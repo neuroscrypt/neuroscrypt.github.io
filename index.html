@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Face Detection like the ones in Scifi Movies</title>
+  <link rel="stylesheet" href="https://public.codepenassets.com/css/reset-2.0.min.css">
+<link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<link href="http://fonts.cdnfonts.com/css/anurati" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+
+<!--<h1>FACE DETECTION <span>like the ones in Scifi Movies 🛸</span></h1>-->
+<div id="input-field-wrapper">
+  <label for="image-upload">ЗАГРУЗИТЬ ФОТО</label>
+  <input type="file" accept="image/*"  id="image-upload" hidden />
+</div>
+<div id="remote-container">
+  <div id="face-count"  style="padding: 15px;font-weight: 900;background-color: #00000045;border-radius: 8px;cursor:pointer;"></div>
+  <button type="button" id="toggle">Next face ></button>
+</div>
+<div id="app">
+  <div id="image-container"></div>
+  <div id="canvas-container"></div>
+  <div id="result-container"></div>
+  <div id="emotion-result-container"></div>
+  <div id="loading-container">Сканирование...
+<!--   <div id="landmarks-container">
+     <canvas id="landmarks-canvas" width="10000" height="10000"></canvas>
+  </div> -->
+</div>
+<div id="particles-js"></div>
+<!-- partial -->
+  <script src='https://assets.codepen.io/1290466/face-api.min.js'></script>
+<script src='https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js'></script><script  src="./script.js"></script>
+
+</body>
+</html>
