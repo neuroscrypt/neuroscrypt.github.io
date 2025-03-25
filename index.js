@@ -1,7 +1,4 @@
-
-
 /*
-
   Music is by The XX
   @see http://thexx.info
 
