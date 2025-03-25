@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Visualizer</title>
+    <!-- Подключение p5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        canvas { display: block; margin: 0 auto; }
+        #controls { text-align: center; margin: 20px; }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="play">Play</button>
+    </div>
+    <!-- Сообщения об ошибках -->
+    <div id="warning1" style="display: none; color: red;">Web Audio API не поддерживается вашим браузером.</div>
+    <div id="warning2" style="display: none; color: red;">Safari может работать некорректно. Используйте Chrome.</div>
+
+    <script>
+/*
+
+  Music is by The XX
+  @see http://thexx.info
+
+  Требуется взаимодействие пользователя (кнопка Play) для запуска аудио.
+*/
+
+(function() {
+    const NUM_PARTICLES = 150;
+    const NUM_BANDS = 128;
+    const SMOOTHING = 0.5;
+    const MP3_PATH = 'https://api.soundcloud.com/tracks/204921857/stream?client_id=b1495e39071bd7081a74093816f77ddb'; // Проверьте актуальность client_id!
+
+    const SCALE = { MIN: 5.0, MAX: 80.0 };
+    const SPEED = { MIN: 0.2, MAX: 1.0 };
+    const ALPHA = { MIN: 0.8, MAX: 0.9 };
+    const SPIN = { MIN: 0.001, MAX: 0.005 };
+    const SIZE = { MIN: 0.5, MAX: 1.25 };
+    const COLORS = ['#69D2E7', '#1B676B', '#BEF202', '#EBE54D', '#00CDAC', '#1693A5', '#F9D423', '#FF4E50', '#E7204E', '#0CCABA', '#FF006F'];
+
+    class AudioAnalyser {
+        static AudioContext = window.AudioContext || window.webkitAudioContext;
+        static enabled = !!AudioAnalyser.AudioContext;
+
+        constructor(audioSrc, numBands = 256, smoothing = 0.3) {
+            this.audio = new Audio();
+            this.audio.crossOrigin = "anonymous";
+            this.audio.src = audioSrc;
+            this.numBands = numBands;
+            this.smoothing = smoothing;
+            this.context = new AudioAnalyser.AudioContext();
+            this.analyser = this.context.createAnalyser();
+            this.analyser.smoothingTimeConstant = this.smoothing;
+            this.analyser.fftSize = this.numBands * 2;
+            this.bands = new Uint8Array(this.analyser.frequencyBinCount);
+            this.setupAudioNodes();
+        }
+
+        setupAudioNodes() {
+            this.source = this.context.createMediaElementSource(this.audio);
+            this.source.connect(this.analyser);
+            this.analyser.connect(this.context.destination);
+            this.audio.addEventListener('play', () => {
+                const processor = this.context.createScriptProcessor(2048, 1, 1);
+                this.analyser.connect(processor);
+                processor.connect(this.context.destination);
+                processor.onaudioprocess = () => {
+                    this.analyser.getByteFrequencyData(this.bands);
+                    this.onUpdate?.(this.bands);
+                };
+            });
+        }
+
+        start() { this.audio.play(); }
+        stop() { this.audio.pause(); }
+    }
+
+    class Particle {
+        constructor(x = 0, y = 0) {
+            this.x = x;
+            this.y = y;
+            this.reset();
+        }
+
+        reset() {
+            this.level = 1 + Math.floor(Math.random() * 4);
+            this.scale = Math.random() * (SCALE.MAX - SCALE.MIN) + SCALE.MIN;
+            this.alpha = Math.random() * (ALPHA.MAX - ALPHA.MIN) + ALPHA.MIN;
+            this.speed = Math.random() * (SPEED.MAX - SPEED.MIN) + SPEED.MIN;
+            this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            this.size = Math.random() * (SIZE.MAX - SIZE.MIN) + SIZE.MIN;
+            this.spin = Math.random() * (SPIN.MAX - SPIN.MIN) + SPIN.MIN;
+            this.band = Math.floor(Math.random() * NUM_BANDS);
+            this.spin *= Math.random() < 0.5 ? -1 : 1;
+            this.smoothedScale = 0;
+            this.smoothedAlpha = 0;
+            this.decayScale = 0;
+            this.decayAlpha = 0;
+            this.rotation = Math.random() * Math.PI * 2;
+            this.energy = 0;
+        }
+
+        move() {
+            this.rotation += this.spin;
+            this.y -= this.speed * this.level;
+        }
+
+        draw(ctx) {
+            const power = Math.exp(this.energy);
+            const scale = this.scale * power;
+            const alpha = this.alpha * this.energy * 1.5;
+            this.decayScale = Math.max(this.decayScale, scale);
+            this.decayAlpha = Math.max(this.decayAlpha, alpha);
+            this.smoothedScale += (this.decayScale - this.smoothedScale) * 0.3;
+            this.smoothedAlpha += (this.decayAlpha - this.smoothedAlpha) * 0.3;
+            this.decayScale *= 0.985;
+            this.decayAlpha *= 0.975;
+
+            ctx.save();
+            ctx.translate(
+                this.x + Math.cos(this.rotation * this.speed) * 250,
+                this.y
+            );
+            ctx.rotate(this.rotation);
+            ctx.scale(
+                this.smoothedScale * this.level,
+                this.smoothedScale * this.level
+            );
+            ctx.beginPath();
+            ctx.moveTo(this.size * 0.5, 0);
+            ctx.lineTo(-this.size * 0.5, 0);
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 1;
+            ctx.lineCap = 'round';
+            ctx.globalAlpha = this.smoothedAlpha / this.level;
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    let analyser;
+    const particles = Array.from({ length: NUM_PARTICLES }, () => 
+        new Particle(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 2)
+    );
+
+    function setup() {
+        createCanvas(window.innerWidth, window.innerHeight);
+        if (!AudioAnalyser.enabled) {
+            document.getElementById('warning1').style.display = 'block';
+            return;
+        }
+
+        document.getElementById('play').addEventListener('click', () => {
+            analyser = new AudioAnalyser(MP3_PATH, NUM_BANDS, SMOOTHING);
+            analyser.onUpdate = (bands) => {
+                particles.forEach(p => p.energy = bands[p.band] / 256);
+            };
+            analyser.start();
+        });
+    }
+
+    function draw() {
+        clear();
+        particles.forEach(p => {
+            if (p.y < -p.size * p.level * p.scale * 2) {
+                p.reset();
+                p.x = Math.random() * width;
+                p.y = height + p.size * p.scale * p.level;
+            }
+            p.move();
+            p.draw(this);
+        });
+    }
+})();
+    </script>
+</body>
+</html>
