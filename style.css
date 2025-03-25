@@ -127,6 +127,7 @@ h1 span {
 span.expression {
   opacity: 0.5;
   font-size: 25px;
+  cursor:pointer;
 }
 span.expression.highest {
   opacity: 1;
