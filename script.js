@@ -86,7 +86,7 @@ window.onload = async () => {
         loadingContainer.style.display = 'none';
       }
 
-      faceCount.append(`${detectionLength} лиц ${detectionLength > 1 ? 'а' : 'о'} обнаружено`);
+      faceCount.append(`${detectionLength} лиц${detectionLength > 1 ? 'а' : 'о'} обнаружено`);
 
       imageContainer.append(image);
 
