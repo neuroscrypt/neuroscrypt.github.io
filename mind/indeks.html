@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4 Ровных Квадрата с Описаниями</title>
+  <style>
+    body, html {
+      font-family: monospace;font-weight: 900;margin: 0;padding: 0;
+      height: 100%;width: 100%;display: flex;flex-wrap: wrap;box-sizing: border-box;
+    }
+    .square {
+      width: 50%;height: 50%;
+      box-sizing: border-box;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .top-left {background-color: #2b2b2b;}
+    .top-right {background-color: #444444;}
+    .bottom-left {background-color: #666666;}
+    .bottom-right {background-color: #888888;}
+    .description-center {
+      font-size:25px;padding:30px;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 7px;
+      background-color: #ffffff14;
+      color: #fff;
+    }
+    .description-corner {
+      position: absolute;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 7px;
+      color: #fff;
+      background-color: #ffffff14;
+    }
+    /* Позиции для углов */
+    .top-left-corner {top: 5%; left: 5%;}
+    .top-right-corner {top: 5%; right: 5%;}
+    .bottom-left-corner {bottom: 5%; left: 5%;}
+    .bottom-right-corner {bottom: 5%; right: 5%;}
+  </style>
+</head>
+<body>
+  <!-- Квадрат "Ясность и Понимание": отражает этапы систематизации, построения пошагового плана и создания координатной системы для бессознательного -->
+  <div class="square top-left">
+    <div class="description-center">
+      Ясность и Понимание<br>
+      (План. Структурирование. Осознание внутренних координат)
+    </div>
+    <div class="description-corner top-left-corner">Осознание процессов</div>
+    <div class="description-corner top-right-corner">Пошаговый анализ и план</div>
+    <div class="description-corner bottom-left-corner">Логичный подход к бессознательному</div>
+    <div class="description-corner bottom-right-corner">Контроль через системные координаты</div>
+  </div>
+  
+  <!-- Квадрат "Неосознанные Порывы": отражает работу с импульсами, автоматизмами и внешними стимулами, влияющими на бессознательное -->
+  <div class="square top-right">
+    <div class="description-center">
+      Неосознанные Порывы<br>
+      (Импульсы. Автоматизмы. Внешние стимулы)
+    </div>
+    <div class="description-corner top-left-corner">Импульсивные реакции</div>
+    <div class="description-corner top-right-corner">Внешние стимулы</div>
+    <div class="description-corner bottom-left-corner">Анализ автоматизмов</div>
+    <div class="description-corner bottom-right-corner">Пути осознанной коррекции</div>
+  </div>
+
+  <!-- Квадрат "Иррациональные Силы": здесь подчёркивается роль эмоций, инстинктов и адаптивных гипотез в моделировании бессознательных паттернов -->
+  <div class="square bottom-left">
+    <div class="description-center">
+      Иррациональные Силы<br>
+      (Эмоции, инстинкты и динамика гипотез)
+    </div>
+    <div class="description-corner top-left-corner">Эмоциональные отклики</div>
+    <div class="description-corner top-right-corner">Инстинктивные импульсы</div>
+    <div class="description-corner bottom-left-corner">Адаптивные модели</div>
+    <div class="description-corner bottom-right-corner">Гибкие гипотезы</div>
+  </div>
+
+  <!-- Квадрат "Глубинные Архетипы": акцент делается на архетипах, символах и создании комплексной навигационной системы для бессознательного -->
+  <div class="square bottom-right">
+    <div class="description-center">
+      Глубинные Архетипы<br>
+      (Символы. Мифы. Компас бессознательного)
+    </div>
+    <div class="description-corner top-left-corner">Универсальные символы</div>
+    <div class="description-corner top-right-corner">Психологические модели</div>
+    <div class="description-corner bottom-left-corner">Структура бессознательного</div>
+    <div class="description-corner bottom-right-corner">Динамическая навигация</div>
+  </div>
+</body>
+</html>
