@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Анализатор эмоций и позы</title>
+  <style>
+    body {
+      margin: 0;
+      background: #fafafa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+    #video, #overlay {
+      position: absolute;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+    }
+  </style>
+  <!-- Обновлённый face-api.js через unpkg -->
+  <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <!-- TensorFlow.js и PoseNet через CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+</head>
+<body>
+  <!-- Видео с веб-камеры -->
+  <video id="video" width="640" height="480" autoplay muted></video>
+  <!-- Канвас для отрисовки результатов -->
+  <canvas id="overlay" width="640" height="480"></canvas>
+
+  <script defer>
+    window.addEventListener('load', async () => {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('overlay');
+      const ctx = canvas.getContext('2d');
+      let posenetModel;
+
+      // Настройка доступа к камере
+      async function setupCamera() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+          video.srcObject = stream;
+          return new Promise((resolve) => {
+            video.onloadedmetadata = () => resolve(video);
+          });
+        } catch (error) {
+          console.error("Ошибка доступа к веб-камере:", error);
+        }
+      }
+
+      // Загрузка моделей face-api.js и posenet
+      async function loadModels() {
+        // Альтернативный URL для весов face-api.js
+        const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        posenetModel = await posenet.load();
+      }
+
+      // Основной цикл обработки видео
+      async function onPlay() {
+        if (video.paused || video.ended) return setTimeout(onPlay, 100);
+
+        // Детекция лиц и распознавание эмоций
+        const faceOptions = new faceapi.TinyFaceDetectorOptions();
+        const faceResults = await faceapi
+          .detectAllFaces(video, faceOptions)
+          .withFaceExpressions();
+
+        // Оценка позы с помощью PoseNet
+        const pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
+
+        // Очистка канваса
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Отрисовка рамок и эмоций для лиц
+        if (faceResults) {
+          faceResults.forEach(result => {
+            const { x, y, width, height } = result.detection.box;
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, width, height);
+            const expressions = result.expressions;
+            const maxValue = Math.max(...Object.values(expressions));
+            const emotion = Object.keys(expressions).find(key => expressions[key] === maxValue);
+            ctx.fillStyle = 'red';
+            ctx.font = '16px Arial';
+            ctx.fillText(emotion, x, y - 10);
+          });
+        }
+
+        // Отрисовка ключевых точек позы
+        if (pose && pose.keypoints) {
+          pose.keypoints.forEach(keypoint => {
+            if (keypoint.score > 0.5) {
+              ctx.fillStyle = 'blue';
+              ctx.beginPath();
+              ctx.arc(keypoint.position.x, keypoint.position.y, 5, 0, 2 * Math.PI);
+              ctx.fill();
+            }
+          });
+        }
+
+        requestAnimationFrame(onPlay);
+      }
+
+      // Инициализация: настройка камеры, воспроизведение видео и загрузка моделей
+      await setupCamera();
+      video.play();
+      await loadModels();
+      onPlay();
+    });
+  </script>
+</body>
+</html>
