@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Анализатор эмоций и позы</title>
+  <style>
+    /* Современный, стильный дизайн */
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      position: relative;
+    }
+    #video, #overlay {
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    /* Панель для отображения поз и эмоций */
+    #infoPanel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255,255,255,0.95);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-size: 16px;
+      color: #333;
+      z-index: 1000;
+    }
+    #infoPanel h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #555;
+    }
+    #infoPanel p {
+      margin: 5px 0;
+    }
+  </style>
+  <!-- Используем tfjs для совместимости -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
+  <!-- face-api.js для детекции лиц и эмоций -->
+  <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <!-- PoseNet через CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+</head>
+<body>
+  <!-- Видео с веб-камеры -->
+  <video id="video" width="640" height="480" autoplay muted></video>
+  <!-- Канвас для отрисовки результатов -->
+  <canvas id="overlay" width="640" height="480"></canvas>
+  <!-- Панель для отображения информации -->
+  <div id="infoPanel">
+    <h2>Статус</h2>
+    <p id="emotionLabel">Эмоция: -</p>
+    <p id="poseLabel">Поза: -</p>
+  </div>
+
+  <script defer>
+    window.addEventListener('load', async () => {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('overlay');
+      const ctx = canvas.getContext('2d');
+      const emotionLabel = document.getElementById('emotionLabel');
+      const poseLabel = document.getElementById('poseLabel');
+      let posenetModel;
+
+      // Порог стабильности для эмоций (5 кадров)
+      const stabilityThreshold = 5;
+      let stableEmotion = null;
+      let currentEmotion = null;
+      let stabilityCount = 0;
+
+      // Массив для последующего анализа всех параметров позы и лица
+      const analysisData = [];
+
+      // Сопоставление английских названий эмоций с русскими
+      const emotionMapping = {
+        angry: 'Злость',
+        disgusted: 'Отвращение',
+        fearful: 'Страх',
+        happy: 'Счастье',
+        neutral: 'Нейтрально',
+        sad: 'Грусть',
+        surprised: 'Удивление'
+      };
+
+      // Настройка веб-камеры
+      async function setupCamera() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+          video.srcObject = stream;
+          return new Promise((resolve) => {
+            video.onloadedmetadata = () => resolve(video);
+          });
+        } catch (error) {
+          console.error("Ошибка доступа к веб-камере:", error);
+        }
+      }
+
+      // Загрузка моделей face-api.js и posenet
+      async function loadModels() {
+        const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        posenetModel = await posenet.load();
+      }
+
+      // Функция обновления стабильного значения эмоции
+      function updateEmotion(newEmotion) {
+        if (currentEmotion === newEmotion) {
+          stabilityCount++;
+        } else {
+          currentEmotion = newEmotion;
+          stabilityCount = 1;
+        }
+        if (stabilityCount >= stabilityThreshold) {
+          stableEmotion = currentEmotion;
+        }
+      }
+
+      // Основной цикл обработки видео
+      async function onPlay() {
+        if (video.paused || video.ended) return setTimeout(onPlay, 100);
+
+        // Детекция лиц и эмоций
+        const faceOptions = new faceapi.TinyFaceDetectorOptions();
+        const faceResults = await faceapi.detectAllFaces(video, faceOptions).withFaceExpressions();
+        // Определение позы с помощью PoseNet
+        const pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Обработка результатов детекции лиц
+        if (faceResults && faceResults.length > 0) {
+          faceResults.forEach(result => {
+            const { x, y, width, height } = result.detection.box;
+            // Обводка лица
+            ctx.strokeStyle = '#ff5252';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, width, height);
+
+            // Определение эмоции: выбирается максимальное значение
+            const expressions = result.expressions;
+            const maxValue = Math.max(...Object.values(expressions));
+            const detectedEmotionKey = Object.keys(expressions).find(key => expressions[key] === maxValue);
+            updateEmotion(detectedEmotionKey);
+
+            // Отрисовка текста с определённой эмоцией над лицом
+            ctx.fillStyle = '#ff5252';
+            ctx.font = '16px Helvetica';
+            const emotionText = emotionMapping[stableEmotion] || 'Определение...';
+            ctx.fillText(emotionText, x, y - 10);
+          });
+        } else {
+          // Если лицо не найдено, сбрасываем информацию об эмоции
+          currentEmotion = null;
+          stabilityCount = 0;
+          stableEmotion = null;
+        }
+
+        // Отрисовка ключевых точек позы
+        if (pose && pose.keypoints) {
+          pose.keypoints.forEach(keypoint => {
+            if (keypoint.score > 0.5) {
+              ctx.fillStyle = '#4285f4';
+              ctx.beginPath();
+              ctx.arc(keypoint.position.x, keypoint.position.y, 5, 0, 2 * Math.PI);
+              ctx.fill();
+            }
+          });
+
+          // Простейшая обработка позы для отображения (пример: координаты первой точки)
+          const poseText = `(${Math.round(pose.keypoints[0].position.x)}, ${Math.round(pose.keypoints[0].position.y)})`;
+          poseLabel.textContent = 'Поза: ' + poseText;
+        }
+
+        // Обновление панели с информацией (эмоция)
+        const displayEmotion = emotionMapping[stableEmotion] || 'Определение...';
+        emotionLabel.textContent = 'Эмоция: ' + displayEmotion;
+
+        // Сохранение данных для последующего анализа
+        analysisData.push({
+          timestamp: Date.now(),
+          emotion: stableEmotion,
+          pose: pose
+        });
+
+        requestAnimationFrame(onPlay);
+      }
+
+      // Инициализация: настройка камеры, загрузка моделей и запуск обработки
+      await setupCamera();
+      video.play();
+      await loadModels();
+      onPlay();
+    });
+  </script>
+</body>
+</html>
