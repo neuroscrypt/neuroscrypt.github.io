@@ -17,7 +17,7 @@
     video#video {
       opacity: 0;
     }
-    /* Панель управления – фиксированная и поверх всех элементов */
+    /* Фиксированная панель управления (350px x 870px) */
     #infoPanel {
       position: fixed;
       top: 10px;
@@ -35,17 +35,18 @@
       margin: 5px 0;
       color: #444;
     }
-    #infoPanel p, #infoPanel li {
+    #infoPanel p, #infoPanel li, #infoPanel span {
       margin: 3px 0;
       font-size: 14px;
       color: #333;
+      display: block;
     }
     #infoPanel ul {
       list-style: none;
       padding-left: 10px;
       margin: 0;
     }
-    /* Секция управления Canvas – ползунки */
+    /* Секция управления Canvas – два ползунка */
     #canvasControls {
       margin-top: 10px;
     }
@@ -61,7 +62,20 @@
       font-weight: bold;
       margin-left: 5px;
     }
-    /* Стили для Canvas – размещаем по центру экрана */
+    /* Секция переключения режима отрисовки лица */
+    #faceRenderToggle {
+      margin-top: 10px;
+      text-align: center;
+    }
+    #faceRenderToggle button {
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f0f0f0;
+    }
+    /* Canvas размещён отдельно по центру страницы */
     canvas#overlay {
       position: absolute;
       top: 50%;
@@ -82,30 +96,41 @@
 </head>
 <body>
   <!-- Видео с веб-камеры (скрыто через opacity) -->
-  <video id="video" width="640" height="480" autoplay muted></video>
-  <!-- Canvas вынесен отдельно и находится по центру экрана -->
-  <canvas id="overlay" width="640" height="480"></canvas>
+  <video id="video" width="1280" height="960" autoplay muted></video>
+  <!-- Canvas вынесен отдельно и по умолчанию имеет размер 1280x960 -->
+  <canvas id="overlay" width="1280" height="960"></canvas>
 
   <!-- Панель управления -->
   <div id="infoPanel">
     <h2>Информация</h2>
+    <!-- Секция лица -->
     <div id="faceInfo">
       <h3>Лица</h3>
-      <p id="faceCount">Количество лиц: 0</p>
-      <ul id="faceDetails"></ul>
+      <span id="faceCountSpan">Количество лиц: 0</span>
+      <ul id="faceDetails">
+        <!-- Каждое лицо будет описываться в отдельных span -->
+      </ul>
     </div>
+    <!-- Секция параметров позы -->
     <div id="poseInfo">
-      <h3>Поза</h3>
-      <ul id="poseDetails"></ul>
+      <h3>Параметры позы</h3>
+      <ul id="poseDetails">
+        <!-- Каждый параметр позы в отдельном span -->
+      </ul>
     </div>
+    <!-- Секция управления размером Canvas -->
     <div id="canvasControls">
       <h3>Управление Canvas</h3>
       <label for="widthSlider">Ширина Canvas:</label>
-      <input type="range" id="widthSlider" min="320" max="1280" value="640">
-      <span id="widthValue">640</span> px<br>
+      <input type="range" id="widthSlider" min="320" max="1920" value="1280">
+      <span id="widthValue">1280</span> px
       <label for="heightSlider">Высота Canvas:</label>
-      <input type="range" id="heightSlider" min="240" max="960" value="480">
-      <span id="heightValue">480</span> px
+      <input type="range" id="heightSlider" min="240" max="1440" value="960">
+      <span id="heightValue">960</span> px
+    </div>
+    <!-- Кнопка переключения режима отрисовки лица -->
+    <div id="faceRenderToggle">
+      <button id="toggleModeButton">Режим: Рамка</button>
     </div>
   </div>
 
@@ -114,14 +139,15 @@
       const video = document.getElementById('video');
       const canvas = document.getElementById('overlay');
       const ctx = canvas.getContext('2d');
-      const faceCountEl = document.getElementById('faceCount');
+      const faceCountSpan = document.getElementById('faceCountSpan');
       const faceDetailsEl = document.getElementById('faceDetails');
       const poseDetailsEl = document.getElementById('poseDetails');
       const widthSlider = document.getElementById('widthSlider');
       const heightSlider = document.getElementById('heightSlider');
       const widthValue = document.getElementById('widthValue');
       const heightValue = document.getElementById('heightValue');
-      let posenetModel;
+      const toggleModeButton = document.getElementById('toggleModeButton');
+      let posenetModel, faceRenderMode = "рамка";  // режим: "рамка" или "маска"
 
       // Порог стабильности для эмоций (5 кадров)
       const stabilityThreshold = 5;
@@ -164,10 +190,23 @@
       // Загрузка моделей face-api.js и posenet
       async function loadModels() {
         const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+        // Модели для детекции лица, эмоций и landmarks
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
         posenetModel = await posenet.load();
       }
+
+      // Переключение режима отрисовки лица
+      toggleModeButton.addEventListener('click', () => {
+        if (faceRenderMode === "рамка") {
+          faceRenderMode = "маска";
+          toggleModeButton.textContent = "Режим: Маска";
+        } else {
+          faceRenderMode = "рамка";
+          toggleModeButton.textContent = "Режим: Рамка";
+        }
+      });
 
       // Функция обновления стабильного значения эмоции
       function updateEmotion(newEmotion) {
@@ -186,62 +225,73 @@
       function getFallbackPose() {
         return {
           keypoints: [
-            { part: "nose", score: 1, position: { x: canvas.width / 2, y: canvas.height / 4 } },
-            { part: "leftEye", score: 1, position: { x: canvas.width / 2 - 20, y: canvas.height / 4 - 10 } },
-            { part: "rightEye", score: 1, position: { x: canvas.width / 2 + 20, y: canvas.height / 4 - 10 } },
-            { part: "leftEar", score: 0.8, position: { x: canvas.width / 2 - 40, y: canvas.height / 4 } },
-            { part: "rightEar", score: 0.8, position: { x: canvas.width / 2 + 40, y: canvas.height / 4 } },
-            { part: "leftShoulder", score: 1, position: { x: canvas.width / 2 - 30, y: canvas.height / 2 } },
-            { part: "rightShoulder", score: 1, position: { x: canvas.width / 2 + 30, y: canvas.height / 2 } },
-            { part: "leftElbow", score: 0.9, position: { x: canvas.width / 2 - 50, y: canvas.height / 2 + 40 } },
-            { part: "rightElbow", score: 0.9, position: { x: canvas.width / 2 + 50, y: canvas.height / 2 + 40 } },
-            { part: "leftWrist", score: 0.8, position: { x: canvas.width / 2 - 60, y: canvas.height / 2 + 80 } },
-            { part: "rightWrist", score: 0.8, position: { x: canvas.width / 2 + 60, y: canvas.height / 2 + 80 } },
-            { part: "leftHip", score: 1, position: { x: canvas.width / 2 - 20, y: canvas.height * 0.75 } },
-            { part: "rightHip", score: 1, position: { x: canvas.width / 2 + 20, y: canvas.height * 0.75 } },
-            { part: "leftKnee", score: 0.9, position: { x: canvas.width / 2 - 20, y: canvas.height - 50 } },
-            { part: "rightKnee", score: 0.9, position: { x: canvas.width / 2 + 20, y: canvas.height - 50 } },
-            { part: "leftAnkle", score: 0.8, position: { x: canvas.width / 2 - 20, y: canvas.height - 10 } },
-            { part: "rightAnkle", score: 0.8, position: { x: canvas.width / 2 + 20, y: canvas.height - 10 } }
+            { part: "нос", score: 1, position: { x: canvas.width / 2, y: canvas.height / 4 } },
+            { part: "левый глаз", score: 1, position: { x: canvas.width / 2 - 20, y: canvas.height / 4 - 10 } },
+            { part: "правый глаз", score: 1, position: { x: canvas.width / 2 + 20, y: canvas.height / 4 - 10 } },
+            { part: "левое ухо", score: 0.8, position: { x: canvas.width / 2 - 40, y: canvas.height / 4 } },
+            { part: "правое ухо", score: 0.8, position: { x: canvas.width / 2 + 40, y: canvas.height / 4 } },
+            { part: "левое плечо", score: 1, position: { x: canvas.width / 2 - 30, y: canvas.height / 2 } },
+            { part: "правое плечо", score: 1, position: { x: canvas.width / 2 + 30, y: canvas.height / 2 } },
+            { part: "левый локоть", score: 0.9, position: { x: canvas.width / 2 - 50, y: canvas.height / 2 + 40 } },
+            { part: "правый локоть", score: 0.9, position: { x: canvas.width / 2 + 50, y: canvas.height / 2 + 40 } },
+            { part: "левая кисть", score: 0.8, position: { x: canvas.width / 2 - 60, y: canvas.height / 2 + 80 } },
+            { part: "правая кисть", score: 0.8, position: { x: canvas.width / 2 + 60, y: canvas.height / 2 + 80 } },
+            { part: "левый таз", score: 1, position: { x: canvas.width / 2 - 20, y: canvas.height * 0.75 } },
+            { part: "правый таз", score: 1, position: { x: canvas.width / 2 + 20, y: canvas.height * 0.75 } },
+            { part: "левое колено", score: 0.9, position: { x: canvas.width / 2 - 20, y: canvas.height - 50 } },
+            { part: "правое колено", score: 0.9, position: { x: canvas.width / 2 + 20, y: canvas.height - 50 } },
+            { part: "левая лодыжка", score: 0.8, position: { x: canvas.width / 2 - 20, y: canvas.height - 10 } },
+            { part: "правая лодыжка", score: 0.8, position: { x: canvas.width / 2 + 20, y: canvas.height - 10 } }
           ]
         };
       }
 
-      // Функция обновления информации в панели (обновление не чаще, чем раз в 500 мс)
+      // Функция обновления информации в панели, где каждый параметр оборачивается в отдельный <span>
       function updateInfoPanel(faceResults, pose) {
         // Обновление информации по лицам
+        faceDetailsEl.innerHTML = "";
         if (faceResults && faceResults.length > 0) {
-          faceCountEl.textContent = "Количество лиц: " + faceResults.length;
-          faceDetailsEl.innerHTML = "";
+          faceCountSpan.textContent = "Количество лиц: " + faceResults.length;
           faceResults.forEach((result, index) => {
             const { x, y, width, height } = result.detection.box;
-            let li = document.createElement('li');
-            li.innerHTML = `<strong>Лицо ${index + 1}</strong> (x:${Math.round(x)}, y:${Math.round(y)}, w:${Math.round(width)}, h:${Math.round(height)})<br>`;
+            // Каждый параметр лица в отдельном span
+            const faceContainer = document.createElement('li');
+            const spanId = document.createElement('span');
+            spanId.textContent = `Лицо ${index + 1}`;
+            const spanBox = document.createElement('span');
+            spanBox.textContent = ` (Коорд. x:${Math.round(x)}, y:${Math.round(y)}; Размеры w:${Math.round(width)}, h:${Math.round(height)})`;
+            faceContainer.appendChild(spanId);
+            faceContainer.appendChild(spanBox);
+            // Вывод каждого значения эмоции в свой span
             const expressions = result.expressions;
             for (let key in expressions) {
+              const spanExp = document.createElement('span');
               let percentage = (expressions[key] * 100).toFixed(1);
-              li.innerHTML += `${emotionMapping[key] || key}: ${percentage}%<br>`;
+              spanExp.textContent = ` ${emotionMapping[key] || key}: ${percentage}%`;
+              faceContainer.appendChild(spanExp);
             }
-            faceDetailsEl.appendChild(li);
+            faceDetailsEl.appendChild(faceContainer);
           });
         } else {
-          faceCountEl.textContent = "Количество лиц: 0";
-          faceDetailsEl.innerHTML = "<li>Лицо не обнаружено</li>";
+          faceCountSpan.textContent = "Количество лиц: 0";
+          let span = document.createElement('span');
+          span.textContent = "Лицо не обнаружено";
+          faceDetailsEl.appendChild(span);
         }
         // Обновление информации по позе
         poseDetailsEl.innerHTML = "";
         if (pose && pose.keypoints && pose.keypoints.length > 0) {
           pose.keypoints.forEach(keypoint => {
-            let li = document.createElement('li');
-            li.textContent = `${keypoint.part} (x:${Math.round(keypoint.position.x)}, y:${Math.round(keypoint.position.y)}; score: ${keypoint.score.toFixed(2)})`;
-            poseDetailsEl.appendChild(li);
+            const spanPose = document.createElement('span');
+            spanPose.textContent = `${keypoint.part} (x:${Math.round(keypoint.position.x)}, y:${Math.round(keypoint.position.y)}; score: ${keypoint.score.toFixed(2)})`;
+            poseDetailsEl.appendChild(spanPose);
           });
         } else {
           let fallback = getFallbackPose();
           fallback.keypoints.forEach(keypoint => {
-            let li = document.createElement('li');
-            li.textContent = `${keypoint.part} (x:${Math.round(keypoint.position.x)}, y:${Math.round(keypoint.position.y)}; score: ${keypoint.score.toFixed(2)})`;
-            poseDetailsEl.appendChild(li);
+            const spanPose = document.createElement('span');
+            spanPose.textContent = `${keypoint.part} (x:${Math.round(keypoint.position.x)}, y:${Math.round(keypoint.position.y)}; score: ${keypoint.score.toFixed(2)})`;
+            poseDetailsEl.appendChild(spanPose);
           });
         }
       }
@@ -251,7 +301,6 @@
         const newWidth = parseInt(widthSlider.value);
         widthValue.textContent = newWidth;
         canvas.width = newWidth;
-        // Переопределяем позиционирование, чтобы Canvas оставался по центру
         canvas.style.width = newWidth + "px";
       });
       heightSlider.addEventListener('input', () => {
@@ -267,34 +316,48 @@
           requestAnimationFrame(onPlay);
           return;
         }
+        // Настройки детекции
         const faceOptions = new faceapi.TinyFaceDetectorOptions();
-        const faceResults = await faceapi.detectAllFaces(video, faceOptions).withFaceExpressions();
+        // Всегда запрашиваем landmarks (они понадобятся для режима "маска")
+        let faceResults = await faceapi.detectAllFaces(video, faceOptions)
+          .withFaceExpressions().withFaceLandmarks();
+
         let pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
         if (!pose || !pose.keypoints) {
           pose = getFallbackPose();
         }
-        // Отрисовка графики на Canvas
+        // Отрисовка на Canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (faceResults && faceResults.length > 0) {
           faceResults.forEach(result => {
-            const { x, y, width, height } = result.detection.box;
-            ctx.strokeStyle = '#ff5252';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x, y, width, height);
-            const expressions = result.expressions;
-            const maxValue = Math.max(...Object.values(expressions));
-            const detectedEmotionKey = Object.keys(expressions).find(key => expressions[key] === maxValue);
-            updateEmotion(detectedEmotionKey);
-            ctx.fillStyle = '#ff5252';
-            ctx.font = '16px Helvetica';
-            const emotionText = emotionMapping[stableEmotion] || 'Определение...';
-            ctx.fillText(emotionText, x, y - 10);
+            if (faceRenderMode === "рамка") {
+              // Рисуем прямоугольник зелёного цвета
+              const { x, y, width, height } = result.detection.box;
+              ctx.strokeStyle = '#00aa00';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(x, y, width, height);
+              // Обновление эмоции для отрисовки
+              const expressions = result.expressions;
+              const maxValue = Math.max(...Object.values(expressions));
+              const detectedEmotionKey = Object.keys(expressions).find(key => expressions[key] === maxValue);
+              updateEmotion(detectedEmotionKey);
+              ctx.fillStyle = '#00aa00';
+              ctx.font = '16px Helvetica';
+              const emotionText = emotionMapping[stableEmotion] || 'Определение...';
+              ctx.fillText(emotionText, x, y - 10);
+            } else if (faceRenderMode === "маска") {
+              // Рисуем маску - 68 ключевых точек лица
+              if(result.landmarks) {
+                faceapi.draw.drawFaceLandmarks(canvas, result.landmarks);
+              }
+            }
           });
         } else {
           currentEmotion = null;
           stabilityCount = 0;
           stableEmotion = null;
         }
+        // Рисуем ключевые точки позы
         if (pose && pose.keypoints && pose.keypoints.length > 0) {
           pose.keypoints.forEach(keypoint => {
             if (keypoint.score > 0.5) {
@@ -305,7 +368,7 @@
             }
           });
         }
-        // Стабилизация обновления данных в панели – обновление не чаще, чем раз в 500 мс
+        // Стабилизация обновления данных в панели (раз в 500 мс)
         const now = Date.now();
         if (now - lastPanelUpdate > 500) {
           lastFaceResults = faceResults;
@@ -313,7 +376,7 @@
           updateInfoPanel(lastFaceResults, lastPose);
           lastPanelUpdate = now;
         }
-        // Сохранение данных для последующего анализа
+        // Сохранение данных для дальнейшего анализа
         analysisData.push({
           timestamp: Date.now(),
           faces: faceResults,
