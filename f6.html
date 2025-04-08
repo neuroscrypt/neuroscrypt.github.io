@@ -9,30 +9,30 @@
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f7f9fc;
-      color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 40px;
-      gap: 40px;
+      overflow: hidden;
     }
-    /* Скрываем видео, используем его только для анализа */
+    /* Скрываем видео – оно используется только для анализа */
     #video { display: none; }
-    /* Канвас для отрисовки виртуального скелета и лица */
+    /* Канвас занимает весь экран */
     #overlay {
-      width: 640px;
-      height: 480px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
-    /* Панель с результатами анализа */
+    /* Панель с результатами поверх канваса */
     .panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
       width: 300px;
-      background: white;
+      background: rgba(255,255,255,0.9);
       border-radius: 16px;
       padding: 24px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      z-index: 10;
     }
     .panel h2 {
       font-size: 20px;
@@ -43,6 +43,8 @@
     .panel ul {
       list-style: none;
       padding: 0;
+      max-height: 200px;
+      overflow-y: auto;
     }
     .panel li {
       padding: 8px 0;
@@ -62,9 +64,9 @@
 </head>
 <body>
   <!-- Скрытое видео для анализа -->
-  <video id="video" autoplay muted playsinline width="640" height="480"></video>
-  <!-- Канвас для отображения виртуального скелета и лица -->
-  <canvas id="overlay" width="640" height="480"></canvas>
+  <video id="video" autoplay muted playsinline></video>
+  <!-- Канвас для отображения виртуальных элементов -->
+  <canvas id="overlay"></canvas>
   <!-- Панель с результатами анализа -->
   <div class="panel">
     <h2>Анализ лица</h2>
@@ -85,13 +87,13 @@
       const faceList = document.getElementById('face-results');
       const poseList = document.getElementById('pose-results');
       let posenetModel;
-      // Глобальное сглаживание для ключевых точек лица
+      // Для сглаживания лицевых точек – уменьшенный коэффициент
       let smoothedLandmarks = null;
-      const smoothingFactor = 0.2;
-      // Порог для позы
-      const minPartConfidence = 0.5;
-
-      // Определяем соединения для отрисовки скелета
+      const smoothingFactor = 0.1;
+      // Порог для поз – снижен, чтобы ключевые точки гарантированно отображались
+      const minPartConfidence = 0.3;
+      
+      // Соединения для отрисовки скелета позы
       const poseConnections = [
         ['leftShoulder', 'rightShoulder'],
         ['leftShoulder', 'leftElbow'],
@@ -107,12 +109,20 @@
         ['rightKnee', 'rightAnkle']
       ];
 
-      // Настройка камеры
+      // Устанавливаем размеры канваса равными размеру viewport
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      // Настройка камеры: запрашиваем видео с веб-камеры с разрешением 640x480
       async function setupCamera() {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
           video.srcObject = stream;
-          return new Promise((resolve) => {
+          return new Promise(resolve => {
             video.onloadedmetadata = () => resolve(video);
           });
         } catch (error) {
@@ -139,10 +149,9 @@
         });
       }
 
-      // Сглаживание координат ключевых точек лица
+      // Сглаживание координат лицевых точек
       function smoothLandmarks(currentLandmarks) {
         if (!smoothedLandmarks) {
-          // Если предыдущих нет, просто копируем
           smoothedLandmarks = currentLandmarks.map(p => ({ x: p.x, y: p.y }));
         } else {
           currentLandmarks.forEach((p, i) => {
@@ -153,31 +162,31 @@
         return smoothedLandmarks;
       }
 
-      // Отрисовка ключевых точек лица (зелёными)
-      function drawFaceLandmarks(landmarks) {
+      // Отрисовка ключевых точек лица (зелёными) с учетом масштабирования
+      function drawFaceLandmarks(landmarks, scaleX, scaleY) {
         const points = smoothLandmarks(landmarks.positions);
         ctx.fillStyle = 'green';
         points.forEach(p => {
           ctx.beginPath();
-          ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
+          ctx.arc(p.x * scaleX, p.y * scaleY, 3, 0, 2 * Math.PI);
           ctx.fill();
         });
       }
 
-      // Отрисовка ключевых точек позы
-      function drawPoseKeypoints(keypoints) {
+      // Отрисовка ключевых точек позы (синими) с масштабированием
+      function drawPoseKeypoints(keypoints, scaleX, scaleY) {
         ctx.fillStyle = 'blue';
         keypoints.forEach(keypoint => {
           if (keypoint.score > minPartConfidence) {
             ctx.beginPath();
-            ctx.arc(keypoint.position.x, keypoint.position.y, 4, 0, 2 * Math.PI);
+            ctx.arc(keypoint.position.x * scaleX, keypoint.position.y * scaleY, 5, 0, 2 * Math.PI);
             ctx.fill();
           }
         });
       }
 
-      // Отрисовка скелета позы
-      function drawSkeleton(keypoints) {
+      // Отрисовка скелета позы с масштабированием
+      function drawSkeleton(keypoints, scaleX, scaleY) {
         const keypointMap = {};
         keypoints.forEach(k => { keypointMap[k.part] = k; });
         ctx.strokeStyle = 'blue';
@@ -187,8 +196,8 @@
           const kpB = keypointMap[partB];
           if (kpA && kpB && kpA.score > minPartConfidence && kpB.score > minPartConfidence) {
             ctx.beginPath();
-            ctx.moveTo(kpA.position.x, kpA.position.y);
-            ctx.lineTo(kpB.position.x, kpB.position.y);
+            ctx.moveTo(kpA.position.x * scaleX, kpA.position.y * scaleY);
+            ctx.lineTo(kpB.position.x * scaleX, kpB.position.y * scaleY);
             ctx.stroke();
           }
         });
@@ -197,8 +206,12 @@
       // Основной цикл анализа и отрисовки
       async function onFrame() {
         if (video.paused || video.ended) return requestAnimationFrame(onFrame);
-
-        // Заливаем фон канваса
+        
+        // Вычисляем масштаб между размерами видео и канваса
+        const scaleX = canvas.width / video.videoWidth;
+        const scaleY = canvas.height / video.videoHeight;
+        
+        // Заливаем фон канваса (белым)
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -211,15 +224,14 @@
         let faceItems = [];
         if (faceResults && faceResults.length > 0) {
           faceResults.forEach(result => {
-            if(result.landmarks) {
-              drawFaceLandmarks(result.landmarks);
+            if (result.landmarks) {
+              drawFaceLandmarks(result.landmarks, scaleX, scaleY);
             }
-            // Обработка эмоций: выводим каждый процент с округлением
-            if(result.expressions) {
+            if (result.expressions) {
               const expressions = result.expressions;
               let exprStrings = [];
               for (const [expr, score] of Object.entries(expressions)) {
-                exprStrings.push(`${expr}: ${(score*100).toFixed(1)}%`);
+                exprStrings.push(`${expr}: ${(score * 100).toFixed(1)}%`);
               }
               faceItems.push(...exprStrings);
             }
@@ -229,12 +241,12 @@
         }
         updateList(faceList, faceItems);
 
-        // Детекция позы (PoseNet) с зеркальным отображением
+        // Детекция позы (PoseNet) – используем flipHorizontal: true для зеркального отображения
         const pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: true });
         let poseItems = [];
         if (pose && pose.keypoints) {
-          drawPoseKeypoints(pose.keypoints);
-          drawSkeleton(pose.keypoints);
+          drawPoseKeypoints(pose.keypoints, scaleX, scaleY);
+          drawSkeleton(pose.keypoints, scaleX, scaleY);
           // Выводим информацию по первым 5 ключевым точкам
           pose.keypoints.slice(0, 5).forEach(p => {
             poseItems.push(`${p.part}: (${Math.round(p.position.x)}, ${Math.round(p.position.y)})`);
