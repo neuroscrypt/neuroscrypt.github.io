@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Компас Бессознательного</title>
+  <style>
+    body, html {
+      font-family: monospace;
+      font-weight: 900;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      box-sizing: border-box;
+      position: relative;
+    }
+    .square {
+      width: 50%;
+      height: 50%;
+      box-sizing: border-box;
+      border: 2px solid #009688;
+      transition: border 0.5s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .north { background-color: #2b2b2b; }
+    .east  { background-color: #444444; }
+    .south { background-color: #888888; }
+    .west  { background-color: #666666; }
+
+    .description-center {
+      font-size: 40px;
+      padding: 40px;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 7px;
+      background-color: #ffffff14;
+      color: #fff;
+    }
+    .description-corner {
+      position: absolute;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 7px;
+      color: #fff;
+      background-color: #ffffff14;
+    }
+    .top-left-corner { top: 5%; left: 5%; }
+    .top-right-corner { top: 5%; right: 5%; }
+    .bottom-left-corner { bottom: 5%; left: 5%; }
+    .bottom-right-corner { bottom: 5%; right: 5%; }
+
+    .compass-center {
+      color: white;
+      font-weight: 900;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120px;
+      height: 120px;
+      margin-top: -60px;
+      margin-left: -60px;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      background-color: #009688;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      text-align: center;
+      z-index: 21;
+      pointer-events: none;
+      transition: left 0.5s ease, top 0.5s ease, background-color 0.5s ease;
+    }
+
+    .report-box {
+      position: absolute;
+      bottom: 47.35%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #009688;
+      color: #fff;
+      padding: 15px 20px;
+      border-radius: 10px;
+      font-size: 20px;
+      text-align: center;
+      z-index: 20;
+      transition: background-color 0.5s ease;
+    }
+
+    .questionnaire {
+      position: absolute;
+      bottom: 21%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 20;
+    }
+    .questionnaire h2 {
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+    .questionnaire .answer {
+      border: none;
+      margin: 5px;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+      color: #fff;
+      font-size: 11px;
+    }
+    .questionnaire .answer[data-quadrant="north"] { background-color: #3f51b5; }
+    .questionnaire .answer[data-quadrant="east"] { background-color: #e91e63; }
+    .questionnaire .answer[data-quadrant="west"] { background-color: #9c27b0; }
+    .questionnaire .answer[data-quadrant="south"] { background-color: #009688; }
+    .questionnaire .answer:hover { filter: brightness(85%); }
+
+    .time-axis {
+      position: absolute;
+      top: 25%;
+      right: 45%;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      z-index: 20;
+    }
+    .time-axis label {
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      padding: 0 20px;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .toast {
+      color: #fff;
+      padding: 15px 25px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      display: flex;
+      justify-content: space-between;
+    /*align-items: center;*/
+      opacity: 0;
+      font-size: 16px;
+      max-width: 350px;
+      width: auto;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      transform: translateX(100%);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .toast .close-btn {
+      margin-left: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="square north">
+    <div class="description-center">Север<br>(Ясность, анализ)</div>
+    <div class="description-corner top-left-corner">План и стратегия</div>
+    <div class="description-corner top-right-corner">Осознание</div>
+    <div class="description-corner bottom-left-corner">Логика</div>
+    <div class="description-corner bottom-right-corner">Контроль</div>
+  </div>
+  
+  <div class="square east">
+    <div class="description-center">Восток<br>(Импульсы)</div>
+    <div class="description-corner top-left-corner">Стимулы</div>
+    <div class="description-corner top-right-corner">Действия</div>
+    <div class="description-corner bottom-left-corner">Автоматизм</div>
+    <div class="description-corner bottom-right-corner">Реакция</div>
+  </div>
+
+  <div class="square west">
+    <div class="description-center">Запад<br>(Эмоции, инстинкты)</div>
+    <div class="description-corner top-left-corner">Эмоции</div>
+    <div class="description-corner top-right-corner">Инстинкты</div>
+    <div class="description-corner bottom-left-corner">Реакции</div>
+    <div class="description-corner bottom-right-corner">Импульс</div>
+  </div>
+
+  <div class="square south">
+    <div class="description-center">Юг<br>(Архетипы)</div>
+    <div class="description-corner top-left-corner">Символы</div>
+    <div class="description-corner top-right-corner">Мифы</div>
+    <div class="description-corner bottom-left-corner">Корни</div>
+    <div class="description-corner bottom-right-corner">Динамика</div>
+  </div>
+
+  <div class="compass-center">Центр</div>
+  <div class="report-box"></div>
+
+  <div class="questionnaire">
+    <h2>Какое из этих состояний тебе ближе?</h2>
+    <button class="answer" data-quadrant="north">Осознанность (Север)</button>
+    <button class="answer" data-quadrant="east">Импульсивность (Восток)</button>
+    <button class="answer" data-quadrant="west">Эмоциональность (Запад)</button>
+    <button class="answer" data-quadrant="south">Архетипичность (Юг)</button>
+  </div>
+
+  <div class="time-axis">
+    <label>
+      <input type="radio" name="time" value="past" checked> Прошлое
+    </label>
+    <label>
+      <input type="radio" name="time" value="future"> Будущее
+    </label>
+  </div>
+
+  <div class="toast-container"></div>
+
+  <script>
+    const config = {
+      timeAxis: 'past',
+      currentColor: '#009688'
+    };
+
+    const timeInputs = document.querySelectorAll('input[name="time"]');
+    timeInputs.forEach(input => {
+      input.addEventListener('change', (event) => {
+        config.timeAxis = event.target.value;
+        showNotification("Ось времени установлена на: " + config.timeAxis);
+      });
+    });
+
+    function showNotification(message) {
+      const container = document.querySelector('.toast-container');
+      const toast = document.createElement('div');
+      toast.classList.add('toast');
+      toast.style.backgroundColor = config.currentColor;
+      toast.innerHTML = `
+        <span>${message}</span>
+        <span class="close-btn">&times;</span>
+      `;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add('show'), 100);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+      }, 5000);
+
+      toast.querySelector('.close-btn').addEventListener('click', () => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+      });
+    }
+
+    function moveCompassCenter(square) {
+      const rect = square.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const compassCenter = document.querySelector('.compass-center');
+      compassCenter.style.left = centerX + 'px';
+      compassCenter.style.top = centerY + 'px';
+      const description = square.querySelector('.description-center').innerText;
+      compassCenter.innerText = description;
+
+      let newColor = "#009688";
+      if (square.classList.contains('north')) {
+        newColor = '#3f51b5';
+      } else if (square.classList.contains('east')) {
+        newColor = '#e91e63';
+      } else if (square.classList.contains('west')) {
+        newColor = '#9c27b0';
+      }
+      config.currentColor = newColor;
+      compassCenter.style.backgroundColor = newColor;
+      document.querySelector('.report-box').style.backgroundColor = newColor;
+      document.querySelectorAll('.square').forEach(sq => {
+        sq.style.border = "2px solid " + newColor;
+      });
+    }
+
+    function showReport(square) {
+      let report = "";
+      if (square.classList.contains('north')) {
+        report = "Ты осознан — действуешь через ясность, логику и стратегическое мышление.";
+      } else if (square.classList.contains('east')) {
+        report = "Импульсы задают ритм твоим действиям. Внешние стимулы берут верх.";
+      } else if (square.classList.contains('west')) {
+        report = "Эмоциональность управляет твоим поведением. Твои инстинкты и чувства активны.";
+      } else if (square.classList.contains('south')) {
+        report = "Доминирует архетипическая энергия. Глубокие символы и мифы направляют твои решения.";
+      }
+      
+      if (config.timeAxis === 'future') {
+        report += " Взгляни в будущее, твои инстинкты формируют предстоящие возможности.";
+      } else {
+        report += " Прошлые переживания влияют на твои текущие реакции.";
+      }
+      
+      showNotification(report);
+      document.querySelector('.report-box').innerText = report;
+    }
+
+    const squares = document.querySelectorAll('.square');
+    squares.forEach(square => {
+      square.addEventListener('click', () => {
+        moveCompassCenter(square);
+        showReport(square);
+      });
+    });
+
+    const answers = document.querySelectorAll('.questionnaire .answer');
+    answers.forEach(button => {
+      button.addEventListener('click', () => {
+        const quadrant = button.getAttribute('data-quadrant');
+        const targetSquare = document.querySelector('.' + quadrant);
+        if (targetSquare) {
+          moveCompassCenter(targetSquare);
+          showReport(targetSquare);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
