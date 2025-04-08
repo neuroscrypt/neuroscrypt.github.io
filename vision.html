@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Анализатор эмоций и поз</title>
+  <style>
+    /* Общие стили для страницы */
+    body {
+      margin: 0;
+      background: #f0f2f5;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+    /* Видео скрыто */
+    #video {
+      position: absolute;
+      opacity: 0;
+    }
+    /* Canvas располагается по центру */
+    #overlay {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      background: #fff;
+    }
+    /* Фиксированная панель управления 350px x 870px */
+
+span {
+    color: #000000;
+    font-weight: 900;
+    display: flex;
+    font-family: monospace;
+}
+
+    #panel {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 350px;
+      height: 1000px;
+      background-color: #ffffffcc;
+      padding: 16px;
+      box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+      z-index: 2;
+      overflow-y: auto;
+    }
+    /* Каждый элемент информации в отдельном span */
+    .info span {
+      display: block;
+      margin: 3px 0;
+      font-size: 14px;
+      color: #333;
+    }
+    .info span.label {
+      font-weight: bold;
+    }
+    /* Стили для списка лиц и позы */
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    /* Ползунки для изменения размеров Canvas */
+    .slider {
+      margin: 10px 0;
+    }
+    .slider label {
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .slider input[type=range] {
+      width: 100%;
+    }
+    /* Кнопка переключения режима отображения лица */
+    .toggle-btn {
+      margin: 10px 0;
+      text-align: center;
+    }
+    .toggle-btn button {
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f0f0f0;
+    }
+    /* Заголовки */
+    h2, h3 {
+      margin: 8px 0 4px;
+      color: #444;
+    }
+  </style>
+  <!-- Подключение необходимых библиотек -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
+  <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+</head>
+<body>
+  <!-- Видео с веб-камеры (скрыто) -->
+  <video id="video" width="1280" height="960" autoplay muted></video>
+  <!-- Canvas; изначально размер 1280 x 960 -->
+  <canvas id="overlay" width="1280" height="960"></canvas>
+  <!-- Панель управления -->
+  <div id="panel">
+    <h2>Информация</h2>
+    <!-- Секция для лиц -->
+    <div id="faceSection">
+      <h3>Лица</h3>
+      <div class="info"><span id="faceCount" class="label">Количество лиц: 0</span></div>
+      <ul id="faceDetails">
+        <!-- Здесь будут добавляться элементы <li> с информацией о каждом лице -->
+      </ul>
+    </div>
+    <!-- Секция для параметров позы -->
+    <div id="poseSection">
+      <h3>Параметры позы</h3>
+      <ul id="poseDetails">
+        <!-- Здесь будут добавляться элементы <li> с информацией о каждой ключевой точке позы -->
+      </ul>
+    </div>
+    <!-- Ползунки для управления размерами Canvas -->
+    <div class="slider">
+      <label for="canvasWidth">Ширина Canvas</label>
+      <input type="range" id="canvasWidth" min="640" max="1920" value="1280">
+      <span id="widthValue">1280</span> px
+    </div>
+    <div class="slider">
+      <label for="canvasHeight">Высота Canvas</label>
+      <input type="range" id="canvasHeight" min="480" max="1440" value="960">
+      <span id="heightValue">960</span> px
+    </div>
+    <!-- Кнопка переключения режима отображения лица (рамка/маска) -->
+    <div class="toggle-btn">
+      <button id="toggleRender">Режим: Рамка</button>
+    </div>
+  </div>
+  
+  <script>
+    // Соответствие значений эмоций (англ. -> рус.)
+    const emotionMapping = {
+      angry: "Злость",
+      disgusted: "Отвращение",
+      fearful: "Страх",
+      happy: "Счастье",
+      neutral: "Нейтральное",
+      sad: "Грусть",
+      surprised: "Удивление"
+    };
+
+    // Таблица перевода названий ключевых точек позы (англ. -> рус.)
+    const poseMapping = {
+      nose: "нос",
+      leftEye: "левый глаз",
+      rightEye: "правый глаз",
+      leftEar: "левое ухо",
+      rightEar: "правое ухо",
+      leftShoulder: "левое плечо",
+      rightShoulder: "правое плечо",
+      leftElbow: "левый локоть",
+      rightElbow: "правый локоть",
+      leftWrist: "левая кисть",
+      rightWrist: "правая кисть",
+      leftHip: "левый таз",
+      rightHip: "правый таз",
+      leftKnee: "левое колено",
+      rightKnee: "правое колено",
+      leftAnkle: "левая лодыжка",
+      rightAnkle: "правая лодыжка"
+    };
+
+    // Получение элементов со страницы
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('overlay');
+    const ctx = canvas.getContext('2d');
+    const faceCountElem = document.getElementById('faceCount');
+    const faceDetailsEl = document.getElementById('faceDetails');
+    const poseDetailsEl = document.getElementById('poseDetails');
+    const widthSlider = document.getElementById('canvasWidth');
+    const heightSlider = document.getElementById('canvasHeight');
+    const widthValue = document.getElementById('widthValue');
+    const heightValue = document.getElementById('heightValue');
+    const toggleRenderBtn = document.getElementById('toggleRender');
+
+    // Переменные для стабилизации эмоций
+    let stableEmotion = null;
+    let currentEmotion = null;
+    let stabilityCount = 0;
+    let lastPanelUpdate = Date.now();
+    let posenetModel;
+    let faceRenderMode = "рамка";  // Возможные режимы: "рамка" или "маска"
+
+    // Переключение режима отображения лица
+    toggleRenderBtn.onclick = () => {
+      faceRenderMode = faceRenderMode === "рамка" ? "маска" : "рамка";
+      toggleRenderBtn.textContent = faceRenderMode === "рамка" ? "Режим: Рамка" : "Режим: Маска";
+    };
+
+    // Обработчики ползунков для изменения размеров Canvas
+    widthSlider.addEventListener('input', (e) => {
+      const newWidth = parseInt(e.target.value);
+      widthValue.textContent = newWidth;
+      canvas.width = newWidth;
+      canvas.style.width = newWidth + "px";
+    });
+    heightSlider.addEventListener('input', (e) => {
+      const newHeight = parseInt(e.target.value);
+      heightValue.textContent = newHeight;
+      canvas.height = newHeight;
+      canvas.style.height = newHeight + "px";
+    });
+
+    // Настройка веб-камеры
+    async function setupCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+      video.srcObject = stream;
+      return new Promise(resolve => {
+        video.onloadedmetadata = () => resolve(video);
+      });
+    }
+
+    // Функция обновления стабильного значения эмоции (на основе 5 кадров)
+    function updateEmotion(newEmotion) {
+      if (currentEmotion === newEmotion) {
+        stabilityCount++;
+        if (stabilityCount >= 5) {
+          stableEmotion = newEmotion;
+        }
+      } else {
+        currentEmotion = newEmotion;
+        stabilityCount = 1;
+      }
+    }
+
+    // Функция для создания fallback-данных позы (если PoseNet не определил позу)
+    function getFallbackPose() {
+      return {
+        keypoints: [
+          { part: "нос", score: 1, position: { x: canvas.width / 2, y: canvas.height / 4 } },
+          { part: "левый глаз", score: 1, position: { x: canvas.width / 2 - 20, y: canvas.height / 4 - 10 } },
+          { part: "правый глаз", score: 1, position: { x: canvas.width / 2 + 20, y: canvas.height / 4 - 10 } },
+          { part: "левое ухо", score: 0.8, position: { x: canvas.width / 2 - 40, y: canvas.height / 4 } },
+          { part: "правое ухо", score: 0.8, position: { x: canvas.width / 2 + 40, y: canvas.height / 4 } },
+          { part: "левое плечо", score: 1, position: { x: canvas.width / 2 - 30, y: canvas.height / 2 } },
+          { part: "правое плечо", score: 1, position: { x: canvas.width / 2 + 30, y: canvas.height / 2 } },
+          { part: "левый локоть", score: 0.9, position: { x: canvas.width / 2 - 50, y: canvas.height / 2 + 40 } },
+          { part: "правый локоть", score: 0.9, position: { x: canvas.width / 2 + 50, y: canvas.height / 2 + 40 } },
+          { part: "левая кисть", score: 0.8, position: { x: canvas.width / 2 - 60, y: canvas.height / 2 + 80 } },
+          { part: "правая кисть", score: 0.8, position: { x: canvas.width / 2 + 60, y: canvas.height / 2 + 80 } },
+          { part: "левый таз", score: 1, position: { x: canvas.width / 2 - 20, y: canvas.height * 0.75 } },
+          { part: "правый таз", score: 1, position: { x: canvas.width / 2 + 20, y: canvas.height * 0.75 } },
+          { part: "левое колено", score: 0.9, position: { x: canvas.width / 2 - 20, y: canvas.height - 50 } },
+          { part: "правое колено", score: 0.9, position: { x: canvas.width / 2 + 20, y: canvas.height - 50 } },
+          { part: "левая лодыжка", score: 0.8, position: { x: canvas.width / 2 - 20, y: canvas.height - 10 } },
+          { part: "правая лодыжка", score: 0.8, position: { x: canvas.width / 2 + 20, y: canvas.height - 10 } }
+        ]
+      };
+    }
+
+    // Функция обновления информации в панели:
+    // Для каждого лица создаётся элемент <li>, в котором каждый параметр (координаты рамки, эмоции) выводится в отдельном <span>.
+    // Аналогично для позы – каждая ключевая точка выводится в отдельном <span> с русским названием, координатами и процентным значением score.
+    function updateInfoPanel(faces, pose) {
+      // Обновление информации по лицам
+      faceDetailsEl.innerHTML = "";
+      if (faces && faces.length > 0) {
+        faceCountElem.textContent = "Количество лиц: " + faces.length;
+        faces.forEach((result, index) => {
+          const li = document.createElement('li');
+          // Координаты рамки лица
+          const box = result.detection.box;
+          const spanBox = document.createElement('span');
+          spanBox.textContent = `Лицо ${index + 1} (x: ${Math.round(box.x)}, y: ${Math.round(box.y)}, w: ${Math.round(box.width)}, h: ${Math.round(box.height)})`;
+          li.appendChild(spanBox);
+          // Эмоции: каждый выводится в отдельном <span>
+          const expressions = result.expressions;
+          Object.keys(expressions).forEach(key => {
+            const spanExp = document.createElement('span');
+            const perc = (expressions[key] * 100).toFixed(1);
+            spanExp.textContent = ` ${emotionMapping[key] || key}: ${perc}%`;
+            li.appendChild(spanExp);
+          });
+          faceDetailsEl.appendChild(li);
+        });
+      } else {
+        faceCountElem.textContent = "Количество лиц: 0";
+        const li = document.createElement('li');
+        const spanNone = document.createElement('span');
+        spanNone.textContent = "Лицо не обнаружено";
+        li.appendChild(spanNone);
+        faceDetailsEl.appendChild(li);
+      }
+      
+      // Обновление информации по позе
+      poseDetailsEl.innerHTML = "";
+      if (pose && pose.keypoints && pose.keypoints.length > 0) {
+        pose.keypoints.forEach(keypoint => {
+          const li = document.createElement('li');
+          const spanKP = document.createElement('span');
+          // Используем poseMapping для перевода названия ключевой точки, если оно имеется
+          const partRus = poseMapping[keypoint.part] || keypoint.part;
+          spanKP.textContent = `${partRus} (x: ${Math.round(keypoint.position.x)}, y: ${Math.round(keypoint.position.y)}; score: ${(keypoint.score * 100).toFixed(1)}%)`;
+          li.appendChild(spanKP);
+          poseDetailsEl.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        const spanNoPose = document.createElement('span');
+        spanNoPose.textContent = "Поза не обнаружена";
+        li.appendChild(spanNoPose);
+        poseDetailsEl.appendChild(li);
+      }
+    }
+
+    // Основной цикл обработки видео
+    async function onPlay() {
+      if (video.paused || video.ended) {
+        requestAnimationFrame(onPlay);
+        return;
+      }
+      const faceOptions = new faceapi.TinyFaceDetectorOptions();
+      let faces = await faceapi.detectAllFaces(video, faceOptions)
+        .withFaceLandmarks()
+        .withFaceExpressions();
+      
+      let pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
+      if (!pose || !pose.keypoints) {
+        pose = getFallbackPose();
+      }
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Отрисовка результатов для лиц
+      if (faces && faces.length > 0) {
+        faces.forEach(result => {
+          if (faceRenderMode === "рамка") {
+            const { x, y, width, height } = result.detection.box;
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, width, height);
+            // Определение эмоции для вывода (на основе максимального значения)
+            const expressions = result.expressions;
+            const maxVal = Math.max(...Object.values(expressions));
+            const emotionKey = Object.keys(expressions).find(k => expressions[k] === maxVal);
+            updateEmotion(emotionKey);
+            ctx.fillStyle = 'green';
+            ctx.font = '18px Segoe UI';
+            ctx.fillText(emotionMapping[stableEmotion] || '', x, y - 10);
+          } else {
+            if (result.landmarks) {
+              faceapi.draw.drawFaceLandmarks(canvas, result);
+            }
+          }
+        });
+      } else {
+        stableEmotion = null;
+        currentEmotion = null;
+        stabilityCount = 0;
+      }
+      
+      // Отрисовка ключевых точек позы
+      if (pose && pose.keypoints && pose.keypoints.length > 0) {
+        pose.keypoints.forEach(kp => {
+          if (kp.score > 0.5) {
+            ctx.beginPath();
+            ctx.arc(kp.position.x, kp.position.y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#4285f4';
+            ctx.fill();
+          }
+        });
+      }
+      
+      // Обновление информации в панели не чаще, чем раз в 500 мс
+      if (Date.now() - lastPanelUpdate > 500) {
+        updateInfoPanel(faces, pose);
+        lastPanelUpdate = Date.now();
+      }
+      
+      requestAnimationFrame(onPlay);
+    }
+
+    // Инициализация: настройка камеры, загрузка моделей и запуск цикла обработки
+    async function init() {
+      await setupCamera();
+      video.play();
+      const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+      posenetModel = await posenet.load();
+      onPlay();
+    }
+    init();
+  </script>
+</body>
+</html>
