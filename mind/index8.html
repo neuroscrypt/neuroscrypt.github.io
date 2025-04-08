@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Компас Бессознательного</title>
+  <style>
+    body, html {
+      font-family: monospace;
+      font-weight: 900;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      box-sizing: border-box;
+      position: relative;
+    }
+    .square {
+      width: 50%;
+      height: 50%;
+      box-sizing: border-box;
+      border: 2px solid #009688; /* Начальный цвет */
+      transition: border 0.5s ease; /* Плавная смена границы */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+    }
+    /* Цвета для квадратов (направлений) */
+    .north { background-color: #2b2b2b; }   /* Север: Ясность, анализ */
+    .east  { background-color: #444444; }   /* Восток: Импульсы, внешние стимулы */
+    .south { background-color: #888888; }   /* Юг: Архетипы, корни */
+    .west  { background-color: #666666; }   /* Запад: Инстинктивность, эмоции */
+
+    .description-center {
+      font-size: 40px;
+      padding: 40px;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 7px;
+      background-color: #ffffff14;
+      color: #fff;
+    }
+    .description-corner {
+      position: absolute;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 7px;
+      color: #fff;
+      background-color: #ffffff14;
+    }
+    /* Позиции угловых описаний */
+    .top-left-corner { top: 5%; left: 5%; }
+    .top-right-corner { top: 5%; right: 5%; }
+    .bottom-left-corner { bottom: 5%; left: 5%; }
+    .bottom-right-corner { bottom: 5%; right: 5%; }
+
+    /* Стили для центрального индикатора */
+    .compass-center {
+      color: white;
+      font-weight: 900;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120px;
+      height: 120px;
+      margin-top: -60px;
+      margin-left: -60px;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      background-color: #009688; /* Начальный цвет */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      text-align: center;
+      z-index: 21;
+      pointer-events: none;
+      transition: left 0.5s ease, top 0.5s ease, background-color 0.5s ease;
+    }
+
+    /* Стили для блока отчёта */
+    .report-box {
+      position: absolute;
+      bottom: 48%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #009688; /* Совпадает с цветом компаса */
+      color: #fff;
+      padding: 15px 20px;
+      border-radius: 10px;
+      font-size: 25px;
+      text-align: center;
+      z-index: 20;
+      transition: background-color 0.5s ease;
+    }
+
+    /* Стили для блока вопросов/опросника */
+    .questionnaire {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 20;
+    }
+    .questionnaire h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .questionnaire .answer {
+      border: none;
+      margin: 5px;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+      color: #fff;
+    }
+    /* Оформляем кнопки в цвета соответствующих квадратов */
+    .questionnaire .answer[data-quadrant="north"] {
+      background-color: #3f51b5;
+    }
+    .questionnaire .answer[data-quadrant="east"] {
+      background-color: #e91e63;
+    }
+    .questionnaire .answer[data-quadrant="west"] {
+      background-color: #9c27b0;
+    }
+    .questionnaire .answer[data-quadrant="south"] {
+      background-color: #009688;
+    }
+    /* При наведении немного затемняем кнопки */
+    .questionnaire .answer:hover {
+      filter: brightness(85%);
+    }
+
+    /* Стили для блока "Ось Времени" */
+    .time-axis {
+    .time-axis {
+    position: absolute;
+    top: 25%;
+    right: 45%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 16px;
+    z-index: 20;
+    }
+    .time-axis label {
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    /* Стили для контейнера уведомлений (тостов) */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+    }
+    .toast {
+      background-color: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px 20px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    .toast .close-btn {
+      margin-left: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Северный квадрант (Ясность, анализ) -->
+  <div class="square north">
+    <div class="description-center">Север<br>(Ясность, анализ)</div>
+    <div class="description-corner top-left-corner">План и стратегия</div>
+    <div class="description-corner top-right-corner">Осознание</div>
+    <div class="description-corner bottom-left-corner">Логика</div>
+    <div class="description-corner bottom-right-corner">Контроль</div>
+  </div>
+  
+  <!-- Восточный квадрант (Импульсы, внешние стимулы) -->
+  <div class="square east">
+    <div class="description-center">Восток<br>(Импульсы)</div>
+    <div class="description-corner top-left-corner">Стимулы</div>
+    <div class="description-corner top-right-corner">Действия</div>
+    <div class="description-corner bottom-left-corner">Автоматизм</div>
+    <div class="description-corner bottom-right-corner">Реакция</div>
+  </div>
+
+  <!-- Западный квадрант (Инстинктивность, эмоции) -->
+  <div class="square west">
+    <div class="description-center">Запад<br>(Эмоции, инстинкты)</div>
+    <div class="description-corner top-left-corner">Эмоции</div>
+    <div class="description-corner top-right-corner">Инстинкты</div>
+    <div class="description-corner bottom-left-corner">Реакции</div>
+    <div class="description-corner bottom-right-corner">Импульс</div>
+  </div>
+
+  <!-- Южный квадрант (Архетипы, корни) -->
+  <div class="square south">
+    <div class="description-center">Юг<br>(Архетипы)</div>
+    <div class="description-corner top-left-corner">Символы</div>
+    <div class="description-corner top-right-corner">Мифы</div>
+    <div class="description-corner bottom-left-corner">Корни</div>
+    <div class="description-corner bottom-right-corner">Динамика</div>
+  </div>
+
+  <!-- Центральный индикатор компаса -->
+  <div class="compass-center">Центр</div>
+
+  <!-- Блок вывода отчёта -->
+  <div class="report-box"></div>
+
+  <!-- Блок вопросов/опросника -->
+  <div class="questionnaire">
+    <h2>Какое из этих состояний тебе ближе?</h2>
+    <button class="answer" data-quadrant="north">Осознанность (Север)</button>
+    <button class="answer" data-quadrant="east">Импульсивность (Восток)</button>
+    <button class="answer" data-quadrant="west">Эмоциональность (Запад)</button>
+    <button class="answer" data-quadrant="south">Архетипичность (Юг)</button>
+  </div>
+
+  <!-- Блок для оси времени (будущие функции) -->
+  <div class="time-axis">
+    <label>
+      <input type="radio" name="time" value="past" checked> Прошлое
+    </label>
+    <label>
+      <input type="radio" name="time" value="future"> Будущее
+    </label>
+  </div>
+
+  <!-- Контейнер для уведомлений (тостов) -->
+  <div class="toast-container"></div>
+
+  <script>
+    // Объект-конфигурация для будущей гибкости системы
+    const config = {
+      timeAxis: 'past' // Значение по умолчанию: "Прошлое"
+    };
+
+    // Обработчик для оси времени
+    const timeInputs = document.querySelectorAll('input[name="time"]');
+    timeInputs.forEach(input => {
+      input.addEventListener('change', (event) => {
+        config.timeAxis = event.target.value;
+        showNotification("Ось времени установлена на: " + config.timeAxis);
+      });
+    });
+
+    // Функция для отображения уведомлений (тостов)
+    function showNotification(message) {
+      const container = document.querySelector('.toast-container');
+      const toast = document.createElement('div');
+      toast.classList.add('toast');
+      toast.innerHTML = `<span>${message}</span> <span class="close-btn">&times;</span>`;
+      container.appendChild(toast);
+      // Запускаем анимацию появления
+      setTimeout(() => {
+        toast.classList.add('show');
+      }, 100);      
+      // Удаление уведомления по клику на "close-btn"
+      toast.querySelector('.close-btn').addEventListener('click', () => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          toast.remove();
+        }, 500);
+      });
+    }
+
+    // Функция перемещения центрального индикатора в центр выбранного квадранта
+    function moveCompassCenter(square) {
+      const rect = square.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const compassCenter = document.querySelector('.compass-center');
+      compassCenter.style.left = centerX + 'px';
+      compassCenter.style.top = centerY + 'px';
+      const description = square.querySelector('.description-center').innerText;
+      compassCenter.innerText = description;
+
+      // Определяем новый цвет в зависимости от квадранта
+      let newColor = "#009688"; // Значение по умолчанию для "south"
+      if (square.classList.contains('north')) {
+        newColor = '#3f51b5';
+      } else if (square.classList.contains('east')) {
+        newColor = '#e91e63';
+      } else if (square.classList.contains('west')) {
+        newColor = '#9c27b0';
+      } else if (square.classList.contains('south')) {
+        newColor = '#009688';
+      }
+      // Обновляем стили: фон компаса, фон отчёта и границы квадратов
+      compassCenter.style.backgroundColor = newColor;
+      document.querySelector('.report-box').style.backgroundColor = newColor;
+      document.querySelectorAll('.square').forEach(sq => {
+        sq.style.border = "2px solid " + newColor;
+      });
+    }
+
+    // Функция генерации и вывода отчёта для выбранного квадранта с учётом оси времени
+    function showReport(square) {
+      let report = "";
+      if (square.classList.contains('north')) {
+        report = "Ты осознан — действуешь через ясность, логику и стратегическое мышление.";
+      } else if (square.classList.contains('east')) {
+        report = "Импульсы задают ритм твоим действиям. Внешние стимулы берут верх.";
+      } else if (square.classList.contains('west')) {
+        report = "Эмоциональность управляет твоим поведением. Твои инстинкты и чувства активны.";
+      } else if (square.classList.contains('south')) {
+        report = "Доминирует архетипическая энергия. Глубокие символы и мифы направляют твои решения.";
+      }
+      
+      // Учитываем выбранную ось времени
+      if (config.timeAxis === 'future') {
+        report += " Взгляни в будущее, твои инстинкты формируют предстоящие возможности.";
+      } else {
+        report += " Прошлые переживания влияют на твои текущие реакции.";
+      }
+      
+      showNotification(report);
+      document.querySelector('.report-box').innerText = report;
+    }
+
+    // Обработчики для клика по квадрантам
+    const squares = document.querySelectorAll('.square');
+    squares.forEach(square => {
+      square.addEventListener('click', () => {
+        moveCompassCenter(square);
+        showReport(square);
+      });
+    });
+
+    // Обработчики для кнопок опросника
+    const answers = document.querySelectorAll('.questionnaire .answer');
+    answers.forEach(button => {
+      button.addEventListener('click', () => {
+        const quadrant = button.getAttribute('data-quadrant');
+        const targetSquare = document.querySelector('.' + quadrant);
+        if (targetSquare) {
+          moveCompassCenter(targetSquare);
+          showReport(targetSquare);
+        }
+      });
+    });
+
+    // Здесь можно подключить будущие модули: импорт профилей, дневниковых записей и т.п.
+  </script>
+</body>
+</html>
