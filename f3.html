@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Анализатор</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f7f9fc;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px;
+      gap: 40px;
+    }
+
+    #video-container {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    #video, #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 640px;
+      height: 480px;
+    }
+
+    .panel {
+      width: 300px;
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .panel h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .panel ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .panel li {
+      padding: 8px 0;
+      font-size: 16px;
+      border-bottom: 1px dashed #eee;
+    }
+
+    .panel li:last-child {
+      border-bottom: none;
+    }
+  </style>
+
+  <!-- Совместимая версия tfjs -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
+  <!-- Face API -->
+  <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <!-- PoseNet -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+</head>
+<body>
+  <!-- Видео и Canvas -->
+  <div id="video-container">
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <!-- Вывод результатов -->
+  <div class="panel">
+    <h2>Анализ лица</h2>
+    <ul id="face-results">
+      <li>Загрузка...</li>
+    </ul>
+    <h2 style="margin-top: 24px;">Анализ позы</h2>
+    <ul id="pose-results">
+      <li>Загрузка...</li>
+    </ul>
+  </div>
+
+  <script>
+    window.addEventListener('load', async () => {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('overlay');
+      const ctx = canvas.getContext('2d');
+      const faceList = document.getElementById('face-results');
+      const poseList = document.getElementById('pose-results');
+      let posenetModel;
+
+      // Камера
+      async function setupCamera() {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        return new Promise(resolve => {
+          video.onloadedmetadata = () => resolve(video);
+        });
+      }
+
+      // Загрузка моделей
+      async function loadModels() {
+        const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        posenetModel = await posenet.load();
+      }
+
+      // Вывод в список
+      function updateList(ul, items) {
+        ul.innerHTML = '';
+        for (const item of items) {
+          const li = document.createElement('li');
+          li.textContent = item;
+          ul.appendChild(li);
+        }
+      }
+
+      // Основной цикл
+      async function onFrame() {
+        if (video.paused || video.ended) return requestAnimationFrame(onFrame);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Face detection
+        const faces = await faceapi
+          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceExpressions();
+
+        if (faces.length > 0) {
+          const faceItems = faces.map(face => {
+            const expr = face.expressions;
+            const max = Math.max(...Object.values(expr));
+            const emotion = Object.keys(expr).find(key => expr[key] === max);
+            const { x, y, width, height } = face.detection.box;
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, width, height);
+            ctx.fillStyle = 'red';
+            ctx.font = '16px sans-serif';
+            ctx.fillText(emotion, x, y - 8);
+            return `Эмоция: ${emotion}`;
+          });
+          updateList(faceList, faceItems);
+        } else {
+          updateList(faceList, ['Лицо не найдено']);
+        }
+
+        // Pose detection
+        const pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
+        if (pose && pose.keypoints) {
+          const poseItems = pose.keypoints
+            .filter(p => p.score > 0.6)
+            .map(p => `${p.part}: (${Math.round(p.position.x)}, ${Math.round(p.position.y)})`);
+
+          pose.keypoints.forEach(k => {
+            if (k.score > 0.5) {
+              ctx.fillStyle = 'blue';
+              ctx.beginPath();
+              ctx.arc(k.position.x, k.position.y, 5, 0, 2 * Math.PI);
+              ctx.fill();
+            }
+          });
+
+          updateList(poseList, poseItems.slice(0, 5));
+        }
+
+        requestAnimationFrame(onFrame);
+      }
+
+      // Запуск
+      await setupCamera();
+      await loadModels();
+      video.play();
+      onFrame();
+    });
+  </script>
+</body>
+</html>
