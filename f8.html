@@ -1,64 +1,80 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Анализатор эмоций и позы</title>
+  <meta charset="UTF-8" />
+  <title>Маска лица и скелет позы</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* Современный, стильный дизайн */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f7f9fc;
+      overflow: hidden;
+    }
+    /* Видео используется только для анализа – оно скрыто */
+    #video { display: none; }
+    /* Канвас занимает весь экран */
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
       height: 100vh;
-      position: relative;
+      background: #fff;
     }
-    #video, #overlay {
-      border: none;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-    /* Панель для отображения поз и эмоций */
-    #infoPanel {
+    /* Фиксированная панель статуса */
+    .panel {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: rgba(255,255,255,0.95);
-      padding: 15px 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 300px;
+      height: 300px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #eee;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      overflow-y: auto;
+    }
+    .panel h2 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 4px;
+    }
+    .panel ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .panel li {
+      padding: 4px 0;
       font-size: 16px;
-      color: #333;
-      z-index: 1000;
+      border-bottom: 1px dashed #eee;
     }
-    #infoPanel h2 {
-      margin-top: 0;
-      font-size: 18px;
-      color: #555;
-    }
-    #infoPanel p {
-      margin: 5px 0;
+    .panel li:last-child {
+      border-bottom: none;
     }
   </style>
-  <!-- Используем tfjs для совместимости -->
+  <!-- TensorFlow.js для совместимости (v1.7.4) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
-  <!-- face-api.js для детекции лиц и эмоций -->
+  <!-- Face API (tinyFaceDetector, faceLandmark68Net, faceExpressionNet) -->
   <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
-  <!-- PoseNet через CDN -->
+  <!-- PoseNet -->
   <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
 </head>
 <body>
-  <!-- Видео с веб-камеры -->
-  <video id="video" width="640" height="480" autoplay muted></video>
-  <!-- Канвас для отрисовки результатов -->
-  <canvas id="overlay" width="640" height="480"></canvas>
-  <!-- Панель для отображения информации -->
-  <div id="infoPanel">
-    <h2>Статус</h2>
-    <p id="emotionLabel">Эмоция: -</p>
-    <p id="poseLabel">Поза: -</p>
+  <!-- Скрытое видео для анализа -->
+  <video id="video" autoplay muted playsinline></video>
+  <!-- Канвас для отображения виртуальных элементов -->
+  <canvas id="overlay"></canvas>
+  <!-- Фиксированная панель статуса -->
+  <div class="panel">
+    <h2>Статус анализа</h2>
+    <ul id="status-results">
+      <li>Загрузка...</li>
+    </ul>
   </div>
 
   <script defer>
@@ -66,36 +82,44 @@
       const video = document.getElementById('video');
       const canvas = document.getElementById('overlay');
       const ctx = canvas.getContext('2d');
-      const emotionLabel = document.getElementById('emotionLabel');
-      const poseLabel = document.getElementById('poseLabel');
+      const statusList = document.getElementById('status-results');
       let posenetModel;
+      // Для сглаживания лицевых точек
+      let smoothedLandmarks = null;
+      const smoothingFactor = 0.05;
+      // Порог для поз (для отрисовки ключевых точек)
+      const minPartConfidence = 0.3;
 
-      // Порог стабильности для эмоций (5 кадров)
-      const stabilityThreshold = 5;
-      let stableEmotion = null;
-      let currentEmotion = null;
-      let stabilityCount = 0;
+      // Соединения для отрисовки скелета позы
+      const poseConnections = [
+        ['leftShoulder', 'rightShoulder'],
+        ['leftShoulder', 'leftElbow'],
+        ['leftElbow', 'leftWrist'],
+        ['rightShoulder', 'rightElbow'],
+        ['rightElbow', 'rightWrist'],
+        ['leftShoulder', 'leftHip'],
+        ['rightShoulder', 'rightHip'],
+        ['leftHip', 'rightHip'],
+        ['leftHip', 'leftKnee'],
+        ['leftKnee', 'leftAnkle'],
+        ['rightHip', 'rightKnee'],
+        ['rightKnee', 'rightAnkle']
+      ];
 
-      // Массив для последующего анализа всех параметров позы и лица
-      const analysisData = [];
+      // Устанавливаем размеры канваса равными viewport
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
 
-      // Сопоставление английских названий эмоций с русскими
-      const emotionMapping = {
-        angry: 'Злость',
-        disgusted: 'Отвращение',
-        fearful: 'Страх',
-        happy: 'Счастье',
-        neutral: 'Нейтрально',
-        sad: 'Грусть',
-        surprised: 'Удивление'
-      };
-
-      // Настройка веб-камеры
+      // Настройка камеры (разрешение 640x480 для анализа)
       async function setupCamera() {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
           video.srcObject = stream;
-          return new Promise((resolve) => {
+          return new Promise(resolve => {
             video.onloadedmetadata = () => resolve(video);
           });
         } catch (error) {
@@ -103,102 +127,125 @@
         }
       }
 
-      // Загрузка моделей face-api.js и posenet
+      // Загрузка моделей face-api и posenet
       async function loadModels() {
         const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        // Для данной задачи можно не выводить эмоции, если нужно только маска лица и скелет позы
         posenetModel = await posenet.load();
       }
 
-      // Функция обновления стабильного значения эмоции
-      function updateEmotion(newEmotion) {
-        if (currentEmotion === newEmotion) {
-          stabilityCount++;
-        } else {
-          currentEmotion = newEmotion;
-          stabilityCount = 1;
-        }
-        if (stabilityCount >= stabilityThreshold) {
-          stableEmotion = currentEmotion;
-        }
+      // Обновление панели статуса (фиксированный размер)
+      function updateStatus(items) {
+        statusList.innerHTML = '';
+        items.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          statusList.appendChild(li);
+        });
       }
 
-      // Основной цикл обработки видео
-      async function onPlay() {
-        if (video.paused || video.ended) return setTimeout(onPlay, 100);
+      // Сглаживание координат лицевых точек
+      function smoothLandmarks(currentLandmarks) {
+        if (!smoothedLandmarks) {
+          smoothedLandmarks = currentLandmarks.map(p => ({ x: p.x, y: p.y }));
+        } else {
+          currentLandmarks.forEach((p, i) => {
+            smoothedLandmarks[i].x = smoothedLandmarks[i].x * (1 - smoothingFactor) + p.x * smoothingFactor;
+            smoothedLandmarks[i].y = smoothedLandmarks[i].y * (1 - smoothingFactor) + p.y * smoothingFactor;
+          });
+        }
+        return smoothedLandmarks;
+      }
 
-        // Детекция лиц и эмоций
-        const faceOptions = new faceapi.TinyFaceDetectorOptions();
-        const faceResults = await faceapi.detectAllFaces(video, faceOptions).withFaceExpressions();
-        // Определение позы с помощью PoseNet
-        const pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
+      // Отрисовка ключевых точек лица (зелёными)
+      function drawFaceLandmarks(landmarks, scaleX, scaleY) {
+        const points = smoothLandmarks(landmarks.positions);
+        ctx.fillStyle = 'green';
+        points.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x * scaleX, p.y * scaleY, 3, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+      }
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Отрисовка ключевых точек позы (синими)
+      function drawPoseKeypoints(keypoints, scaleX, scaleY) {
+        ctx.fillStyle = 'blue';
+        keypoints.forEach(keypoint => {
+          if (keypoint.score > minPartConfidence) {
+            ctx.beginPath();
+            ctx.arc(keypoint.position.x * scaleX, keypoint.position.y * scaleY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        });
+      }
 
-        // Обработка результатов детекции лиц
+      // Отрисовка скелета позы
+      function drawSkeleton(keypoints, scaleX, scaleY) {
+        const keypointMap = {};
+        keypoints.forEach(k => { keypointMap[k.part] = k; });
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
+        poseConnections.forEach(([partA, partB]) => {
+          const kpA = keypointMap[partA];
+          const kpB = keypointMap[partB];
+          if (kpA && kpB && kpA.score > minPartConfidence && kpB.score > minPartConfidence) {
+            ctx.beginPath();
+            ctx.moveTo(kpA.position.x * scaleX, kpA.position.y * scaleY);
+            ctx.lineTo(kpB.position.x * scaleX, kpB.position.y * scaleY);
+            ctx.stroke();
+          }
+        });
+      }
+
+      // Основной цикл анализа и отрисовки
+      async function onFrame() {
+        if (video.paused || video.ended) return requestAnimationFrame(onFrame);
+
+        // Масштабируем координаты между видео (640x480) и канвасом
+        const scaleX = canvas.width / 640;
+        const scaleY = canvas.height / 480;
+        // Заполняем фон канваса белым
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Детекция лица (только landmarks)
+        const faceResults = await faceapi
+          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks();
+
+        const statusItems = [];
         if (faceResults && faceResults.length > 0) {
           faceResults.forEach(result => {
-            const { x, y, width, height } = result.detection.box;
-            // Обводка лица
-            ctx.strokeStyle = '#ff5252';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x, y, width, height);
-
-            // Определение эмоции: выбирается максимальное значение
-            const expressions = result.expressions;
-            const maxValue = Math.max(...Object.values(expressions));
-            const detectedEmotionKey = Object.keys(expressions).find(key => expressions[key] === maxValue);
-            updateEmotion(detectedEmotionKey);
-
-            // Отрисовка текста с определённой эмоцией над лицом
-            ctx.fillStyle = '#ff5252';
-            ctx.font = '16px Helvetica';
-            const emotionText = emotionMapping[stableEmotion] || 'Определение...';
-            ctx.fillText(emotionText, x, y - 10);
-          });
-        } else {
-          // Если лицо не найдено, сбрасываем информацию об эмоции
-          currentEmotion = null;
-          stabilityCount = 0;
-          stableEmotion = null;
-        }
-
-        // Отрисовка ключевых точек позы
-        if (pose && pose.keypoints) {
-          pose.keypoints.forEach(keypoint => {
-            if (keypoint.score > 0.5) {
-              ctx.fillStyle = '#4285f4';
-              ctx.beginPath();
-              ctx.arc(keypoint.position.x, keypoint.position.y, 5, 0, 2 * Math.PI);
-              ctx.fill();
+            if(result.landmarks) {
+              drawFaceLandmarks(result.landmarks, scaleX, scaleY);
+              statusItems.push("Лицо обнаружено");
             }
           });
-
-          // Простейшая обработка позы для отображения (пример: координаты первой точки)
-          const poseText = `(${Math.round(pose.keypoints[0].position.x)}, ${Math.round(pose.keypoints[0].position.y)})`;
-          poseLabel.textContent = 'Поза: ' + poseText;
+        } else {
+          statusItems.push("Лицо не найдено");
         }
-
-        // Обновление панели с информацией (эмоция)
-        const displayEmotion = emotionMapping[stableEmotion] || 'Определение...';
-        emotionLabel.textContent = 'Эмоция: ' + displayEmotion;
-
-        // Сохранение данных для последующего анализа
-        analysisData.push({
-          timestamp: Date.now(),
-          emotion: stableEmotion,
-          pose: pose
-        });
-
-        requestAnimationFrame(onPlay);
+        
+        // Детекция позы (PoseNet)
+        const pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
+        if (pose && pose.keypoints) {
+          drawPoseKeypoints(pose.keypoints, scaleX, scaleY);
+          drawSkeleton(pose.keypoints, scaleX, scaleY);
+          statusItems.push("Поза обнаружена");
+        } else {
+          statusItems.push("Поза не найдена");
+        }
+        
+        updateStatus(statusItems);
+        requestAnimationFrame(onFrame);
       }
-
-      // Инициализация: настройка камеры, загрузка моделей и запуск обработки
+      
       await setupCamera();
-      video.play();
       await loadModels();
-      onPlay();
+      video.play();
+      onFrame();
     });
   </script>
 </body>
