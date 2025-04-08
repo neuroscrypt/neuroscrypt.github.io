@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Виртуальный Скелет и Лицо с Панелью Результатов</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f7f9fc;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px;
+      gap: 40px;
+    }
+    /* Скрываем видео, используем его только для анализа */
+    #video { display: none; }
+    /* Канвас для отрисовки виртуального скелета и лица */
+    #overlay {
+      width: 640px;
+      height: 480px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    /* Панель с результатами */
+    .panel {
+      width: 300px;
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+    .panel h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+    .panel ul {
+      list-style: none;
+      padding: 0;
+    }
+    .panel li {
+      padding: 8px 0;
+      font-size: 16px;
+      border-bottom: 1px dashed #eee;
+    }
+    .panel li:last-child {
+      border-bottom: none;
+    }
+  </style>
+  <!-- TensorFlow.js версии 1.7.4 для совместимости -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
+  <!-- Face API: tinyFaceDetector, faceLandmark68Net -->
+  <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <!-- PoseNet -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+</head>
+<body>
+  <!-- Скрытое видео для анализа -->
+  <video id="video" autoplay muted playsinline width="640" height="480"></video>
+  <!-- Канвас для отображения виртуального скелета и лица -->
+  <canvas id="overlay" width="640" height="480"></canvas>
+  <!-- Панель с результатами анализа -->
+  <div class="panel">
+    <h2>Анализ лица</h2>
+    <ul id="face-results">
+      <li>Загрузка...</li>
+    </ul>
+    <h2 style="margin-top: 24px;">Анализ позы</h2>
+    <ul id="pose-results">
+      <li>Загрузка...</li>
+    </ul>
+  </div>
+
+  <script defer>
+    window.addEventListener('load', async () => {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('overlay');
+      const ctx = canvas.getContext('2d');
+      const faceList = document.getElementById('face-results');
+      const poseList = document.getElementById('pose-results');
+      let posenetModel;
+      // Порог снижен, чтобы отрисовка позы была стабильной
+      const minPoseConfidence = 0.2;
+      const minPartConfidence = 0.5;
+
+      // Определяем соединения для отрисовки скелета
+      const poseConnections = [
+        ['leftShoulder', 'rightShoulder'],
+        ['leftShoulder', 'leftElbow'],
+        ['leftElbow', 'leftWrist'],
+        ['rightShoulder', 'rightElbow'],
+        ['rightElbow', 'rightWrist'],
+        ['leftShoulder', 'leftHip'],
+        ['rightShoulder', 'rightHip'],
+        ['leftHip', 'rightHip'],
+        ['leftHip', 'leftKnee'],
+        ['leftKnee', 'leftAnkle'],
+        ['rightHip', 'rightKnee'],
+        ['rightKnee', 'rightAnkle']
+      ];
+
+      // Камера
+      async function setupCamera() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+          return new Promise((resolve) => {
+            video.onloadedmetadata = () => resolve(video);
+          });
+        } catch (error) {
+          console.error("Ошибка доступа к веб-камере:", error);
+        }
+      }
+
+      // Загрузка моделей face-api и posenet
+      async function loadModels() {
+        const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        posenetModel = await posenet.load();
+      }
+
+      // Обновление панели с результатами
+      function updateList(ul, items) {
+        ul.innerHTML = '';
+        items.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          ul.appendChild(li);
+        });
+      }
+
+      // Отрисовка ключевых точек лица (зелёными)
+      function drawFaceLandmarks(landmarks) {
+        const points = landmarks.positions;
+        ctx.fillStyle = 'green';
+        points.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+      }
+
+      // Отрисовка ключевых точек позы
+      function drawPoseKeypoints(keypoints) {
+        ctx.fillStyle = 'blue';
+        keypoints.forEach(keypoint => {
+          if (keypoint.score > minPartConfidence) {
+            ctx.beginPath();
+            ctx.arc(keypoint.position.x, keypoint.position.y, 4, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        });
+      }
+
+      // Отрисовка скелета позы
+      function drawSkeleton(keypoints) {
+        const keypointMap = {};
+        keypoints.forEach(k => {
+          keypointMap[k.part] = k;
+        });
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
+        poseConnections.forEach(([partA, partB]) => {
+          const kpA = keypointMap[partA];
+          const kpB = keypointMap[partB];
+          if (kpA && kpB && kpA.score > minPartConfidence && kpB.score > minPartConfidence) {
+            ctx.beginPath();
+            ctx.moveTo(kpA.position.x, kpA.position.y);
+            ctx.lineTo(kpB.position.x, kpB.position.y);
+            ctx.stroke();
+          }
+        });
+      }
+
+      // Основной цикл анализа и отрисовки
+      async function onFrame() {
+        if (video.paused || video.ended) return requestAnimationFrame(onFrame);
+
+        // Заливаем фон канваса
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Детекция лица с landmarks
+        const faceResults = await faceapi
+          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks();
+
+        let faceItems = [];
+        if (faceResults && faceResults.length > 0) {
+          faceResults.forEach(result => {
+            if(result.landmarks) {
+              drawFaceLandmarks(result.landmarks);
+              faceItems.push("Лицо обнаружено");
+            }
+          });
+        } else {
+          faceItems.push("Лицо не найдено");
+        }
+        updateList(faceList, faceItems);
+
+        // Детекция позы (PoseNet)
+        const pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
+        let poseItems = [];
+        if (pose && pose.score > minPoseConfidence) {
+          drawPoseKeypoints(pose.keypoints);
+          drawSkeleton(pose.keypoints);
+          // Выводим информацию по первым 5 ключевым точкам
+          pose.keypoints.slice(0, 5).forEach(p => {
+            poseItems.push(`${p.part}: (${Math.round(p.position.x)}, ${Math.round(p.position.y)})`);
+          });
+        } else {
+          poseItems.push("Поза не найдена");
+        }
+        updateList(poseList, poseItems);
+
+        requestAnimationFrame(onFrame);
+      }
+
+      await setupCamera();
+      await loadModels();
+      video.play();
+      onFrame();
+    });
+  </script>
+</body>
+</html>
