@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Пси-интерфейс: Биометрический анализ</title>
+  <style>
+    /* Основные стили компаса */
+    body, html {
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: #1a1a1a;
+      color: white;
+    }
+
+    /* Видео и канвас для анализа */
+    #video-container {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+    }
+    #videoInput, #overlay {
+      width: 320px;
+      height: 240px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,150,136,0.5);
+    }
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    /* Панель биометрических данных */
+    #bio-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.8);
+      padding: 15px;
+      border-radius: 10px;
+      min-width: 300px;
+    }
+    .bio-item {
+      margin: 8px 0;
+      font-size: 14px;
+    }
+    .bio-label {
+      color: #009688;
+      margin-right: 10px;
+    }
+
+    /* Остальные стили компаса из предыдущей версии */
+    .square { /* ... */ }
+    .north { /* ... */ }
+    .east { /* ... */ }
+    .south { /* ... */ }
+    .west { /* ... */ }
+    /* Вставьте сюда все остальные стили из предыдущего кода */
+  </style>
+  <script src='https://assets.codepen.io/1290466/face-api.min.js'></script>
+</head>
+<body>
+  <!-- Элементы для анализа видео -->
+  <div id="video-container">
+    <video id="videoInput" autoplay muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+  
+  <div id="bio-panel">
+    <div class="bio-item">
+      <span class="bio-label">Эмоция:</span>
+      <span id="emotion">-</span>
+    </div>
+    <div class="bio-item">
+      <span class="bio-label">Возраст:</span>
+      <span id="age">-</span>
+    </div>
+    <div class="bio-item">
+      <span class="bio-label">Поза:</span>
+      <span id="pose">-</span>
+    </div>
+  </div>
+
+  <!-- Все элементы компаса из предыдущей версии -->
+  <div class="square north">...</div>
+  <div class="square east">...</div>
+  <div class="square west">...</div>
+  <div class="square south">...</div>
+  <!-- Остальные элементы интерфейса -->
+
+<script>
+// Инициализация видео и моделей
+Promise.all([
+  faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights'),
+  faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights'),
+  faceapi.nets.faceExpressionNet.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights'),
+  faceapi.nets.ageGenderNet.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights')
+]).then(startVideo);
+
+async function startVideo() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+    const video = document.getElementById('videoInput');
+    video.srcObject = stream;
+    
+    // Запуск анализа
+    setInterval(async () => {
+      const detections = await faceapi.detectAllFaces(video, 
+        new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceExpressions()
+        .withAgeAndGender();
+
+      updateBioPanel(detections);
+      drawAnalysis(detections);
+    }, 100);
+    
+  } catch(err) {
+    console.error('Ошибка доступа к камере:', err);
+  }
+}
+
+function updateBioPanel(detections) {
+  if(detections.length > 0) {
+    const face = detections[0];
+    
+    // Определение эмоции
+    const emotions = face.expressions;
+    const mainEmotion = Object.entries(emotions)
+      .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    
+    // Обновление данных
+    document.getElementById('emotion').textContent = mainEmotion;
+    document.getElementById('age').textContent = Math.round(face.age);
+    
+    // Анализ позы
+    const pose = face.detection.box;
+    const poseStatus = `
+      Наклон: ${Math.round(pose.angleX)}° 
+      Поворот: ${Math.round(pose.angleY)}°
+    `;
+    document.getElementById('pose').textContent = poseStatus;
+    
+    // Интеграция с компасом
+    updateCompassBasedOnFace(face);
+  }
+}
+
+function drawAnalysis(detections) {
+  const canvas = document.getElementById('overlay');
+  const dims = faceapi.matchDimensions(canvas, videoInput, true);
+  faceapi.draw.drawDetections(canvas, detections);
+  faceapi.draw.drawFaceLandmarks(canvas, detections);
+}
+
+function updateCompassBasedOnFace(face) {
+  // Пример интеграции: изменение цвета центра при улыбке
+  if(face.expressions.happy > 0.9) {
+    document.querySelector('.compass-center').style.backgroundColor = '#00ff00';
+  }
+  
+  // Логика взаимодействия с элементами интерфейса
+  // Можно добавить реакции на повороты головы, эмоции и т.д.
+}
+
+// Остальной JavaScript код из предыдущей версии
+</script>
+</body>
+</html>
