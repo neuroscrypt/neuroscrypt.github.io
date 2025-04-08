@@ -33,7 +33,7 @@
       right: 0;
       top: 0;
       width: 350px;
-      height: 1000px;
+      height: 870px;
       background-color: #ffffffcc;
       padding: 16px;
       box-shadow: -2px 0 10px rgba(0,0,0,0.1);
@@ -58,7 +58,7 @@
     li {
       margin-bottom: 6px;
     }
-    /* Ползунки для изменения размера Canvas */
+    /* Ползунки для изменения размеров Canvas */
     .slider {
       margin: 10px 0;
     }
@@ -107,7 +107,7 @@
       <h3>Лица</h3>
       <div class="info"><span id="faceCount" class="label">Количество лиц: 0</span></div>
       <ul id="faceDetails">
-        <!-- Здесь будут добавляться элементы <li> с информацией о каждом лице, где каждый параметр внутри отдельный <span> -->
+        <!-- Здесь будут добавляться элементы <li> с информацией о каждом лице -->
       </ul>
     </div>
     <!-- Секция для параметров позы -->
@@ -128,14 +128,14 @@
       <input type="range" id="canvasHeight" min="480" max="1440" value="960">
       <span id="heightValue">960</span> px
     </div>
-    <!-- Кнопка для переключения режима отображения лица (рамка / маска) -->
+    <!-- Кнопка переключения режима отображения лица (рамка/маска) -->
     <div class="toggle-btn">
       <button id="toggleRender">Режим: Рамка</button>
     </div>
   </div>
   
   <script>
-    // Соответствие значений эмоций на английском с русскими надписями
+    // Соответствие значений эмоций (англ. -> рус.)
     const emotionMapping = {
       angry: "Злость",
       disgusted: "Отвращение",
@@ -144,6 +144,27 @@
       neutral: "Нейтральное",
       sad: "Грусть",
       surprised: "Удивление"
+    };
+
+    // Таблица перевода названий ключевых точек позы (англ. -> рус.)
+    const poseMapping = {
+      nose: "нос",
+      leftEye: "левый глаз",
+      rightEye: "правый глаз",
+      leftEar: "левое ухо",
+      rightEar: "правое ухо",
+      leftShoulder: "левое плечо",
+      rightShoulder: "правое плечо",
+      leftElbow: "левый локоть",
+      rightElbow: "правый локоть",
+      leftWrist: "левая кисть",
+      rightWrist: "правая кисть",
+      leftHip: "левый таз",
+      rightHip: "правый таз",
+      leftKnee: "левое колено",
+      rightKnee: "правое колено",
+      leftAnkle: "левая лодыжка",
+      rightAnkle: "правая лодыжка"
     };
 
     // Получение элементов со страницы
@@ -167,7 +188,7 @@
     let posenetModel;
     let faceRenderMode = "рамка";  // Возможные режимы: "рамка" или "маска"
 
-    // Переключение режима отрисовки лица
+    // Переключение режима отображения лица
     toggleRenderBtn.onclick = () => {
       faceRenderMode = faceRenderMode === "рамка" ? "маска" : "рамка";
       toggleRenderBtn.textContent = faceRenderMode === "рамка" ? "Режим: Рамка" : "Режим: Маска";
@@ -235,8 +256,8 @@
     }
 
     // Функция обновления информации в панели:
-    // Для каждого лица создаётся элемент <li>, в котором каждый параметр (координаты рамки, значения эмоций) выводится в отдельном <span>.
-    // Аналогично для позы – каждая ключевая точка выводится в отдельном <span> с координатами и процентным значением score.
+    // Для каждого лица создаётся элемент <li>, в котором каждый параметр (координаты рамки, эмоции) выводится в отдельном <span>.
+    // Аналогично для позы – каждая ключевая точка выводится в отдельном <span> с русским названием, координатами и процентным значением score.
     function updateInfoPanel(faces, pose) {
       // Обновление информации по лицам
       faceDetailsEl.innerHTML = "";
@@ -244,12 +265,12 @@
         faceCountElem.textContent = "Количество лиц: " + faces.length;
         faces.forEach((result, index) => {
           const li = document.createElement('li');
-          // Вывод координат рамки лица
+          // Координаты рамки лица
           const box = result.detection.box;
           const spanBox = document.createElement('span');
           spanBox.textContent = `Лицо ${index + 1} (x: ${Math.round(box.x)}, y: ${Math.round(box.y)}, w: ${Math.round(box.width)}, h: ${Math.round(box.height)})`;
           li.appendChild(spanBox);
-          // Вывод значений эмоций
+          // Эмоции: каждый выводится в отдельном <span>
           const expressions = result.expressions;
           Object.keys(expressions).forEach(key => {
             const spanExp = document.createElement('span');
@@ -274,7 +295,9 @@
         pose.keypoints.forEach(keypoint => {
           const li = document.createElement('li');
           const spanKP = document.createElement('span');
-          spanKP.textContent = `${keypoint.part} (x: ${Math.round(keypoint.position.x)}, y: ${Math.round(keypoint.position.y)}; score: ${(keypoint.score * 100).toFixed(1)}%)`;
+          // Используем poseMapping для перевода названия ключевой точки, если оно имеется
+          const partRus = poseMapping[keypoint.part] || keypoint.part;
+          spanKP.textContent = `${partRus} (x: ${Math.round(keypoint.position.x)}, y: ${Math.round(keypoint.position.y)}; score: ${(keypoint.score * 100).toFixed(1)}%)`;
           li.appendChild(spanKP);
           poseDetailsEl.appendChild(li);
         });
@@ -322,7 +345,6 @@
             ctx.font = '18px Segoe UI';
             ctx.fillText(emotionMapping[stableEmotion] || '', x, y - 10);
           } else {
-            // Режим "маска" – вывод 68 ключевых точек лица
             if (result.landmarks) {
               faceapi.draw.drawFaceLandmarks(canvas, result);
             }
@@ -355,7 +377,7 @@
       requestAnimationFrame(onPlay);
     }
 
-    // Инициализация камеры, моделей и запуск цикла обработки
+    // Инициализация: настройка камеры, загрузка моделей и запуск цикла обработки
     async function init() {
       await setupCamera();
       video.play();
