@@ -17,7 +17,7 @@
     video#video {
       opacity: 0;
     }
-    /* Стили для панели, которая всегда сверху */
+    /* Панель управления – фиксированная и поверх всех элементов */
     #infoPanel {
       position: fixed;
       top: 10px;
@@ -45,34 +45,32 @@
       padding-left: 10px;
       margin: 0;
     }
-    /* Секция управления размером канваса */
+    /* Секция управления Canvas – ползунки */
     #canvasControls {
       margin-top: 10px;
     }
-    #canvasControls button {
-      margin-right: 5px;
-      padding: 5px 10px;
+    #canvasControls label {
       font-size: 14px;
-      cursor: pointer;
+      margin-right: 5px;
     }
-    /* Канвас будем размещать внутри панели */
-    #canvasContainer {
-      position: relative;
-      margin-top: 10px;
-      border: 2px solid #ddd;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      background: #fff;
-      /* стандартный размер канваса */
-      width: 640px;
-      height: 480px;
-      overflow: hidden;
+    #canvasControls input[type=range] {
+      width: 90%;
+      margin: 5px 0;
     }
-    /* Чтобы канвас занимал всё пространство контейнера */
+    #canvasControls span {
+      font-weight: bold;
+      margin-left: 5px;
+    }
+    /* Стили для Canvas – размещаем по центру экрана */
     canvas#overlay {
-      width: 100%;
-      height: 100%;
-      display: block;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      background: #fff;
     }
   </style>
   <!-- Подключение TensorFlow.js -->
@@ -83,10 +81,12 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
 </head>
 <body>
-  <!-- Видео с веб-камеры (скрыто благодаря opacity) -->
+  <!-- Видео с веб-камеры (скрыто через opacity) -->
   <video id="video" width="640" height="480" autoplay muted></video>
+  <!-- Canvas вынесен отдельно и находится по центру экрана -->
+  <canvas id="overlay" width="640" height="480"></canvas>
 
-  <!-- Панель с информацией и управлением -->
+  <!-- Панель управления -->
   <div id="infoPanel">
     <h2>Информация</h2>
     <div id="faceInfo">
@@ -99,13 +99,13 @@
       <ul id="poseDetails"></ul>
     </div>
     <div id="canvasControls">
-      <h3>Управление канвасом</h3>
-      <button id="btnStandard">Стандартный (640×480)</button>
-      <button id="btnFullscreen">На весь экран</button>
-    </div>
-    <!-- Контейнер для канваса -->
-    <div id="canvasContainer">
-      <canvas id="overlay" width="640" height="480"></canvas>
+      <h3>Управление Canvas</h3>
+      <label for="widthSlider">Ширина Canvas:</label>
+      <input type="range" id="widthSlider" min="320" max="1280" value="640">
+      <span id="widthValue">640</span> px<br>
+      <label for="heightSlider">Высота Canvas:</label>
+      <input type="range" id="heightSlider" min="240" max="960" value="480">
+      <span id="heightValue">480</span> px
     </div>
   </div>
 
@@ -117,9 +117,10 @@
       const faceCountEl = document.getElementById('faceCount');
       const faceDetailsEl = document.getElementById('faceDetails');
       const poseDetailsEl = document.getElementById('poseDetails');
-      const btnStandard = document.getElementById('btnStandard');
-      const btnFullscreen = document.getElementById('btnFullscreen');
-      const canvasContainer = document.getElementById('canvasContainer');
+      const widthSlider = document.getElementById('widthSlider');
+      const heightSlider = document.getElementById('heightSlider');
+      const widthValue = document.getElementById('widthValue');
+      const heightValue = document.getElementById('heightValue');
       let posenetModel;
 
       // Порог стабильности для эмоций (5 кадров)
@@ -128,7 +129,7 @@
       let currentEmotion = null;
       let stabilityCount = 0;
 
-      // Переменные для стабилизации отображения панели (обновление раз в 500 мс)
+      // Переменные для стабилизации обновления панели (раз в 500 мс)
       let lastPanelUpdate = Date.now();
       let lastFaceResults = null;
       let lastPose = null;
@@ -206,9 +207,9 @@
         };
       }
 
-      // Функция обновления информации в панели (вызывается раз в 500 мс)
+      // Функция обновления информации в панели (обновление не чаще, чем раз в 500 мс)
       function updateInfoPanel(faceResults, pose) {
-        // Лица
+        // Обновление информации по лицам
         if (faceResults && faceResults.length > 0) {
           faceCountEl.textContent = "Количество лиц: " + faceResults.length;
           faceDetailsEl.innerHTML = "";
@@ -227,7 +228,7 @@
           faceCountEl.textContent = "Количество лиц: 0";
           faceDetailsEl.innerHTML = "<li>Лицо не обнаружено</li>";
         }
-        // Поза
+        // Обновление информации по позе
         poseDetailsEl.innerHTML = "";
         if (pose && pose.keypoints && pose.keypoints.length > 0) {
           pose.keypoints.forEach(keypoint => {
@@ -245,37 +246,34 @@
         }
       }
 
-      // Обработчики для изменения размера канваса
-      btnStandard.addEventListener('click', () => {
-        canvasContainer.style.width = '640px';
-        canvasContainer.style.height = '480px';
-        canvas.width = 640;
-        canvas.height = 480;
+      // Обработчики изменения ползунков управления Canvas
+      widthSlider.addEventListener('input', () => {
+        const newWidth = parseInt(widthSlider.value);
+        widthValue.textContent = newWidth;
+        canvas.width = newWidth;
+        // Переопределяем позиционирование, чтобы Canvas оставался по центру
+        canvas.style.width = newWidth + "px";
       });
-      btnFullscreen.addEventListener('click', () => {
-        // Занимаем почти весь экран панели
-        canvasContainer.style.width = '100%';
-        canvasContainer.style.height = '100%';
-        canvas.width = canvasContainer.clientWidth;
-        canvas.height = canvasContainer.clientHeight;
+      heightSlider.addEventListener('input', () => {
+        const newHeight = parseInt(heightSlider.value);
+        heightValue.textContent = newHeight;
+        canvas.height = newHeight;
+        canvas.style.height = newHeight + "px";
       });
 
       // Основной цикл обработки видео
       async function onPlay() {
-        // Если видео не активно, пропускаем отрисовку
         if (video.paused || video.ended) {
           requestAnimationFrame(onPlay);
           return;
         }
-        
         const faceOptions = new faceapi.TinyFaceDetectorOptions();
         const faceResults = await faceapi.detectAllFaces(video, faceOptions).withFaceExpressions();
         let pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
         if (!pose || !pose.keypoints) {
           pose = getFallbackPose();
         }
-
-        // Отрисовка графики на канвасе
+        // Отрисовка графики на Canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (faceResults && faceResults.length > 0) {
           faceResults.forEach(result => {
@@ -307,8 +305,7 @@
             }
           });
         }
-        
-        // Для стабилизации обновления панели – обновляем только раз в 500 мс
+        // Стабилизация обновления данных в панели – обновление не чаще, чем раз в 500 мс
         const now = Date.now();
         if (now - lastPanelUpdate > 500) {
           lastFaceResults = faceResults;
@@ -316,15 +313,13 @@
           updateInfoPanel(lastFaceResults, lastPose);
           lastPanelUpdate = now;
         }
-
-        // Сохранение данных для дальнейшего анализа
+        // Сохранение данных для последующего анализа
         analysisData.push({
           timestamp: Date.now(),
           faces: faceResults,
           pose: pose,
           stableEmotion: stableEmotion
         });
-
         requestAnimationFrame(onPlay);
       }
 
