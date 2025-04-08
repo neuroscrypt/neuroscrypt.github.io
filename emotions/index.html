@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Эмоциональный симулятор ОСС+</title>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+          /*font-size: 20px;*/
+            font-size: 16px;
+        }
+        #container { 
+            display: flex; 
+            height: 100vh;
+        }
+        #controls { 
+            width: 400px; 
+            padding: 20px; 
+            background: #111;
+            border-right: 2px solid #0f0;
+            overflow-y: auto;
+        }
+        .param-group { 
+            margin: 15px 0; 
+            padding: 10px;
+            border: 1px solid #0f0;
+        }
+        canvas { 
+            width: 100%; 
+            height: 90vh; 
+            background: #000;
+        }
+        .tooltip {
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #0f0;
+            margin-top: 20px;
+        }
+        .axis-label {
+            position: absolute;
+            font-size: 12px;pointer-events: none;
+            color: #0f0;font-weight: 900;
+        }
+        button { 
+            margin: 5px; 
+            padding: 8px;
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #0f0;
+            color: #000;
+        }
+        input[type="range"] {
+            width: 100%;
+            background: #000;
+        }
+        select {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 3px;
+        }
+/*********** Baseline, reset styles ***********/
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 15.25rem;
+}
+
+/* Removes default focus */
+input[type="range"]:focus {
+  outline: none;
+}
+
+/******** Chrome, Safari, Opera and Edge Chromium styles ********/
+/* slider track */
+input[type="range"]::-webkit-slider-runnable-track {
+  background-color: #ededed;
+  border-radius: 0.5rem;
+  height: 0.5rem;
+}
+
+/* slider thumb */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  margin-top: -8px; /* Centers thumb on the track */
+  background-color: #00eb27;
+  border-radius: 0.5rem;
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+  outline: 3px solid #00eb27;
+  outline-offset: 0.125rem;
+}
+
+/*********** Firefox styles ***********/
+/* slider track */
+input[type="range"]::-moz-range-track {
+  background-color: #ededed;
+  border-radius: 0.5rem;
+  height: 0.5rem;
+}
+
+/* slider thumb */
+input[type="range"]::-moz-range-thumb {
+  background-color: #00eb27;
+  border: none; /*Removes extra border that FF applies*/
+  border-radius: 0.5rem;
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+input[type="range"]:focus::-moz-range-thumb{
+  outline: 3px solid #00eb27;
+  outline-offset: 0.125rem;
+}
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="controls">
+            <h2>Инструкция ПОДСОЗНАНИЯ</h2>
+            <div class="tooltip">
+                <strong>>_ Для использования:</strong>
+                <ol>
+                    <li>Выберите параметры эмоции</li>
+                    <li>Настройте D и L ползунками</li>
+                    <li>Нажмите "Добавить эмоцию"</li>
+                    <li>Кликните на две эмоции и нажмите "Комбинировать"</li>
+                </ol>
+                
+                <strong>>_ Оси координат:</strong>
+                <ul>
+                    <li><span style="color:red">■</span> X (Гедония)</li>
+                    <li><span style="color:#0f0">■</span> Y (Желательность)</li>
+                    <li><span style="color:blue">■</span> Z (Направленность)</li>
+                </ul>
+                <p>>_ WASD - движение камеры<br>>_ Пробел - вращение<br>>_ ЛКМ - выбор</p>
+            </div>
+
+            <h2>>_ Параметры эмоции</h2>
+            <div class="param-group">
+                <label>Гедоническая (±):</label>
+                <select id="hedonic">
+                    <option value="+">+ (Позитивная)</option>
+                    <option value="-">- (Негативная)</option>
+                </select>
+            </div>
+
+            <div class="param-group">
+                <label>Желательность (±):</label>
+                <select id="desirability">
+                    <option value="+">+ (Желательное)</option>
+                    <option value="-">- (Нежелательное)</option>
+                </select>
+            </div>
+
+            <div class="param-group">
+                <label>Направленность:</label>
+                <select id="direction">
+                    <option value="I">На себя (I)</option>
+                    <option value="He">На другого (He)</option>
+                    <option value="Soc">На общество (Soc)</option>
+                    <option value="W">Внешний мир (W)</option>
+                </select>
+            </div>
+
+            <div class="param-group">
+                <label>D: <input type="range" id="d" min="-1" max="1" step="0.1" value="1"></label>
+                <span id="dValue">1</span>
+            </div>
+
+            <div class="param-group">
+                <label>L: <input type="range" id="l" min="0" max="1" step="0.1" value="1"></label>
+                <span id="lValue">1</span>
+            </div>
+
+            <button onclick="addEmotion()">Добавить эмоцию</button>
+            <button onclick="combineEmotions()">Комбинировать</button>
+            <button onclick="clearScene()">Очистить</button>
+        </div>
+        <div id="visualization">
+            <div class="axis-label" style="left: 1970px;top: 580px; color:red;font-size: 60px;">X (Гедония)</div>
+            
+            <div class="axis-label" style="left: 850px;top: 1250px; color:#0f0;font-size: 60px;">Y (Желательность)</div>
+            
+            <div class="axis-label" style="left: 820px;top: 10px;color:blue;font-size: 60px;">Z (Направленность)</div>
+            
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer;
+        let emotions = [];
+        let selectedEmotions = [];
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let rotate = true;
+        let moveSpeed = 0.1;
+
+        function initThreeJS() {
+            console.log("[INIT] Инициализация сцены...");
+            scene = new THREE.Scene();
+            
+            // Настройка камеры
+            camera = new THREE.PerspectiveCamera(
+                75, 
+                window.innerWidth / window.innerHeight, 
+                0.1, 
+                1000
+            );
+            
+            // Настройка рендерера
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true
+            });
+            
+            const availableWidth = window.innerWidth - 440;
+            const availableHeight = window.innerHeight;
+            renderer.setSize(availableWidth, availableHeight);
+            document.getElementById('visualization').appendChild(renderer.domElement);
+            console.log(`[RENDER] Размер области: ${availableWidth}x${availableHeight}`);
+
+            // Создание осей координат
+            const axisLength = 5;
+            const axes = [
+                {color: 0xff0000, points: [[-axisLength,0,0], [axisLength,0,0]]},
+                {color: 0x00ff00, points: [[0,-axisLength,0], [0,axisLength,0]]},
+                {color: 0x0000ff, points: [[0,0,-axisLength], [0,0,axisLength]]}
+            ];
+
+            axes.forEach((axis, index) => {
+                const geometry = new THREE.BufferGeometry().setFromPoints(
+                    axis.points.map(p => new THREE.Vector3(...p))
+                );
+                const line = new THREE.Line(
+                    geometry,
+                    new THREE.LineBasicMaterial({ color: axis.color })
+                );
+                scene.add(line);
+            });
+            console.log("[SCENE] Оси координат созданы");
+
+            // Позиционирование камеры
+            camera.position.set(5, 5, 5);
+            camera.lookAt(0, 0, 0);
+            console.log("[CAMERA] Позиция камеры установлена");
+
+            // Обработчики событий
+            document.addEventListener('keydown', handleKeys);
+            document.addEventListener('mousedown', onMouseClick);
+            document.addEventListener('wheel', onMouseWheel);
+            window.addEventListener('resize', handleResize);
+            console.log("[EVENTS] Обработчики событий зарегистрированы");
+
+            animate();
+        }
+
+        function handleResize() {
+            const availableWidth = window.innerWidth - 440;
+            const availableHeight = window.innerHeight;
+            renderer.setSize(availableWidth, availableHeight);
+            camera.aspect = availableWidth / availableHeight;
+            camera.updateProjectionMatrix();
+            console.log(`[RESIZE] Новый размер: ${availableWidth}x${availableHeight}`);
+        }
+
+        function handleKeys(e) {
+            console.log(`[KEY] Нажата клавиша: ${e.key}`);
+            switch(e.key.toLowerCase()) {
+                case ' ':
+                    rotate = !rotate;
+                    console.log(`[ROTATION] Вращение ${rotate ? 'включено' : 'выключено'}`);
+                    break;
+                case 'w':
+                    camera.position.z -= moveSpeed;
+                    break;
+                case 's':
+                    camera.position.z += moveSpeed;
+                    break;
+                case 'a':
+                    camera.position.x -= moveSpeed;
+                    break;
+                case 'd':
+                    camera.position.x += moveSpeed;
+                    break;
+            }
+            camera.lookAt(scene.position);
+        }
+
+        function onMouseClick(event) {
+            console.log(`[MOUSE] Клик в позиции: ${event.clientX},${event.clientY}`);
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            console.log(`[MOUSE] Нормализованные координаты: X=${mouse.x.toFixed(2)}, Y=${mouse.y.toFixed(2)}`);
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(emotions);
+            console.log(`[RAY] Найдено пересечений: ${intersects.length}`);
+            
+            if(intersects.length > 0) {
+                const obj = intersects[0].object;
+                console.log(`[SELECT] Выбран объект:`, obj);
+                
+                if(selectedEmotions.length >= 2) {
+                    console.log(`[SELECT] Сброс предыдущего выбора`);
+                    selectedEmotions[0].material.color.set(
+                        selectedEmotions[0].userData.hedonic === '+' ? 0x00ff00 : 0xff0000
+                    );
+                    selectedEmotions.shift();
+                }
+                
+                obj.material.color.set(0xffff00);
+                selectedEmotions.push(obj);
+                console.log(`[SELECT] Текущий выбор: ${selectedEmotions.length} объектов`);
+            }
+        }
+
+        function onMouseWheel(event) {
+            camera.position.y += event.deltaY * 0.01;
+            camera.lookAt(scene.position);
+            console.log(`[WHEEL] Позиция камеры Y: ${camera.position.y.toFixed(2)}`);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if(rotate) {
+                scene.rotation.y += 0.005;
+            }
+            
+            emotions.forEach(obj => {
+                if(!selectedEmotions.includes(obj)) {
+                    obj.scale.x = Math.sin(Date.now()*0.002) * 0.1 + 1;
+                    obj.scale.y = Math.sin(Date.now()*0.002) * 0.1 + 1;
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        function mapDirection(direction) {
+            const directions = { I: 0, He: 1, Soc: 2, W: 3 };
+            return directions[direction];
+        }
+
+        function addEmotion() {
+            console.log("[EMO] Добавление новой эмоции...");
+            const hedonic = document.getElementById('hedonic').value;
+            const desirability = document.getElementById('desirability').value;
+            const direction = document.getElementById('direction').value;
+            const D = parseFloat(document.getElementById('d').value);
+            const L = parseFloat(document.getElementById('l').value);
+
+            const geometry = new THREE.SphereGeometry(0.2);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: hedonic === '+' ? 0x00ff00 : 0xff0000,
+                wireframe: true
+            });
+            
+            const sphere = new THREE.Mesh(geometry, material);
+            sphere.position.set(
+                hedonic === '+' ? 1 : -1,
+                desirability === '+' ? 1 : -1,
+                mapDirection(direction)
+            );
+
+            sphere.userData = { 
+                hedonic: hedonic,
+                desirability: desirability,
+                direction: direction,
+                D: D,
+                L: L,
+                timestamp: Date.now()
+            };
+            
+            scene.add(sphere);
+            emotions.push(sphere);
+            console.log("[EMO] Эмоция добавлена:", sphere);
+        }
+
+        function combineEmotions() {
+            console.log("[COMBO] Попытка комбинирования...");
+            console.log("[COMBO] Выбрано объектов:", selectedEmotions.length);
+            
+            if (selectedEmotions.length === 2) {
+                const [e1, e2] = selectedEmotions;
+                console.log("[COMBO] Объекты для комбинации:", e1, e2);
+                
+                const geometry = new THREE.TorusGeometry(0.3, 0.1, 16, 100);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffff,
+                    wireframe: true
+                });
+
+                const combined = new THREE.Mesh(geometry, material);
+                combined.position.set(
+                    (e1.position.x + e2.position.x)/2,
+                    (e1.position.y + e2.position.y)/2,
+                    (e1.position.z + e2.position.z)/2
+                );
+                console.log(`[COMBO] Позиция: X=${combined.position.x.toFixed(2)}, Y=${combined.position.y.toFixed(2)}, Z=${combined.position.z.toFixed(2)}`);
+
+                combined.userData = {
+                    type: 'combined',
+                    components: [
+                        {id: e1.uuid, data: e1.userData},
+                        {id: e2.uuid, data: e2.userData}
+                    ],
+                    timestamp: Date.now()
+                };
+                
+                scene.add(combined);
+                emotions.push(combined);
+                console.log("[COMBO] Новая эмоция создана:", combined);
+
+                selectedEmotions.forEach(obj => {
+                    obj.material.color.set(
+                        obj.userData.hedonic === '+' ? 0x00ff00 : 0xff0000
+                    );
+                });
+                selectedEmotions = [];
+                console.log("[COMBO] Сброс выбора");
+            } else {
+                console.warn("[COMBO] Необходимо выбрать 2 объекта!");
+            }
+        }
+
+        function clearScene() {
+            console.log("[CLEAR] Очистка сцены...");
+            scene.children.slice().forEach(obj => {
+                if(obj.type === 'Mesh') {
+                    scene.remove(obj);
+                    console.log("[CLEAR] Удалён объект:", obj);
+                }
+            });
+            emotions = [];
+            selectedEmotions = [];
+        }
+
+        // Инициализация приложения
+        document.getElementById('d').addEventListener('input', e => {
+            document.getElementById('dValue').textContent = e.target.value;
+        });
+
+        document.getElementById('l').addEventListener('input', e => {
+            document.getElementById('lValue').textContent = e.target.value;
+        });
+
+        initThreeJS();
+        console.log("[APP] Приложение инициализировано");
+    </script>
+</body>
+</html>
