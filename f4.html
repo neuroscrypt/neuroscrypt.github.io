@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Виртуальный Скелет и Лицо</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f7f9fc;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+    /* Видео используется для анализа, но скрыто */
+    #video { display: none; }
+    /* Основной канвас для виртуальной отрисовки */
+    #overlay {
+      width: 640px;
+      height: 480px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+  </style>
+  <!-- TensorFlow.js версии 1.7.4 для совместимости -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
+  <!-- Face API (с моделями: tinyFaceDetector и faceLandmark68Net) -->
+  <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <!-- PoseNet -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+</head>
+<body>
+  <!-- Видео для анализа (скрыто) -->
+  <video id="video" autoplay muted playsinline width="640" height="480"></video>
+  <!-- Канвас для отображения виртуального скелета и лица -->
+  <canvas id="overlay" width="640" height="480"></canvas>
+
+  <script defer>
+    window.addEventListener('load', async () => {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('overlay');
+      const ctx = canvas.getContext('2d');
+      let posenetModel;
+      const minPoseConfidence = 0.5;
+      const minPartConfidence = 0.6;
+
+      // Для соединения ключевых точек позы (скелета)
+      const poseConnections = [
+        ['leftShoulder', 'rightShoulder'],
+        ['leftShoulder', 'leftElbow'],
+        ['leftElbow', 'leftWrist'],
+        ['rightShoulder', 'rightElbow'],
+        ['rightElbow', 'rightWrist'],
+        ['leftShoulder', 'leftHip'],
+        ['rightShoulder', 'rightHip'],
+        ['leftHip', 'rightHip'],
+        ['leftHip', 'leftKnee'],
+        ['leftKnee', 'leftAnkle'],
+        ['rightHip', 'rightKnee'],
+        ['rightKnee', 'rightAnkle']
+      ];
+
+      // Скрытый вызов камеры
+      async function setupCamera() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+          return new Promise((resolve) => {
+            video.onloadedmetadata = () => resolve(video);
+          });
+        } catch (error) {
+          console.error("Ошибка доступа к веб-камере:", error);
+        }
+      }
+
+      // Загрузка моделей: face-api и posenet
+      async function loadModels() {
+        const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        posenetModel = await posenet.load();
+      }
+
+      // Отрисовка ключевых точек лица (face-api)
+      function drawFaceLandmarks(landmarks) {
+        const points = landmarks.positions;
+        ctx.fillStyle = 'red';
+        points.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+      }
+
+      // Отрисовка ключевых точек позы
+      function drawPoseKeypoints(keypoints) {
+        ctx.fillStyle = 'blue';
+        keypoints.forEach(keypoint => {
+          if (keypoint.score > minPartConfidence) {
+            ctx.beginPath();
+            ctx.arc(keypoint.position.x, keypoint.position.y, 4, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        });
+      }
+
+      // Отрисовка скелета позы
+      function drawSkeleton(keypoints) {
+        // Создаем словарь для удобства
+        const keypointMap = {};
+        keypoints.forEach(k => {
+          keypointMap[k.part] = k;
+        });
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
+        poseConnections.forEach(([partA, partB]) => {
+          const kpA = keypointMap[partA];
+          const kpB = keypointMap[partB];
+          if (kpA && kpB && kpA.score > minPartConfidence && kpB.score > minPartConfidence) {
+            ctx.beginPath();
+            ctx.moveTo(kpA.position.x, kpA.position.y);
+            ctx.lineTo(kpB.position.x, kpB.position.y);
+            ctx.stroke();
+          }
+        });
+      }
+
+      // Основной цикл анализа и отрисовки
+      async function onFrame() {
+        if (video.paused || video.ended) return requestAnimationFrame(onFrame);
+
+        // Заполняем фон канваса (например, белым)
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Face detection с определением landmarks
+        const faceResults = await faceapi
+          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks();
+
+        // Если лицо найдено, рисуем набор точек
+        if (faceResults && faceResults.length > 0) {
+          faceResults.forEach(result => {
+            if(result.landmarks) {
+              drawFaceLandmarks(result.landmarks);
+            }
+          });
+        }
+
+        // Pose detection (PoseNet)
+        const pose = await posenetModel.estimateSinglePose(video, { flipHorizontal: false });
+        if (pose && pose.score > minPoseConfidence) {
+          drawPoseKeypoints(pose.keypoints);
+          drawSkeleton(pose.keypoints);
+        }
+
+        requestAnimationFrame(onFrame);
+      }
+
+      await setupCamera();
+      await loadModels();
+      video.play();
+      onFrame();
+    });
+  </script>
+</body>
+</html>
