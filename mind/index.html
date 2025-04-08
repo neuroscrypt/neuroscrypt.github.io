@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4 Ровных Квадрата с Описаниями</title>
+    <style>
+        body, html {
+            font-family: monospace;font-weight: 900;margin: 0;padding: 0;
+            height: 100%;width: 100%;display: flex;flex-wrap: wrap;
+            box-sizing: border-box;
+        }
+
+        .square {
+            width: 50%;height: 50%;box-sizing: border-box;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;justify-content: center;
+            align-items: center;position: relative;
+        }
+
+        .top-left {background-color: #2b2b2b;}
+        .top-right {background-color: #444444;}
+        .bottom-left {background-color: #666666;}
+        .bottom-right {background-color: #888888;}
+
+        .description-center {
+           font-size:40px;padding:40px;
+           font-weight: bold;
+           text-align: center;
+           border-radius: 7px;
+           background-color: #ffffff14;
+           color: #fff;
+        }
+        .description-corner {
+           position: absolute;
+           padding: 15px;font-size: 20px;
+           font-weight: bold; text-align: center;
+           border-radius: 7px;color: #fff;
+           background-color: #ffffff14;
+        }
+
+        /* Позиции для углов */
+        .top-left-corner {top: 5%;left: 5%;}
+        .top-right-corner {top: 5%;right: 5%;}
+        .bottom-left-corner {bottom: 5%;left: 5%;}
+        .bottom-right-corner {bottom: 5%;right: 5%;}
+    </style>
+</head>
+<body>
+    <div class="square top-left">
+        <div class="description-center">Ясность и Понимание</div>
+        <div class="description-corner top-left-corner">Осознание происходящего</div>
+        <div class="description-corner top-right-corner">Контроль и осознанные выборы</div>
+        <div class="description-corner bottom-left-corner">Решения, опирающиеся на логику</div>
+        <div class="description-corner bottom-right-corner">Влияние сознания на действия</div>
+    </div>
+    
+    <div class="square top-right">
+        <div class="description-center">Неосознанные Порывы</div>
+        <div class="description-corner top-left-corner">Внешние импульсы</div>
+        <div class="description-corner top-right-corner">Действия без осознания</div>
+        <div class="description-corner bottom-left-corner">Реакции на среду без анализа</div>
+        <div class="description-corner bottom-right-corner">Бессознательные привычки</div>
+    </div>
+
+    <div class="square bottom-left">
+        <div class="description-center">Иррациональные Силы</div>
+        <div class="description-corner top-left-corner">Эмоции и инстинкты</div>
+        <div class="description-corner top-right-corner">Непредсказуемые поступки</div>
+        <div class="description-corner bottom-left-corner">Влияние на поведение без логики</div>
+        <div class="description-corner bottom-right-corner">Аффекты и импульсивные реакции</div>
+    </div>
+
+    <div class="square bottom-right">
+        <div class="description-center">Глубинные Архетипы</div>
+        <div class="description-corner top-left-corner">Мифы и символы</div>
+        <div class="description-corner top-right-corner">Внутренние образы и идеи</div>
+        <div class="description-corner bottom-left-corner">Психологические модели поведения</div>
+        <div class="description-corner bottom-right-corner">Генетические предрасположенности</div>
+    </div>
+</body>
+</html>
