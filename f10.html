@@ -392,11 +392,11 @@
           const expressions = result.expressions;
           Object.keys(expressions).forEach(key => {
             const spanExpKey = document.createElement("span");
-            spanExpKey.className = key; // Имя из emotionMapping (например, "happy")
+            spanExpKey.className = "parametr " + key; // Имя из emotionMapping (например, "happy")
             spanExpKey.textContent = `, ${emotionMapping[key] || key}: `;
             li.appendChild(spanExpKey);
             const spanExpVal = document.createElement("span");
-            spanExpVal.className = "dynamicValue" + key;
+            spanExpVal.className = "parametr dynamicValue" + key;
             spanExpVal.textContent = (expressions[key] * 100).toFixed(1) + "%";
             li.appendChild(spanExpVal);
           });
