@@ -16,7 +16,7 @@
     div#faceSection {min-height: 270px;}div#poseSection {height: 550px;}
     /*span {display:flex;text-align: center;}*/
     span.parametr {animation: fluorescentGlow 2s infinite;}
-    span.face.parametr {     }
+    span.face.parametr {display: flex;}
     #video {
       position: absolute;
       opacity: 0;
@@ -393,7 +393,7 @@
             spanExpKey.textContent = `, ${emotionMapping[key] || key}: `;
             li.appendChild(spanExpKey);
             const spanExpVal = document.createElement("span");
-            spanExpVal.className = "dynamicValue" + key;
+            spanExpVal.className = "face dynamicValue " + key;
             spanExpVal.textContent = (expressions[key] * 100).toFixed(1) + "%";
             li.appendChild(spanExpVal);
           });
@@ -421,7 +421,7 @@
           spanKPKey.textContent = `${partRus}: `;
           li.appendChild(spanKPKey);
           const spanKPVal = document.createElement("span");
-          spanKPVal.className = "parametr dynamicValue" + keypoint.part;
+          spanKPVal.className = "parametr dynamicValue " + keypoint.part;
           spanKPVal.textContent = `(x: ${Math.round(keypoint.position.x)}, y: ${Math.round(keypoint.position.y)}; score: ${(keypoint.score * 100).toFixed(1)}%)`;
           li.appendChild(spanKPVal);
           poseDetailsEl.appendChild(li);
