@@ -12,7 +12,7 @@
             background-color: #f5f5f5;
             font-family:monospace;
         }
-#frame{border:0;width:400px;}
+        #frame{border:0;width: 60vh;height: 33vh;}
         /* Верхняя панель */
         #topPanel {
             position: fixed;
@@ -28,7 +28,6 @@
             align-items: center;
             justify-content: center;
         }
-
         /* Левая панель */
         #leftPanel {
             position: fixed;
@@ -46,7 +45,6 @@
             z-index: 2;
             overflow-y: auto;
         }
-
         /* Нижняя панель */
         #bottomPanel {
             position: fixed;
@@ -60,7 +58,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-
         }
 
         /* Правая панель (из предыдущего ответа) */
@@ -73,10 +70,8 @@
             background-color: #fff;
             padding: 16px;
             z-index: 3;
-            overflow-y: auto; */
-    
-        }
-
+            overflow-y: auto; 
+        } */
         /* Основная область контента */
         #mainContent {
             position: fixed;
@@ -90,7 +85,6 @@
             z-index: 1;
             width: 73%;
         }
-
         /* Элементы управления */
         .control-button {
             padding: 12px;
@@ -102,10 +96,7 @@
             margin: 4px;
             transition: background 0.3s;
         }
-
-        .control-button:hover {
-            background: #45a049;
-        }
+        .control-button:hover {background: #45a049;}
 
        .section {
            margin-bottom: 24px;
@@ -113,9 +104,7 @@
            padding-bottom: 16px;
          }
 
-      .section:last-child {
-          border-bottom: none;
-        }
+      .section:last-child {border-bottom: none;}
 
 h2 {
   font-size: 18px;
@@ -125,10 +114,7 @@ h2 {
   color: #333;
 }
 
-.parameters {
-  display: grid;
-  gap: 8px;
-}
+.parameters {display: grid;gap: 8px;}
 
 .parameter {
   display: flex;
@@ -138,10 +124,7 @@ h2 {
   padding: 4px 0;
 }
 
-.parameter-label {
-  color: #666;
-  margin-right: 12px;
-}
+.parameter-label {color: #666;margin-right: 12px;}
 
 .parameter-value {
   color: #222;
@@ -151,14 +134,8 @@ h2 {
 }
 
 @media (max-width: 400px) {
-  #panel {
-    width: 100%;
-    max-width: 360px;
-  }
-  
-  .parameter {
-    font-size: 13px;
-  }
+  #panel {width: 100%;max-width: 360px;}
+  .parameter {font-size: 13px;}
 }
 
          /* Цвета для эмоций */
