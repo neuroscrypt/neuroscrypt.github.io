@@ -210,13 +210,13 @@
     // Обработчики ползунков для изменения размеров Canvas
     widthSlider.addEventListener('input', (e) => {
       const newWidth = parseInt(e.target.value);
-      widthValue.textContent = newWidth;
+      widthValue.textContent = newWidth + " px";
       canvas.width = newWidth;
       canvas.style.width = newWidth + "px";
     });
     heightSlider.addEventListener('input', (e) => {
       const newHeight = parseInt(e.target.value);
-      heightValue.textContent = newHeight;
+      heightValue.textContent = newHeight + " px";
       canvas.height = newHeight;
       canvas.style.height = newHeight + "px";
     });
