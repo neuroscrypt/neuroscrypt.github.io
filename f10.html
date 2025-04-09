@@ -348,20 +348,20 @@
           const box = result.detection.box;
           // Вывод параметра x
           const spanXKey = document.createElement("span");
-          spanXKey.className = "x";
+          spanXKey.className = "parametr x";
           spanXKey.textContent = "x: ";
           li.appendChild(spanXKey);
           const spanXVal = document.createElement("span");
-          spanXVal.className = "dynamicValuex";
+          spanXVal.className = "parametr dynamicValuex";
           spanXVal.textContent = Math.round(box.x);
           li.appendChild(spanXVal);
           // Вывод параметра y
           const spanYKey = document.createElement("span");
-          spanYKey.className = "y";
+          spanYKey.className = "parametr y";
           spanYKey.textContent = ", y: ";
           li.appendChild(spanYKey);
           const spanYVal = document.createElement("span");
-          spanYVal.className = "dynamicValuey";
+          spanYVal.className = "parametr dynamicValuey";
           spanYVal.textContent = Math.round(box.y);
           li.appendChild(spanYVal);
           // Вывод параметра w
@@ -370,16 +370,16 @@
           spanWKey.textContent = ", w: ";
           li.appendChild(spanWKey);
           const spanWVal = document.createElement("span");
-          spanWVal.className = "dynamicValuew";
+          spanWVal.className = "parametr dynamicValuew";
           spanWVal.textContent = Math.round(box.width);
           li.appendChild(spanWVal);
           // Вывод параметра h
           const spanHKey = document.createElement("span");
-          spanHKey.className = "h";
+          spanHKey.className = "parametr h";
           spanHKey.textContent = ", h: ";
           li.appendChild(spanHKey);
           const spanHVal = document.createElement("span");
-          spanHVal.className = "dynamicValueh";
+          spanHVal.className = "parametr dynamicValueh";
           spanHVal.textContent = Math.round(box.height);
           li.appendChild(spanHVal);
           
