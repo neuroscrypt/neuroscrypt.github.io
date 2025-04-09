@@ -16,7 +16,7 @@
     div#faceSection {min-height: 270px;}div#poseSection {height: 550px;}
     /*span {display:flex;text-align: center;}*/
     span.parametr {animation: fluorescentGlow 2s infinite;}
-
+    span.face.parametr {     }
     #video {
       position: absolute;
       opacity: 0;
@@ -389,7 +389,7 @@
           const expressions = result.expressions;
           Object.keys(expressions).forEach(key => {
             const spanExpKey = document.createElement("span");
-            spanExpKey.className = "parametr " + key; // Имя из emotionMapping (например, "happy")
+            spanExpKey.className = "face parametr " + key; // Имя из emotionMapping (например, "happy")
             spanExpKey.textContent = `, ${emotionMapping[key] || key}: `;
             li.appendChild(spanExpKey);
             const spanExpVal = document.createElement("span");
