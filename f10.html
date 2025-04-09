@@ -27,7 +27,7 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
       background: #fff;
     }
-    /* Правильный размер правой панели (информация) */
+    /* Правая панель (информация) – фиксированная 350px x 100% */
     #panel {
       position: fixed;
       right: 0;
@@ -88,10 +88,7 @@
       font-size: 14px;
       color: #333;
     }
-    .info span.label {
-      font-weight: bold;
-    }
-    /* Стили для списка лиц и позы */
+    /* Стили для списка */
     ul {
       list-style: none;
       padding-left: 0;
@@ -99,7 +96,7 @@
     li {
       margin-bottom: 6px;
     }
-    /* Ползунки для изменения размеров Canvas в правой панели */
+    /* Ползунки для изменения размеров Canvas */
     .slider {
       margin: 10px 0;
     }
@@ -120,7 +117,7 @@
       padding: 12px 20px;
       font-size: 14px;
       cursor: pointer;
-      border: 0px;
+      border: 0;
       border-radius: 4px;
       background-color: #f0f0f0;
     }
@@ -142,7 +139,7 @@
       animation: fluorescentGlow 2s infinite;
     }
   </style>
-  <!-- Подключение необходимых библиотек -->
+  <!-- Подключение библиотек -->
   <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
   <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
@@ -177,16 +174,20 @@
     <!-- Секция для лиц -->
     <div id="faceSection">
       <h3>Лица</h3>
-      <div class="info"><span id="faceCount" class="label">Количество лиц: 0</span></div>
+      <div class="info">
+        <span id="faceCount" class="faceCount">Количество лиц: 0</span>
+      </div>
       <ul id="faceDetails">
-        <!-- Здесь будут данные по каждому лицу, каждый параметр — отдельный <span> с классами "ключ" и "ЗначениеКлюча" -->
+        <!-- Здесь будут данные по каждому лицу. Для каждого параметра создается пара <span>: -->
+        <!-- Первый <span> имеет класс, равный имени параметра (например, "x", "y", либо ключ из emotionMapping), -->
+        <!-- второй <span> имеет класс "dynamicValue"+имя параметра. -->
       </ul>
     </div>
     <!-- Секция для параметров позы -->
     <div id="poseSection">
       <h3>Параметры позы</h3>
       <ul id="poseDetails">
-        <!-- Здесь будут данные по каждой ключевой точке, каждый параметр — отдельный <span> с классами "ключ" и "ЗначениеКлюча" -->
+        <!-- Здесь будут данные по каждой ключевой точке, аналогичным образом -->
       </ul>
     </div>
     <!-- Ползунки для управления размерами Canvas -->
@@ -301,7 +302,7 @@
       }
     }
 
-    // Функция создания fallback-данных позы, если PoseNet не определил позу
+    // Функция создания fallback-данных позы (если PoseNet не определил позу)
     function getFallbackPose() {
       return {
         keypoints: [
@@ -327,10 +328,10 @@
     }
 
     // Функция обновления информации в панели:
-    // Для каждого лица создаётся элемент <li>, в котором отдельно выводятся:
-    //   - Координаты рамки (каждый параметр – отдельный <span> с классами "ключ" (имя) и "ЗначениеКлюча" (значение)).
-    //   - Значения эмоций (каждая пара ключ-значение выводится в отдельных <span>).
-    // Для позы каждая ключевая точка выводится в отдельном <li> с русским названием, координатами и процентом score.
+    // Для каждого лица создаётся элемент <li>, в котором:
+    //  - Для параметров рамки (x, y, w, h) создаются пары: первый <span> с классом (например, "x") и текстом "x: ", второй <span> с классом "dynamicValuex" и значением.
+    //  - Для каждого значения эмоции создаются пары <span>: первый с классом равным ключу из emotionMapping, второй с классом "dynamicValue" + ключ, выводящие перевод и процентное соотношение.
+    // Аналогично для позы, для каждой ключевой точки (название берется из poseMapping) создается пара <span>.
     function updateInfoPanel(faces, pose) {
       // Обновление информации по лицам
       faceDetailsEl.innerHTML = "";
@@ -338,47 +339,47 @@
         faceCountElem.textContent = "Количество лиц: " + faces.length;
         faces.forEach((result, index) => {
           const li = document.createElement("li");
-          // Вывод данных о рамке лица
+          // Заголовок для лица
           const spanHeader = document.createElement("span");
-          spanHeader.className = "ключ";
+          spanHeader.className = "faceHeader";
           spanHeader.textContent = `Лицо ${index + 1}: `;
           li.appendChild(spanHeader);
           
           const box = result.detection.box;
-          // x
+          // Вывод параметра x
           const spanXKey = document.createElement("span");
-          spanXKey.className = "ключ";
+          spanXKey.className = "x";
           spanXKey.textContent = "x: ";
           li.appendChild(spanXKey);
           const spanXVal = document.createElement("span");
-          spanXVal.className = "ЗначениеКлюча";
+          spanXVal.className = "dynamicValuex";
           spanXVal.textContent = Math.round(box.x);
           li.appendChild(spanXVal);
-          // y
+          // Вывод параметра y
           const spanYKey = document.createElement("span");
-          spanYKey.className = "ключ";
+          spanYKey.className = "y";
           spanYKey.textContent = ", y: ";
           li.appendChild(spanYKey);
           const spanYVal = document.createElement("span");
-          spanYVal.className = "ЗначениеКлюча";
+          spanYVal.className = "dynamicValuey";
           spanYVal.textContent = Math.round(box.y);
           li.appendChild(spanYVal);
-          // w
+          // Вывод параметра w
           const spanWKey = document.createElement("span");
-          spanWKey.className = "ключ";
+          spanWKey.className = "w";
           spanWKey.textContent = ", w: ";
           li.appendChild(spanWKey);
           const spanWVal = document.createElement("span");
-          spanWVal.className = "ЗначениеКлюча";
+          spanWVal.className = "dynamicValuew";
           spanWVal.textContent = Math.round(box.width);
           li.appendChild(spanWVal);
-          // h
+          // Вывод параметра h
           const spanHKey = document.createElement("span");
-          spanHKey.className = "ключ";
+          spanHKey.className = "h";
           spanHKey.textContent = ", h: ";
           li.appendChild(spanHKey);
           const spanHVal = document.createElement("span");
-          spanHVal.className = "ЗначениеКлюча";
+          spanHVal.className = "dynamicValueh";
           spanHVal.textContent = Math.round(box.height);
           li.appendChild(spanHVal);
           
@@ -386,11 +387,11 @@
           const expressions = result.expressions;
           Object.keys(expressions).forEach(key => {
             const spanExpKey = document.createElement("span");
-            spanExpKey.className = "ключ";
+            spanExpKey.className = key; // Имя из emotionMapping (например, "happy")
             spanExpKey.textContent = `, ${emotionMapping[key] || key}: `;
             li.appendChild(spanExpKey);
             const spanExpVal = document.createElement("span");
-            spanExpVal.className = "ЗначениеКлюча";
+            spanExpVal.className = "dynamicValue" + key;
             spanExpVal.textContent = (expressions[key] * 100).toFixed(1) + "%";
             li.appendChild(spanExpVal);
           });
@@ -400,7 +401,7 @@
         faceCountElem.textContent = "Количество лиц: 0";
         const li = document.createElement("li");
         const spanNone = document.createElement("span");
-        spanNone.className = "ключ";
+        spanNone.className = "noFace";
         spanNone.textContent = "Лицо не обнаружено";
         li.appendChild(spanNone);
         faceDetailsEl.appendChild(li);
@@ -412,12 +413,13 @@
         pose.keypoints.forEach(keypoint => {
           const li = document.createElement("li");
           const spanKPKey = document.createElement("span");
-          spanKPKey.className = "ключ";
+          // Используем poseMapping для перевода названия ключевой точки
           const partRus = poseMapping[keypoint.part] || keypoint.part;
+          spanKPKey.className = keypoint.part; // Класс по ключу (например, "nose")
           spanKPKey.textContent = `${partRus}: `;
           li.appendChild(spanKPKey);
           const spanKPVal = document.createElement("span");
-          spanKPVal.className = "ЗначениеКлюча";
+          spanKPVal.className = "dynamicValue" + keypoint.part;
           spanKPVal.textContent = `(x: ${Math.round(keypoint.position.x)}, y: ${Math.round(keypoint.position.y)}; score: ${(keypoint.score * 100).toFixed(1)}%)`;
           li.appendChild(spanKPVal);
           poseDetailsEl.appendChild(li);
@@ -425,7 +427,7 @@
       } else {
         const li = document.createElement("li");
         const spanNoPose = document.createElement("span");
-        spanNoPose.className = "ключ";
+        spanNoPose.className = "noPose";
         spanNoPose.textContent = "Поза не обнаружена";
         li.appendChild(spanNoPose);
         poseDetailsEl.appendChild(li);
