@@ -16,7 +16,8 @@
     div#faceSection {min-height: 270px;}div#poseSection {height: 550px;}
     /*span {display:flex;text-align: center;}*/
     span.parametr {animation: fluorescentGlow 2s infinite;}
-    span.face.parametr {display: flex;}
+
+    span.face.parametr {display: flex;}span.face.dynamicValue {display: flex;}
     #video {
       position: absolute;
       opacity: 0;
@@ -263,7 +264,7 @@
     let faceRenderMode = "рамка";  // Возможные режимы: "рамка" или "маска"
 
     // Переключение режима отображения лица
-    toggleRenderBtn.onclick = () => {
+      toggleRenderBtn.onclick = () => {
       faceRenderMode = faceRenderMode === "рамка" ? "маска" : "рамка";
       toggleRenderBtn.textContent = faceRenderMode === "рамка" ? "Режим: Рамка" : "Режим: Маска";
     };
