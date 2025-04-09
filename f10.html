@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Анализатор эмоций и поз</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #0a0a0a;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+      color: #e0e0e0;
+    }
+
+    #video {
+      position: absolute;
+      opacity: 0;
+      transform: scaleX(-1);
+    }
+
+    #overlay {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 255, 127, 0.3);
+      background: #1a1a1a;
+      transition: all 0.3s ease;
+    }
+
+    .panel {
+      background: rgba(10, 10, 10, 0.9);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 255, 127, 0.2);
+      padding: 15px;
+      box-shadow: 0 0 15px rgba(0, 255, 127, 0.2);
+    }
+
+    #topPanel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 350px;
+      height: 100px;
+      z-index: 3;
+      text-align: center;
+    }
+
+    #leftPanel {
+      position: fixed;
+      top: 100px;
+      left: 0;
+      width: 200px;
+      bottom: 100px;
+      text-align: center;
+    }
+
+    #bottomPanel {
+      position: fixed;
+      left: 0;
+      right: 350px;
+      bottom: 0;
+      height: 100px;
+      z-index: 3;
+    }
+
+    #panel {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 350px;
+      height: 100%;
+      overflow-y: auto;
+      z-index: 3;
+    }
+
+    .fluorescent {
+      animation: fluorescentGlow 2s infinite;
+      text-shadow: 0 0 10px #B4FF9F;
+    }
+
+    @keyframes fluorescentGlow {
+      0%, 100% { filter: drop-shadow(0 0 10px #B4FF9F); }
+      50% { filter: drop-shadow(0 0 20px #FFEE93); }
+    }
+
+    .slider input[type="range"] {
+      width: 100%;
+      height: 5px;
+      background: #2a2a2a;
+      outline: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .slider input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      background: #00ff7f;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    button {
+      background: #00ff7f;
+      color: #002710;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #B4FF9F;
+      box-shadow: 0 0 15px #00ff7f;
+    }
+
+    .info span {
+      display: block;
+      margin: 5px 0;
+      padding: 3px;
+      background: rgba(0, 255, 127, 0.1);
+      border-radius: 3px;
+    }
+  </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
+  <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+</head>
+<body>
+  <video id="video" width="1280" height="960" autoplay muted></video>
+  <canvas id="overlay" width="1280" height="960"></canvas>
+
+  <div id="topPanel" class="panel fluorescent">
+    <h2>«Компас Бессознательного»</h2>
+    <p>Интерактивная платформа анализа подсознания</p>
+  </div>
+
+  <div id="leftPanel" class="panel fluorescent">
+    <h2>Биометрические показатели</h2>
+    <p>Стабилизация сигнала...</p>
+  </div>
+
+  <div id="bottomPanel" class="panel fluorescent">
+    <h2>«НЕЙРОСКРИПТ»</h2>
+    <p>2025 © Квантовый анализ поведения</p>
+  </div>
+
+  <div id="panel" class="panel">
+    <h2 class="fluorescent">Аналитическая панель</h2>
+    
+    <div id="faceSection">
+      <h3 class="fluorescent">Эмоциональный анализ</h3>
+      <div class="info"><span id="faceCount">Количество лиц: 0</span></div>
+      <ul id="faceDetails"></ul>
+    </div>
+
+    <div id="poseSection">
+      <h3 class="fluorescent">Кинематический анализ</h3>
+      <ul id="poseDetails"></ul>
+    </div>
+
+    <div class="slider">
+      <label>Масштаб интерфейса</label>
+      <input type="range" id="canvasWidth" min="640" max="1920" value="1280">
+      <span id="widthValue">1280 px</span>
+    </div>
+
+    <div class="toggle-btn">
+      <button id="toggleRender">Режим: Рамка</button>
+    </div>
+  </div>
+
+  <script>
+    const EMOTION_STABILITY_FRAMES = 5;
+    const PANEL_UPDATE_INTERVAL = 500;
+    const MIN_KEYPOINT_SCORE = 0.5;
+
+    const emotionMapping = {
+      angry: "🤬 Агрессия",
+      disgusted: "🤢 Отвращение",
+      fearful: "😨 Страх",
+      happy: "😃 Радость",
+      neutral: "😐 Нейтрально",
+      sad: "😢 Грусть",
+      surprised: "😯 Удивление"
+    };
+
+    const poseMapping = {
+      nose: "👃 Нос",
+      leftEye: "👁 Левый глаз",
+      rightEye: "👁 Правый глаз",
+      leftEar: "👂 Левое ухо",
+      rightEar: "👂 Правое ухо",
+      leftShoulder: "💪 Левое плечо",
+      rightShoulder: "💪 Правое плечо",
+      leftElbow: "🦾 Левый локоть",
+      rightElbow: "🦾 Правый локоть",
+      leftWrist: "✋ Левая кисть",
+      rightWrist: "✋ Правая кисть",
+      leftHip: "🦵 Левый таз",
+      rightHip: "🦵 Правый таз",
+      leftKnee: "🦵 Левое колено",
+      rightKnee: "🦵 Правое колено",
+      leftAnkle: "🦶 Левая лодыжка",
+      rightAnkle: "🦶 Правая лодыжка"
+    };
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('overlay');
+    const ctx = canvas.getContext('2d');
+    let posenetModel;
+    let faceRenderMode = "рамка";
+    let stableEmotion = null;
+
+    document.getElementById('toggleRender').onclick = () => {
+      faceRenderMode = faceRenderMode === "рамка" ? "маска" : "рамка";
+      document.getElementById('toggleRender').textContent = `Режим: ${faceRenderMode}`;
+    };
+
+    async function setupCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        video.srcObject = stream;
+        return new Promise(resolve => video.onloadedmetadata = () => resolve(video));
+      } catch (error) {
+        showError('Ошибка доступа к камере');
+        throw error;
+      }
+    }
+
+    function scaleCoordinates(x, y) {
+      const scaleX = canvas.width / video.videoWidth;
+      const scaleY = canvas.height / video.videoHeight;
+      return { x: x * scaleX, y: y * scaleY };
+    }
+
+    async function processFrame() {
+      const [faces, pose] = await Promise.all([
+        faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceExpressions(),
+        posenetModel.estimateSinglePose(video)
+      ]);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#00ff7f';
+      ctx.fillStyle = '#00ff7f';
+      ctx.lineWidth = 2;
+
+      // Обработка лиц
+      faces.forEach(face => {
+        const box = face.detection.box;
+        const scaledBox = scaleCoordinates(box.x, box.y);
+        const scaledWidth = box.width * (canvas.width / video.videoWidth);
+        const scaledHeight = box.height * (canvas.height / video.videoHeight);
+
+        if (faceRenderMode === "рамка") {
+          ctx.strokeRect(scaledBox.x, scaledBox.y, scaledWidth, scaledHeight);
+        } else {
+          faceapi.draw.drawFaceLandmarks(canvas, face);
+        }
+
+        const emotion = Object.entries(face.expressions)
+          .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+        ctx.font = '16px Segoe UI';
+        ctx.fillText(emotionMapping[emotion], scaledBox.x, scaledBox.y - 10);
+      });
+
+      // Обработка позы
+      pose.keypoints.forEach(kp => {
+        if (kp.score > MIN_KEYPOINT_SCORE) {
+          const pos = scaleCoordinates(kp.position.x, kp.position.y);
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      requestAnimationFrame(processFrame);
+    }
+
+    async function init() {
+      try {
+        await setupCamera();
+        video.play();
+        
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(
+            'https://justadudewhohacks.github.io/face-api.js/models'
+          ),
+          posenet.load()
+        ]);
+
+        processFrame();
+      } catch (error) {
+        showError('Инициализация не удалась: ' + error.message);
+      }
+    }
+
+    function showError(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 15px;
+        background: #ff0066;
+        color: white;
+        border-radius: 5px;
+        z-index: 999;
+        animation: fluorescentGlow 1s infinite;
+      `;
+      errorDiv.textContent = message;
+      document.body.appendChild(errorDiv);
+    }
+
+    init();
+  </script>
+</body>
+</html>
