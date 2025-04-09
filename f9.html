@@ -83,6 +83,13 @@
     .toggle-btn button {.toggle-btn button {padding: 12px 20px;font-size: 14px;cursor: pointer;border: 0px solid #ccc;border-radius: 4px;background-color: #f0f0f0;}
     /* Заголовки для панелей */
     h2, h3 {margin: 8px 0 4px;color: #444;}
+
+    /* Анимация мигания флуоресцентного свечения */
+    @keyframes fluorescentGlow {
+      0%, 100% {filter: drop-shadow(0 0 10px #B4FF9F);}
+      50% {filter: drop-shadow(0 0 20px #FFEE93);}
+    }
+    .fluorescent {animation: fluorescentGlow 2s infinite;}
   </style>
   <!-- Подключение необходимых библиотек -->
   <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
