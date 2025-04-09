@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система мониторинга</title>
+    <style>
+        /* Основные стили */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Верхняя панель */
+        #topPanel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 350px;
+            height: 100px;
+            background-color: #fff;
+            padding: 8px;
+            z-index: 3;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Левая панель */
+        #leftPanel {
+            position: fixed;
+            top: 100px;
+            left: 0;
+            width: 200px;
+            bottom: 100px;
+            background-color: #fff;
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+            z-index: 2;
+            overflow-y: auto;
+        }
+
+        /* Нижняя панель */
+        #bottomPanel {
+            position: fixed;
+            left: 0;
+            right: 350px;
+            bottom: 0;
+            height: 100px;
+            background-color: #fff;
+            padding: 8px;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Правая панель (из предыдущего ответа) */
+        #panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 360px;
+            height: 100%;
+            background-color: #fff;
+            padding: 16px;
+            z-index: 3;
+            overflow-y: auto;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+        }
+
+        /* Основная область контента */
+        #mainContent {
+            position: fixed;
+            top: 100px;
+            left: 200px;
+            right: 360px;
+            bottom: 100px;
+            background-color: #f8f8f8;
+            overflow: auto;
+            padding: 20px;
+            z-index: 1;
+        }
+
+        /* Элементы управления */
+        .control-button {
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 4px;
+            transition: background 0.3s;
+        }
+
+        .control-button:hover {
+            background: #45a049;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1200px) {
+            #leftPanel {
+                width: 160px;
+            }
+            #panel {
+                width: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #leftPanel {
+                width: 100px;
+                padding: 10px;
+            }
+            #panel {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Верхняя панель -->
+    <div id="topPanel">
+        <h1>Система анализа поведения</h1>
+    </div>
+
+    <!-- Левая панель -->
+    <div id="leftPanel">
+        <button class="control-button" data-key="start">Старт</button>
+        <button class="control-button" data-key="stop">Стоп</button>
+        <button class="control-button" data-key="reset">Сброс</button>
+        <button class="control-button" data-key="settings">Настройки</button>
+        <button class="control-button" data-key="export">Экспорт</button>
+        <button class="control-button" data-key="help">Помощь</button>
+    </div>
+
+    <!-- Основная область контента -->
+    <div id="mainContent">
+        <div class="content-helper">
+            <p>Здесь будет отображаться основная информация системы</p>
+            <p>📊 Графики и визуализация данных</p>
+            <p>🖥 Видеопоток с камеры</p>
+            <p>📈 Результаты анализа в реальном времени</p>
+        </div>
+    </div>
+
+    <!-- Нижняя панель -->
+    <div id="bottomPanel">
+        <div class="status-bar">
+            <span>Статус системы: <span id="systemStatus">Активна</span></span>
+            <span> | Загрузка ЦП: <span id="cpuLoad">25%</span></span>
+            <span> | Память: <span id="memoryUsage">1.2/4 GB</span></span>
+        </div>
+    </div>
+
+    <!-- Правая панель (из предыдущего ответа) -->
+    <div id="panel">
+    <!-- Секция лиц -->
+  <section class="section">
+    <h2>Лица</h2>
+    <div class="parameters">
+      <div class="parameter"><span class="parameter-label angry">🤬 Агрессия</span><span class="parameter-value" id="angry-value">-</span></div>
+      <div class="parameter"><span class="parameter-label disgusted">🤢 Отвращение</span><span class="parameter-value" id="disgusted-value">-</span></div>
+      <div class="parameter"><span class="parameter-label fearful">😨 Страх</span><span class="parameter-value" id="fearful-value">-</span></div>
+      <div class="parameter"><span class="parameter-label happy">😃 Радость</span><span class="parameter-value" id="happy-value">-</span></div>
+      <div class="parameter"><span class="parameter-label neutral">😐 Нейтрально</span><span class="parameter-value" id="neutral-value">-</span></div>
+      <div class="parameter"><span class="parameter-label sad">😢 Грусть</span><span class="parameter-value" id="sad-value">-</span></div>
+      <div class="parameter"><span class="parameter-label surprised">😯 Удивление</span><span class="parameter-value" id="surprised-value">-</span></div>
+    </div>
+  </section>
+
+  <!-- Секция позы -->
+  <section class="section">
+    <h2>Поза</h2>
+    <div class="parameters">
+      <div class="parameter"><span class="parameter-label">👃 Нос</span><span class="parameter-value" id="nose-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">👁 Левый глаз</span><span class="parameter-value" id="leftEye-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">👁 Правый глаз</span><span class="parameter-value" id="rightEye-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">👂 Левое ухо</span><span class="parameter-value" id="leftEar-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">👂 Правое ухо</span><span class="parameter-value" id="rightEar-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">💪 Левое плечо</span><span class="parameter-value" id="leftShoulder-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">💪 Правое плечо</span><span class="parameter-value" id="rightShoulder-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">🦾 Левый локоть</span><span class="parameter-value" id="leftElbow-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">🦾 Правый локоть</span><span class="parameter-value" id="rightElbow-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">✋ Левая кисть</span><span class="parameter-value" id="leftWrist-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">✋ Правая кисть</span><span class="parameter-value" id="rightWrist-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">🦵 Левый таз</span><span class="parameter-value" id="leftHip-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">🦵 Правый таз</span><span class="parameter-value" id="rightHip-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">🦵 Левое колено</span><span class="parameter-value" id="leftKnee-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">🦵 Правое колено</span><span class="parameter-value" id="rightKnee-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">🦶 Левая лодыжка</span><span class="parameter-value" id="leftAnkle-value">-</span></div>
+      <div class="parameter"><span class="parameter-label">🦶 Правая лодыжка</span><span class="parameter-value" id="rightAnkle-value">-</span></div>
+    </div>
+  </section>
+
+  <!-- Секция результатов -->
+  <section class="section">
+    <h2>Суммарные результаты</h2>
+    <div id="combined-results">
+      <!-- Сюда можно добавить дополнительную разметку для результатов -->
+    </div>
+  </section>
+</div>
+
+<style>
+#panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 360px;
+  height: 100%;
+  background-color: #fff;
+  padding: 16px;
+  z-index: 3;
+  overflow-y: auto;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+  font-family: Arial, sans-serif;
+}
+
+.section {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 16px;
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+h2 {
+  font-size: 18px;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #ddd;
+  color: #333;
+}
+
+.parameters {
+  display: grid;
+  gap: 8px;
+}
+
+.parameter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  padding: 4px 0;
+}
+
+.parameter-label {
+  color: #666;
+  margin-right: 12px;
+}
+
+.parameter-value {
+  color: #222;
+  font-weight: bold;
+  min-width: 60px;
+  text-align: right;
+}
+
+@media (max-width: 400px) {
+  #panel {
+    width: 100%;
+    max-width: 360px;
+  }
+  
+  .parameter {
+    font-size: 13px;
+  }
+}
+
+/* Цвета для эмоций */
+.angry { color: #ff4444; }
+.disgusted { color: #66bb6a; }
+.fearful { color: #ab47bc; }
+.happy { color: #fdd835; }
+.neutral { color: #78909c; }
+.sad { color: #42a5f5; }
+.surprised { color: #ffa726; }
+</style>
+    </div>
+
+    <script>
+        // Пример базовой логики управления
+        document.querySelectorAll('.control-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const action = button.dataset.key;
+                console.log(`Выбрано действие: ${action}`);
+                // Здесь можно добавить логику обработки действий
+            });
+        });
+    </script>
+</body>
+</html>
