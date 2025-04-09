@@ -418,11 +418,11 @@ parametr {color: green;}
           const spanKPKey = document.createElement("span");
           // Используем poseMapping для перевода названия ключевой точки
           const partRus = poseMapping[keypoint.part] || keypoint.part;
-          spanKPKey.className = keypoint.part; // Класс по ключу (например, "nose")
+          spanKPKey.className = "parametr " + keypoint.part; // Класс по ключу (например, "nose")
           spanKPKey.textContent = `${partRus}: `;
           li.appendChild(spanKPKey);
           const spanKPVal = document.createElement("span");
-          spanKPVal.className = "dynamicValue" + keypoint.part;
+          spanKPVal.className = "parametr dynamicValue" + keypoint.part;
           spanKPVal.textContent = `(x: ${Math.round(keypoint.position.x)}, y: ${Math.round(keypoint.position.y)}; score: ${(keypoint.score * 100).toFixed(1)}%)`;
           li.appendChild(spanKPVal);
           poseDetailsEl.appendChild(li);
