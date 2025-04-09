@@ -354,7 +354,7 @@
           spanXKey.textContent = "x: ";
           li.appendChild(spanXKey);
           const spanXVal = document.createElement("span");
-          spanXVal.className = "parametr dynamicValuex";
+          spanXVal.className = "dynamicValuex";
           spanXVal.textContent = Math.round(box.x);
           li.appendChild(spanXVal);
           // Вывод параметра y
@@ -363,7 +363,7 @@
           spanYKey.textContent = ", y: ";
           li.appendChild(spanYKey);
           const spanYVal = document.createElement("span");
-          spanYVal.className = "parametr dynamicValuey";
+          spanYVal.className = "dynamicValuey";
           spanYVal.textContent = Math.round(box.y);
           li.appendChild(spanYVal);
           // Вывод параметра w
@@ -372,7 +372,7 @@
           spanWKey.textContent = ", w: ";
           li.appendChild(spanWKey);
           const spanWVal = document.createElement("span");
-          spanWVal.className = "parametr dynamicValuew";
+          spanWVal.className = "dynamicValuew";
           spanWVal.textContent = Math.round(box.width);
           li.appendChild(spanWVal);
           // Вывод параметра h
@@ -393,7 +393,7 @@
             spanExpKey.textContent = `, ${emotionMapping[key] || key}: `;
             li.appendChild(spanExpKey);
             const spanExpVal = document.createElement("span");
-            spanExpVal.className = "parametr dynamicValue" + key;
+            spanExpVal.className = "dynamicValue" + key;
             spanExpVal.textContent = (expressions[key] * 100).toFixed(1) + "%";
             li.appendChild(spanExpVal);
           });
