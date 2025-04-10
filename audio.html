@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Эмоциональный синтезатор</title>
+  <style>
+    /* Основные стили документа */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #f0f0f0, #ececec);
+      color: #333;
+      overflow: hidden;
+    }
+    header {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-size: 2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    /* Контейнер для 4-х категорий: 2 столбца x 2 строки */
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      width: 100vw;
+      height: 100vh;
+      gap: 10px;
+      padding: 50px 10px 10px;
+    }
+    .category {
+      position: relative;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .category h2 {
+      margin: 0;
+      font-size: 2.5rem;
+      display: flex;
+      align-items: center;
+    }
+    .category h2::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 10px;
+      background: currentColor;
+    }
+    /* Определённые цвета для каждой категории */
+    .category[data-category="joy"] { color: #FFD700; }
+    .category[data-category="sadness"] { color: #2196F3; }
+    .category[data-category="tension"] { color: #F44336; }
+    .category[data-category="calm"] { color: #4CAF50; }
+    /* Стили эквалайзера */
+    .equalizer {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px 0;
+    }
+    .eq-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 120px;
+      transform: rotate(-90deg);
+      margin: 20px 0;
+      background: transparent;
+    }
+    .eq-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #666;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .eq-slider::-webkit-slider-thumb:hover {
+      background: #444;
+    }
+    /* Canvas для визуализации звуковой волны */
+    .waveform {
+      width: 100%;
+      height: 80px;
+    /*background: #000;
+      border: 1px solid #ccc;*/
+      border-radius: 8px;
+    }
+    /* Блок кнопок эмоций */
+    .btn-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .emotion-btn {
+      flex: 1 1 30%;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+      color: #fff;
+      font-weight: bold;
+    }
+    .emotion-btn:hover {
+      transform: scale(1.05);
+      opacity: 0.95;
+    }
+    /* Кнопка стоп */
+    #stop-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #ff4444;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: background 0.3s;
+      z-index: 10;display: none;
+    }
+    #stop-btn:hover {
+      background: #cc3333;
+    }
+    /* Статус аудио */
+    #audio-status {
+      position: fixed;
+      top: 5px;
+      left: 10px;
+      background: #333;
+      color: #fff;border-radius: 12px;
+      padding: 10px 15px;
+      font-size: 0.9rem;
+      z-index: 10;
+    }
+    input[type="range"] {
+    -webkit-appearance: none;
+    margin-right: 15px;
+    width: 200px;
+    height: 7px;
+    background: rgb(255 255 255 / 0%);
+    border-radius: 5px;
+    background-image: linear-gradient(#000000, #000000);
+    background-size: 70% 100%;
+    background-repeat: no-repeat;
+}
+  </style>
+</head>
+<body>
+  <!-- <header>Эмоциональный синтезатор</header> -->
+  <div class="grid-container">
+    <!-- Категория Радость -->
+    <div class="category" data-category="joy">
+      <h2>😊 Радость</h2>
+      <div class="equalizer" id="eq-joy">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+      </div>
+      <canvas class="waveform" id="waveform-joy"></canvas>
+      <div class="btn-container">
+        <button class="emotion-btn" style="background: #FFEB3B;" data-preset="jubilation">Ликование</button>
+        <button class="emotion-btn" style="background: #FFF176;" data-preset="playfulness">Игривость</button>
+        <button class="emotion-btn" style="background: #FBC02D;" data-preset="triumph">Триумф</button>
+      </div>
+    </div>
+    <!-- Категория Грусть -->
+    <div class="category" data-category="sadness">
+      <h2>😢 Грусть</h2>
+      <div class="equalizer" id="eq-sadness">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+      </div>
+      <canvas class="waveform" id="waveform-sadness"></canvas>
+      <div class="btn-container">
+        <button class="emotion-btn" style="background: #64B5F6;" data-preset="melancholy">Меланхолия</button>
+        <button class="emotion-btn" style="background: #42A5F5;" data-preset="longing">Тоска</button>
+        <button class="emotion-btn" style="background: #1E88E5;" data-preset="solitude">Одиночество</button>
+      </div>
+    </div>
+    <!-- Категория Напряжение -->
+    <div class="category" data-category="tension">
+      <h2>😰 Напряжение</h2>
+      <div class="equalizer" id="eq-tension">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+      </div>
+      <canvas class="waveform" id="waveform-tension"></canvas>
+      <div class="btn-container">
+        <button class="emotion-btn" style="background: #EF5350;" data-preset="anxiety">Тревога</button>
+        <button class="emotion-btn" style="background: #E53935;" data-preset="fear">Страх</button>
+        <button class="emotion-btn" style="background: #D32F2F;" data-preset="drama">Драматизм</button>
+      </div>
+    </div>
+    <!-- Категория Спокойствие -->
+    <div class="category" data-category="calm">
+      <h2>😌 Спокойствие</h2>
+      <div class="equalizer" id="eq-calm">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+        <input type="range" class="eq-slider" min="-40" max="40" value="0">
+      </div>
+      <canvas class="waveform" id="waveform-calm"></canvas>
+      <div class="btn-container">
+        <button class="emotion-btn" style="background: #81C784;" data-preset="serenity">Умиротворение</button>
+        <button class="emotion-btn" style="background: #66BB6A;" data-preset="tenderness">Нежность</button>
+        <button class="emotion-btn" style="background: #43A047;" data-preset="nostalgia">Ностальгия</button>
+      </div>
+    </div>
+  </div>
+  
+  <button id="stop-btn">⏹ Стоп</button>
+  <div id="audio-status">Статус: Готово</div>
+  
+  <script>
+    // Пресеты звука для каждой эмоции
+    const audioPresets = {
+      // Радость
+      jubilation: { type: "sine", freq: 440, tempo: 160, effect: "vibrato" },
+      playfulness: { type: "square", freq: 880, tempo: 120, effect: "staccato" },
+      triumph: { type: "sawtooth", freq: 220, tempo: 140, effect: "crescendo" },
+      // Грусть
+      melancholy: { type: "sine", freq: 220, tempo: 60, effect: "legato" },
+      longing: { type: "triangle", freq: 329.63, tempo: 45, effect: "portamento" },
+      solitude: { type: "sine", freq: 146.83, tempo: 30, effect: "reverb" },
+      // Напряжение
+      anxiety: { type: "square", freq: 554.37, tempo: 180, effect: "tremolo" },
+      fear: { type: "sawtooth", freq: 698.46, tempo: 200, effect: "glissando" },
+      drama: { type: "sawtooth", freq: 440, tempo: 160, effect: "distortion", modulation: true },
+      // Спокойствие
+      serenity: { type: "sine", freq: 523.25, tempo: 80, effect: "none" },
+      tenderness: { type: "triangle", freq: 659.26, tempo: 60, effect: "chorus" },
+      nostalgia: { type: "sine", freq: 392, tempo: 50, effect: "delay" }
+    };
+    
+    class AudioEngine {
+      constructor() {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Для каждой категории будем хранить отдельный аудиоканал
+        // Формат: { oscillator, analyser, eqNodes, animationFrameId, presetKey }
+        this.channels = {};
+      }
+      
+      createEQChain() {
+        // Создаём три BiquadFilter для низких, средних и высоких частот
+        const low = this.createEQNode(250);
+        const mid = this.createEQNode(1000);
+        const high = this.createEQNode(4000);
+        return { low, mid, high };
+      }
+      
+      createEQNode(frequency) {
+        const filter = this.audioCtx.createBiquadFilter();
+        filter.type = 'peaking';
+        filter.frequency.value = frequency;
+        filter.Q.value = 1;
+        filter.gain.value = 0;
+        return filter;
+      }
+      
+      createAnalyser() {
+        const analyser = this.audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        return analyser;
+      }
+      
+      // Останавливает и удаляет аудиоканал для данной категории
+      stopChannel(category) {
+        const channel = this.channels[category];
+        if(channel) {
+          if(channel.oscillator) channel.oscillator.stop();
+          if(channel.animationFrameId) cancelAnimationFrame(channel.animationFrameId);
+          delete this.channels[category];
+          document.getElementById('audio-status').textContent = `Статус: ${category} остановлен`;
+        }
+      }
+      
+      animateWaveform(category, analyser) {
+        const canvas = document.getElementById(`waveform-${category}`);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        const draw = () => {
+          analyser.getByteTimeDomainData(dataArray);
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = '#000';
+          ctx.beginPath();
+          let sliceWidth = canvas.width / bufferLength;
+          let x = 0;
+          for(let i = 0; i < bufferLength; i++) {
+            let v = dataArray[i] / 128.0;
+            let y = v * canvas.height / 2;
+            if(i === 0) { ctx.moveTo(x, y); }
+            else { ctx.lineTo(x, y); }
+            x += sliceWidth;
+          }
+          ctx.lineTo(canvas.width, canvas.height / 2);
+          ctx.stroke();
+          // Сохраняем ID анимации для возможности отмены
+          this.channels[category].animationFrameId = requestAnimationFrame(draw);
+        };
+        draw();
+      }
+      
+      play(preset, category, presetKey) {
+        // Если уже запущен канал для категории:
+        // Если тот же пресет – отключаем (toggle), иначе перезапускаем канал
+        if(this.channels[category]) {
+          if(this.channels[category].presetKey === presetKey) {
+            this.stopChannel(category);
+            return;
+          } else {
+            this.stopChannel(category);
+          }
+        }
+        
+        // Создаём новый аудиоканал для категории
+        const oscillator = this.audioCtx.createOscillator();
+        oscillator.type = preset.type;
+        oscillator.frequency.setValueAtTime(preset.freq, this.audioCtx.currentTime);
+        
+        // Если требуется модуляция – добавляем модуллирующий осциллятор
+        if(preset.modulation) {
+          const modulator = this.audioCtx.createOscillator();
+          modulator.type = 'sine';
+          modulator.frequency.value = 5;
+          const gainNode = this.audioCtx.createGain();
+          gainNode.gain.value = 50;
+          modulator.connect(gainNode).connect(oscillator.frequency);
+          modulator.start();
+        }
+        
+        const analyser = this.createAnalyser();
+        const eqChain = this.createEQChain();
+        
+        // Соединяем цепочку: oscillator → analyser → EQ (low → mid → high) → destination
+        oscillator.connect(analyser);
+        analyser.connect(eqChain.low);
+        eqChain.low.connect(eqChain.mid);
+        eqChain.mid.connect(eqChain.high);
+        eqChain.high.connect(this.audioCtx.destination);
+        
+        oscillator.start();
+        
+        // Сохраняем канал для данной категории
+        this.channels[category] = {
+          oscillator,
+          analyser,
+          eqNodes: eqChain,
+          presetKey
+        };
+        document.getElementById('audio-status').textContent = `Воспроизведение: ${preset.type} ${preset.freq}Hz (${category})`;
+        this.animateWaveform(category, analyser);
+      }
+    }
+    
+    const engine = new AudioEngine();
+    
+    // Обработчик для кнопок эмоций – теперь передаём presetKey из data-атрибута кнопки
+    document.querySelectorAll('.emotion-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const category = btn.closest('.category').getAttribute('data-category');
+        const presetKey = btn.getAttribute('data-preset');
+        engine.play(audioPresets[presetKey], category, presetKey);
+      });
+    });
+    
+    // Глобальная кнопка "Стоп" для остановки всех каналов
+    document.getElementById('stop-btn').addEventListener('click', () => {
+      for (const category in engine.channels) {
+        engine.stopChannel(category);
+      }
+    });
+    
+    // Настройка слайдеров эквалайзера: при изменении значения слайдера для конкретной категории меняется gain соответствующего фильтра
+    document.querySelectorAll('.equalizer input').forEach((slider, index) => {
+      slider.addEventListener('input', (e) => {
+        const category = e.target.closest('.equalizer').id.split('-')[1];
+        const band = ['low', 'mid', 'high'][index % 3];
+        if(engine.channels[category] && engine.channels[category].eqNodes) {
+          engine.channels[category].eqNodes[band].gain.value = parseInt(e.target.value);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
