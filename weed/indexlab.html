@@ -185,8 +185,16 @@ ATOM      2  C   UNK     1       1.529   0.000   0.000`
             };
 
             const formula = {
-                THC: Math.min(5 * (profile.genetics.includes('CYP2C9') ? 0.6 : 1 + (profile.goal === 'pain' ? 3 : 0), 15),
-                CBD: Math.min(profile.cortisol * 0.8 * (profile.genetics.includes('COMT') ? 1.2 : 1, 40),
+                THC: Math.min(
+                    5 * (profile.genetics.includes('CYP2C9') ? 0.6 : 1) + 
+                    (profile.goal === 'pain' ? 3 : 0), 
+                    15
+                ),
+                CBD: Math.min(
+                    profile.cortisol * 0.8 * 
+                    (profile.genetics.includes('COMT') ? 1.2 : 1), 
+                    40
+                ),
                 terpenes: profile.goal === 'sleep' ? ['Мирцен'] : 
                          profile.cortisol > 25 ? ['Лимонен'] : [],
                 additives: ['Магний L-треонат']
