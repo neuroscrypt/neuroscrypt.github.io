@@ -176,13 +176,16 @@ ATOM      2  C   UNK     1       1.529   0.000   0.000`
         }
 
         // Расчет формулы
-        function calculateFormula() {
-            const profile = {
-                genetics: Array.from(document.querySelector('#geneticMarkers').selectedOptions
-                             .map(opt => opt.value),
-                cortisol: parseFloat(document.querySelector('#cortisol').value) || 20,
-                goal: document.querySelector('#goal').value
-            };
+function calculateFormula() {
+    const profile = {
+        genetics: Array.from(document.querySelector('#geneticMarkers').selectedOptions)
+                     .map(opt => opt.value),
+        cortisol: parseFloat(document.querySelector('#cortisol').value) || 20,
+        goal: document.querySelector('#goal').value
+    };
+    
+    // Остальная часть кода...
+}
 
             // Расчет компонентов
             const thcBase = profile.genetics.includes('CYP2C9') ? 5 * 0.6 : 5;
