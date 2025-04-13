@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CannaGenix AI - Персонализированные формулы</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/3dmol/1.7.0/3Dmol-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/3dmol@1.7.0/build/3Dmol-min.js"></script>
     <style>
         :root {
             --primary: #2A2A2A;
@@ -132,13 +132,15 @@
                 </select>
             </div>
 
-            <button onclick="calculateFormula()">Создать формулу</button>
+            <button id="calculateBtn">Создать формулу</button>
         </div>
 
         <div id="results"></div>
     </div>
 
     <script>
+        // Инициализация глобальных переменных
+        let viewer = null;
         const molecularDB = {
             'THC': `ATOM      1  C   UNK     1       0.000   0.000   0.000
 ATOM      2  C   UNK     1       1.529   0.000   0.000
@@ -152,64 +154,64 @@ ATOM      3  C   UNK     1       2.100   1.401   0.000`,
 ATOM      2  C   UNK     1       1.529   0.000   0.000`
         };
 
-        let viewer = null;
-
+        // Инициализация 3D просмотрщика
         function initViewer(containerId) {
             viewer = $3Dmol.createViewer(containerId, {
                 backgroundColor: 0xf9f9f9
             });
         }
 
+        // Отрисовка молекулы
         function renderMolecule(molecule) {
-            if (!viewer) return;
+            if (!viewer || !molecularDB[molecule]) return;
             
             viewer.clear();
-            const data = molecularDB[molecule];
-            
-            viewer.addModel(data, "pdb");
+            viewer.addModel(molecularDB[molecule], "pdb");
             viewer.setStyle({}, {
                 stick: {colorscheme: "greenCarbon", radius: 0.2},
                 sphere: {scale: 0.3}
             });
-            
             viewer.zoomTo();
             viewer.render();
         }
 
+        // Расчет формулы
         function calculateFormula() {
             const profile = {
-                genetics: Array.from(document.querySelector('#geneticMarkers').selectedOptions)
+                genetics: Array.from(document.querySelector('#geneticMarkers').selectedOptions
                              .map(opt => opt.value),
-                cortisol: parseFloat(document.querySelector('#cortisol').value),
+                cortisol: parseFloat(document.querySelector('#cortisol').value) || 20,
                 goal: document.querySelector('#goal').value
             };
 
+            // Расчет компонентов
+            const thcBase = profile.genetics.includes('CYP2C9') ? 5 * 0.6 : 5;
+            const thc = Math.min(thcBase + (profile.goal === 'pain' ? 3 : 0), 15);
+            
+            const cbdBase = profile.cortisol * 0.8;
+            const cbd = Math.min(profile.genetics.includes('COMT') ? cbdBase * 1.2 : cbdBase, 40);
+
             const formula = {
-                THC: Math.min(
-                    5 * (profile.genetics.includes('CYP2C9') ? 0.6 : 1) + 
-                    (profile.goal === 'pain' ? 3 : 0), 
-                    15
-                ),
-                CBD: Math.min(
-                    profile.cortisol * 0.8 * 
-                    (profile.genetics.includes('COMT') ? 1.2 : 1), 
-                    40
-                ),
+                THC: thc,
+                CBD: cbd,
                 terpenes: profile.goal === 'sleep' ? ['Мирцен'] : 
                          profile.cortisol > 25 ? ['Лимонен'] : [],
                 additives: ['Магний L-треонат']
             };
 
+            // Генерация HTML
             const molecules = [...formula.terpenes, 'THC', 'CBD'];
             const resultHTML = `
                 <div class="card">
                     <h3>Персонализированная формула</h3>
-                    <div class="structure-tabs">
-                        ${molecules.map(m => `
-                            <div class="structure-tab" onclick="renderMolecule('${m}')">${m}</div>
-                        `).join('')}
-                    </div>
-                    <div id="molecule-viewer" class="molecule-viewer"></div>
+                    ${molecules.length > 0 ? `
+                        <div class="structure-tabs">
+                            ${molecules.map(m => `
+                                <div class="structure-tab" onclick="renderMolecule('${m}')">${m}</div>
+                            `).join('')}
+                        </div>
+                        <div id="molecule-viewer" class="molecule-viewer"></div>
+                    ` : ''}
                     
                     <div class="formula-result">
                         <div>
@@ -240,11 +242,18 @@ ATOM      2  C   UNK     1       1.529   0.000   0.000`
             `;
 
             document.querySelector('#results').innerHTML = resultHTML;
-            initViewer('molecule-viewer');
-            if(molecules.length > 0) renderMolecule(molecules[0]);
+            
+            // Инициализация просмотрщика после рендера
+            if(molecules.length > 0) {
+                initViewer('molecule-viewer');
+                renderMolecule(molecules[0]);
+            }
         }
 
-        window.onload = () => initViewer('molecule-viewer');
+        // Инициализация при загрузке
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('calculateBtn').addEventListener('click', calculateFormula);
+        });
     </script>
 </body>
 </html>
