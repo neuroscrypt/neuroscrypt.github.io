@@ -38,7 +38,38 @@
     <!-- Остальные стили остаются без изменений -->
 </head>
 <body>
-    <!-- Остальная часть HTML без изменений -->
+    <div class="container">
+        <!-- Сайдбар для ввода данных -->
+        <div class="card">
+            <h2>Ваш профиль</h2>
+            <div class="input-group">
+                <label>Генетические маркеры</label>
+                <select id="geneticMarkers" multiple>
+                    <option value="CYP2C9">CYP2C9*3 (медленный метаболизм)</option>
+                    <option value="COMT">COMT Met/Met (стресс)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Кортизол (мкг/дл)</label>
+                <input type="number" id="cortisol" value="20">
+            </div>
+
+            <div class="input-group">
+                <label>Цель</label>
+                <select id="goal">
+                    <option value="pain">Обезболивание</option>
+                    <option value="sleep">Сон</option>
+                    <option value="anxiety">Антитревога</option>
+                </select>
+            </div>
+
+            <button onclick="calculateFormula()">Сгенерировать формулу</button>
+        </div>
+
+        <!-- Область результатов -->
+        <div id="results"></div>
+    </div>
 
     <script>
         // База молекулярных структур (формат PDB)
