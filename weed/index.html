@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CannaGenix AI - Персонализированные формулы</title>
+    <style>
+        /* Behance-стиль: минимализм, сетки, плавные анимации */
+        :root {
+            --primary: #2A2A2A;
+            --accent: #6C63FF;
+            --background: #F9F9F9;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: var(--background);
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .formula-result {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .component-chip {
+            display: inline-block;
+            background: #eee;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Сайдбар для ввода данных -->
+        <div class="card">
+            <h2>Ваш профиль</h2>
+            <div class="input-group">
+                <label>Генетические маркеры</label>
+                <select id="geneticMarkers" multiple>
+                    <option value="CYP2C9">CYP2C9*3 (медленный метаболизм)</option>
+                    <option value="COMT">COMT Met/Met (стресс)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Кортизол (мкг/дл)</label>
+                <input type="number" id="cortisol" value="20">
+            </div>
+
+            <div class="input-group">
+                <label>Цель</label>
+                <select id="goal">
+                    <option value="pain">Обезболивание</option>
+                    <option value="sleep">Сон</option>
+                    <option value="anxiety">Антитревога</option>
+                </select>
+            </div>
+
+            <button onclick="calculateFormula()">Сгенерировать формулу</button>
+        </div>
+
+        <!-- Область результатов -->
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // База знаний: правила генерации формул
+        const knowledgeBase = {
+            THC: (profile) => {
+                let base = 5;
+                if(profile.genetics.includes('CYP2C9')) base *= 0.6;
+                if(profile.goal === 'pain') base += 3;
+                return Math.min(base, 15);
+            },
+
+            CBD: (profile) => {
+                let base = profile.cortisol * 0.8;
+                if(profile.genetics.includes('COMT')) base *= 1.2;
+                return Math.min(base, 40);
+            },
+
+            terpenes: (profile) => {
+                const terps = [];
+                if(profile.goal === 'sleep') terps.push('Мирцен', 'Линалол');
+                if(profile.cortisol > 25) terps.push('Лимонен');
+                return terps;
+            }
+        };
+
+        function calculateFormula() {
+            // Сбор данных пользователя
+            const profile = {
+                genetics: Array.from(document.querySelector('#geneticMarkers').selectedOptions)
+                             .map(opt => opt.value),
+                cortisol: parseFloat(document.querySelector('#cortisol').value),
+                goal: document.querySelector('#goal').value
+            };
+
+            // Генерация формулы
+            const formula = {
+                THC: knowledgeBase.THC(profile).toFixed(1),
+                CBD: knowledgeBase.CBD(profile).toFixed(1),
+                terpenes: knowledgeBase.terpenes(profile),
+                additives: ['Магний L-треонат']
+            };
+
+            // Рендеринг результата
+            const resultHTML = `
+                <div class="card">
+                    <h3>Ваша персонализированная формула</h3>
+                    <div class="formula-result">
+                        <div>
+                            <h4>Каннабиноиды (мг)</h4>
+                            <div class="component-chip">THC: ${formula.THC}</div>
+                            <div class="component-chip">CBD: ${formula.CBD}</div>
+                        </div>
+                        
+                        <div>
+                            <h4>Терпены</h4>
+                            ${formula.terpenes.map(t => `<div class="component-chip">${t}</div>`).join('')}
+                        </div>
+
+                        <div>
+                            <h4>Адъюванты</h4>
+                            ${formula.additives.map(a => `<div class="component-chip">${a}</div>`).join('')}
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 1.5rem;">Рекомендации</h4>
+                    <ul>
+                        <li>Форма приёма: ${profile.goal === 'sleep' ? 'Капсулы' : 'Сублингвальные капли'}</li>
+                        <li>Время приёма: ${profile.goal === 'sleep' ? 'За 30 минут до сна' : 'Утром'}</li>
+                    </ul>
+                </div>
+            `;
+
+            document.querySelector('#results').innerHTML = resultHTML;
+        }
+    </script>
+</body>
+</html>
