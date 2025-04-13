@@ -4,10 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CannaGenix AI - Персонализированные формулы</title>
-    <!-- 3Dmol.js для визуализации молекул -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/3dmol/1.7.0/3Dmol-min.js"></script>
     <style>
-        /* Добавленные стили для визуализации */
+        :root {
+            --primary: #2A2A2A;
+            --accent: #6C63FF;
+            --background: #F9F9F9;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: var(--background);
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .formula-result {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .component-chip {
+            display: inline-block;
+            background: #eee;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 0.9em;
+        }
+
         .molecule-viewer {
             width: 100%;
             height: 300px;
@@ -31,22 +101,20 @@
         }
 
         .structure-tab.active {
-            background: #6C63FF;
+            background: var(--accent);
             color: white;
         }
     </style>
-    <!-- Остальные стили остаются без изменений -->
 </head>
 <body>
     <div class="container">
-        <!-- Сайдбар для ввода данных -->
         <div class="card">
-            <h2>Ваш профиль</h2>
+            <h2>Профиль пользователя</h2>
             <div class="input-group">
                 <label>Генетические маркеры</label>
                 <select id="geneticMarkers" multiple>
-                    <option value="CYP2C9">CYP2C9*3 (медленный метаболизм)</option>
-                    <option value="COMT">COMT Met/Met (стресс)</option>
+                    <option value="CYP2C9">CYP2C9*3</option>
+                    <option value="COMT">COMT Met/Met</option>
                 </select>
             </div>
 
@@ -64,40 +132,41 @@
                 </select>
             </div>
 
-            <button onclick="calculateFormula()">Сгенерировать формулу</button>
+            <button onclick="calculateFormula()">Создать формулу</button>
         </div>
 
-        <!-- Область результатов -->
         <div id="results"></div>
     </div>
 
     <script>
-        // База молекулярных структур (формат PDB)
-        const molecularStructures = {
-            'THC': `АТОМ 1 C 0.000 0.000 0.000
-АТОМ 2 C 1.529 0.000 0.000
-...`,
-            'CBD': `АТОМ 1 C 0.000 0.000 0.000
-АТОМ 2 O 1.529 0.000 0.000
-...`,
-            'Лимонен': `АТОМ 1 C 0.000 0.000 0.000
-...`
+        const molecularDB = {
+            'THC': `ATOM      1  C   UNK     1       0.000   0.000   0.000
+ATOM      2  C   UNK     1       1.529   0.000   0.000
+ATOM      3  O   UNK     1       2.045   1.401   0.000`,
+            
+            'CBD': `ATOM      1  C   UNK     1       0.000   0.000   0.000
+ATOM      2  O   UNK     1       1.400   0.000   0.000
+ATOM      3  C   UNK     1       2.100   1.401   0.000`,
+            
+            'Лимонен': `ATOM      1  C   UNK     1       0.000   0.000   0.000
+ATOM      2  C   UNK     1       1.529   0.000   0.000`
         };
 
-        // Инициализация 3D просмотрщика
         let viewer = null;
-        function initViewer() {
-            viewer = $3Dmol.createViewer('molecule-container', {
+
+        function initViewer(containerId) {
+            viewer = $3Dmol.createViewer(containerId, {
                 backgroundColor: 0xf9f9f9
             });
         }
 
-        // Функция отображения структуры
-        function renderStructure(molecule) {
-            viewer.clear();
-            const pdbData = molecularStructures[molecule];
+        function renderMolecule(molecule) {
+            if (!viewer) return;
             
-            viewer.addModel(pdbData, "pdb");
+            viewer.clear();
+            const data = molecularDB[molecule];
+            
+            viewer.addModel(data, "pdb");
             viewer.setStyle({}, {
                 stick: {colorscheme: "greenCarbon", radius: 0.2},
                 sphere: {scale: 0.3}
@@ -107,32 +176,67 @@
             viewer.render();
         }
 
-        // Обновленная функция генерации формулы
         function calculateFormula() {
-            // ... существующая логика ...
+            const profile = {
+                genetics: Array.from(document.querySelector('#geneticMarkers').selectedOptions)
+                             .map(opt => opt.value),
+                cortisol: parseFloat(document.querySelector('#cortisol').value),
+                goal: document.querySelector('#goal').value
+            };
 
-            // Добавляем визуализацию
+            const formula = {
+                THC: Math.min(5 * (profile.genetics.includes('CYP2C9') ? 0.6 : 1 + (profile.goal === 'pain' ? 3 : 0), 15),
+                CBD: Math.min(profile.cortisol * 0.8 * (profile.genetics.includes('COMT') ? 1.2 : 1, 40),
+                terpenes: profile.goal === 'sleep' ? ['Мирцен'] : 
+                         profile.cortisol > 25 ? ['Лимонен'] : [],
+                additives: ['Магний L-треонат']
+            };
+
             const molecules = [...formula.terpenes, 'THC', 'CBD'];
             const resultHTML = `
                 <div class="card">
-                    <h3>Ваша персонализированная формула</h3>
-                    <div class="structure-tabs" id="structure-tabs">
+                    <h3>Персонализированная формула</h3>
+                    <div class="structure-tabs">
                         ${molecules.map(m => `
-                            <div class="structure-tab" onclick="renderStructure('${m}')">${m}</div>
+                            <div class="structure-tab" onclick="renderMolecule('${m}')">${m}</div>
                         `).join('')}
                     </div>
-                    <div id="molecule-container" class="molecule-viewer"></div>
-                    <!-- Остальная часть результатов -->
+                    <div id="molecule-viewer" class="molecule-viewer"></div>
+                    
+                    <div class="formula-result">
+                        <div>
+                            <h4>Каннабиноиды</h4>
+                            <div class="component-chip">THC: ${formula.THC.toFixed(1)} мг</div>
+                            <div class="component-chip">CBD: ${formula.CBD.toFixed(1)} мг</div>
+                        </div>
+                        
+                        <div>
+                            <h4>Терпены</h4>
+                            ${formula.terpenes.map(t => `<div class="component-chip">${t}</div>`).join('')}
+                        </div>
+
+                        <div>
+                            <h4>Адъюванты</h4>
+                            ${formula.additives.map(a => `<div class="component-chip">${a}</div>`).join('')}
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <h4>Рекомендации</h4>
+                        <ul>
+                            <li>Форма: ${profile.goal === 'sleep' ? 'Капсулы' : 'Капли'}</li>
+                            <li>Время приёма: ${profile.goal === 'sleep' ? 'Перед сном' : 'Утром'}</li>
+                        </ul>
+                    </div>
                 </div>
             `;
 
             document.querySelector('#results').innerHTML = resultHTML;
-            initViewer();
-            if(molecules.length > 0) renderStructure(molecules[0]);
+            initViewer('molecule-viewer');
+            if(molecules.length > 0) renderMolecule(molecules[0]);
         }
 
-        // Инициализация при загрузке
-        window.onload = initViewer;
+        window.onload = () => initViewer('molecule-viewer');
     </script>
 </body>
 </html>
