@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CannaGenix AI - Персонализированные формулы</title>
+    <!-- 3Dmol.js для визуализации молекул -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/3dmol/1.7.0/3Dmol-min.js"></script>
+    <style>
+        /* Добавленные стили для визуализации */
+        .molecule-viewer {
+            width: 100%;
+            height: 300px;
+            margin: 1rem 0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .structure-tabs {
+            display: flex;
+            gap: 8px;
+            margin: 1rem 0;
+        }
+
+        .structure-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #eee;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .structure-tab.active {
+            background: #6C63FF;
+            color: white;
+        }
+    </style>
+    <!-- Остальные стили остаются без изменений -->
+</head>
+<body>
+    <!-- Остальная часть HTML без изменений -->
+
+    <script>
+        // База молекулярных структур (формат PDB)
+        const molecularStructures = {
+            'THC': `АТОМ 1 C 0.000 0.000 0.000
+АТОМ 2 C 1.529 0.000 0.000
+...`,
+            'CBD': `АТОМ 1 C 0.000 0.000 0.000
+АТОМ 2 O 1.529 0.000 0.000
+...`,
+            'Лимонен': `АТОМ 1 C 0.000 0.000 0.000
+...`
+        };
+
+        // Инициализация 3D просмотрщика
+        let viewer = null;
+        function initViewer() {
+            viewer = $3Dmol.createViewer('molecule-container', {
+                backgroundColor: 0xf9f9f9
+            });
+        }
+
+        // Функция отображения структуры
+        function renderStructure(molecule) {
+            viewer.clear();
+            const pdbData = molecularStructures[molecule];
+            
+            viewer.addModel(pdbData, "pdb");
+            viewer.setStyle({}, {
+                stick: {colorscheme: "greenCarbon", radius: 0.2},
+                sphere: {scale: 0.3}
+            });
+            
+            viewer.zoomTo();
+            viewer.render();
+        }
+
+        // Обновленная функция генерации формулы
+        function calculateFormula() {
+            // ... существующая логика ...
+
+            // Добавляем визуализацию
+            const molecules = [...formula.terpenes, 'THC', 'CBD'];
+            const resultHTML = `
+                <div class="card">
+                    <h3>Ваша персонализированная формула</h3>
+                    <div class="structure-tabs" id="structure-tabs">
+                        ${molecules.map(m => `
+                            <div class="structure-tab" onclick="renderStructure('${m}')">${m}</div>
+                        `).join('')}
+                    </div>
+                    <div id="molecule-container" class="molecule-viewer"></div>
+                    <!-- Остальная часть результатов -->
+                </div>
+            `;
+
+            document.querySelector('#results').innerHTML = resultHTML;
+            initViewer();
+            if(molecules.length > 0) renderStructure(molecules[0]);
+        }
+
+        // Инициализация при загрузке
+        window.onload = initViewer;
+    </script>
+</body>
+</html>
