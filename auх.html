@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head> 
+
+    <meta charset="UTF-8">
+    <title> @ </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <link rel="stylesheet" href="audio/css/dev.css"/>
+    <script src="https://blckhle.github.io/test/p2p-graph.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ipfs/dist/index.min.js"></script>
+<!--<script src="https://kit.fontawesome.com/969af07023.js" crossorigin="anonymous"></script>-->
+
+<script> 
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+            document.getElementById('wdt').innerHTML=(w);
+            document.getElementById('hgt').innerHTML=(h);
+            document.onreadystatechange = function () {
+        if (document.readyState == "complete") {
+            console.log( ' загружено');
+    } else {  }
+          }    </script>
+  
+              <style>
+                  
+        svg {transition: unset;fill:#7fff00;}
+        line.link {transition: unset;stroke:#ffe928!important;}
+
+  @-webkit-keyframes f {
+    0% {display: none;
+        opacity: 0;
+    } 1% {
+        display: block;
+        opacity: 0;
+    } 100% {
+        display: block;
+        opacity: 1;
+    }
+  }
+/*-----------------------------------------------------------------*/
+     text.text{font-size:7.5px;font-weight:bolder;opacity:.6;}
+/*-----------------------------------------------------------------*/
+ body {
+       -webkit-animation: f 3.5s ease-out;overflow: hidden;margin: 0;
+        background: linear-gradient(40deg, transparent 10%, rgba(255, 255, 255, 0.16) 60%, transparent 100%);
+       -webkit-backdrop-filter: blur(7px);
+        backdrop-filter: blur(7px);
+        border-radius: 10px;
+      }
+  .graph{position:fixed;top:60vh;width:100%;height:60vh;}
+  
+  #frame1{position: fixed;width: 100%;
+    border: 0px;
+    top: 20vh;
+    left: 1%;
+    height: 100vh;
+    z-index: 1;opacity: .85;
+}
+   eq#eq {position: absolute;
+    width: 98%;
+    height: 25vh;
+    top: 35vh;
+    margin: 1%;
+}
+.os {position: absolute;
+    z-index: 1;top: 10px;
+    font-size: 2em;color:#969696;
+    padding-left: 107px;}
+  
+  iframe#frame {
+    width: 80%;
+    position: fixed;
+    height: 80vh;
+    border: 0;
+    z-index: -2;
+    left: 25%;
+    background-color: #ffebcd00; 
+    background-image: url(https://raw.githubusercontent.com/biometricz/biometricz.github.io/master/audio/media/fce.png);
+    background-size: 250px;
+    background-repeat: no-repeat;
+    background-position: 40px 0px;
+  }
+  #vidOn{width: 70px;
+    padding: 0;
+    margin: 0;
+    height: 70px;
+    border-radius: 8px;
+    background-image: url(https://biometricz.github.io/audio/media/strwbr.png);
+    background-size: 90px;
+    background-color:white;
+    background-position: -8px 2px;
+    position: fixed;
+    top: 2.5px;
+    left: 2.5px;
+    background-repeat: no-repeat;
+    opacity: .68;
+    z-index: 5;
+    cursor: pointer;}
+  #vidOff{width: 70px;
+    width: 70px;
+    padding: 0;
+    margin: 0;
+    height: 70px;
+    border-radius: 8px;
+    background-image: url(https://biometricz.github.io/audio/media/strwbr.png);
+    background-size: 90px;
+    background-color:white;
+    background-position: -8px 2px;
+    position: fixed;
+    top: 2.5px;
+    left: 2.5px;
+    background-repeat: no-repeat;
+    opacity: .68;
+    z-index: 5;
+    cursor: pointer;}
+  #cams{display:none;}
+  #vidA {width: 70px;
+    padding: 0;
+    margin: 0;
+    height: 70px;
+    border-radius: 8px;
+    background-image: url(https://biometricz.github.io/audio/media/bee.png);
+    background-size: 85px;
+     background-color:white;
+    background-position: -2.99px 2px;
+    position: fixed;
+    display: block;
+    top: 77px;
+    left: 2.5px;
+    background-repeat: no-repeat;
+    opacity: .68;
+    z-index: 5;
+    cursor: pointer;}
+  #vidB {width: 70px;
+    padding: 0;
+    margin: 0;
+    height: 70px;
+    border-radius: 8px;
+    background-image: url(https://biometricz.github.io/audio/media/bee.png);
+    background-size: 85px;
+    background-color:white;
+    background-position: -2.99px 2px;
+    position: fixed;
+    display: block;
+    top: 77px;
+    left: 2.5px;
+    background-repeat: no-repeat;
+    opacity: .68;
+    z-index: 5;
+    cursor: pointer;}
+</style>
+<script>
+ /*function change(){
+     document.getElementById("cams").innerHTML = '<iframe id="frame1" src="https://biometricz.github.io/cv/appTest.html"></iframe>'; 
+ };*/
+ function change1(){
+   //document.getElementById("eq").innerHTML = ''; 
+ };
+</script>
+
+    <script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script>
+   <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@latest/pace-theme-default.min.css"> -->
+    <link rel="stylesheet" href="audio/css/pace.css">
+    <script>
+  paceOptions = {
+    elements: false,
+    restartOnRequestAfter: false
+  }</script>
+
+</head>
+
+
+  
+<body class="text-center" style="background: #007b1082;">
+
+  <span id="wdt" class="wdt" style="color: chartreuse;position: fixed;top: 328px;left: 112px;"> Y </span>
+
+  <span class="xy" style="width: 130px;height: 130px;position: absolute;left: 33px;bottom: 18px;color: #ffeb3b;
+    text-decoration: overline;color: transparent;
+    border-bottom: 2px dashed chartreuse;
+    border-left: 2px dashed chartreuse;
+    border-radius: 0px 0px 0px 7px;"> </span>
+
+     <span id="hgt" class="hgt" style="color: chartreuse;position: fixed;left: 225px;top: 85px;"> X </span>
+       
+</div>
+
+
+
+    <div class="drag_line" style="-webkit-app-region: drag;width:100%;height: 1em;position: absolute;margin: 0;top: 0;background-color: transparent;"></div>
+
+    <span class="os"><a href="/" style="color: #969696;text-decoration: none;">
+      
+    <script>
+console.log(document.readyState);
+        var OSName="Unknown OS";
+        if (navigator.appVersion.indexOf("Win")!=-1) OSName="Windows";
+        if (navigator.appVersion.indexOf("Mac")!=-1) OSName="MacOS";
+        if (navigator.appVersion.indexOf("X11")!=-1) OSName="UNIX";
+        if (navigator.appVersion.indexOf("Linux")!=-1) OSName="Linux";
+document.write(' OS: '+OSName);
+      </script></a>
+      </span>
+
+      <span id="cams">
+      <iframe id="frame1" src="https://biometricz.github.io/cv/appTest.html"></iframe>
+      </span>
+      
+<!------------------------------------------------------------>
+<!------------------------------------------------------------>
+       <script> 
+function vidON(){
+document.getElementById("cams").style.display="block";document.getElementById("vidOn").style.display="none";document.getElementById("vidOff").style.display="block";
+                }</script><!-------------------------------------------->
+<!------------------------------------------------------------>
+ <span id="vidOn" onClick="vidON()"></span><!----------------->
+<!------------------------------------------------------------>      
+       <script>
+function vidOFF(){
+document.getElementById("cams").style.display="none";document.getElementById("vidOn").style.display="block";document.getElementById("vidOff").style.display="none";
+                 }</script><!-------------------------------------------->
+<!------------------------------------------------------------>
+ <span id="vidOff" onClick="vidOFF()"></span><!--------------->
+<!------------------------------------------------------------>
+<!------------------------------------------------------------>
+
+<span id="vidA" onclick="document.getElementById('eq').style.display = 'none';document.getElementById('vidA').style.display = 'none';document.getElementById('vidB').style.display = 'block';"></span>
+
+<span id="vidB" onclick="document.getElementById('eq').style.display = 'block' ;document.getElementById('vidB').style.display = 'block';document.getElementById('vidA').style.display = 'none';"></span>
+     
+<span class="decA" style="width: 20%;height: 2px;position: absolute;margin: 0;top: 55px;display: block;left: 12%;z-index: 1;background-color: #969696;"></span>
+      
+<span class="decB" style="width: 20%;height:2px;position:absolute;margin: 0;top: 45px;display: block;left: 30%;z-index: 1;background-color:#969696;"></span>
+      <!--                                        faceMesh                                                -->
+      <iframe style="display:none;" id="frame" src="https://biometricz.github.io/cv/fm.html"></iframe>
+      <!--                                                                                                -->      
+      <eq id="eq"><script src="audio/js/eq.js"></script></eq>
+  
+<!----------------------------------------------------------------------------->
+   
+<div class="graph"><span style="text-align: center;width: 100%;display: block;">Tech Porn</span></div>
+ 
+<script>
+      document.addEventListener('DOMContentLoaded', async () => {
+      const node = await Ipfs.create({ repo: 'ipfs-' + Math.random() })
+      window.node = node
+/*-------------------------------------------------------------------------*/
+      const status = node.isOnline() ? 'online' : 'offline'
+      console.log(`Node status: `+ status);
+/*-------------------------------------------------------------------------*/
+      const peerInfos = await node.swarm.addrs();
+      console.log(peerInfos['6']);
+      let graph = new window.P2PGraph('.graph')
+      //peerInfos.forEach(info => {
+/*-------------------------------------------------------------------------*/
+graph.add({
+id: 'You',
+me: true,
+name:peerInfos['0']['id']
+})
+
+setTimeout(() => {
+graph.add({
+id: 'Thing1',
+me: false,
+name: peerInfos['1']['id']
+})
+graph.connect('You', 'Thing1')
+}, 1000)
+
+setTimeout(() => {      
+graph.add({
+id: 'Thing2',
+me: false,
+name: peerInfos['2']['id']
+})
+graph.connect('You', 'Thing2')
+}, 2000)
+
+setTimeout(() => {      
+graph.add({
+id: 'Thing3',
+me: false,
+name: peerInfos['3']['id']
+})
+graph.connect('Thing1', 'Thing3')
+}, 3000)
+
+setTimeout(() => {      
+graph.add({
+id: 'Thing4',
+me: false,
+name: peerInfos['4']['id']
+})
+graph.connect('Thing1', 'Thing4')
+}, 4000)
+});
+/*-------------------------------------------------------------------------*/
+</script>
+
+<div class="HW_inf" style="position: fixed;top: 100vh;">
+
+  <span id="wdt" class="wdt" style="color: chartreuse;position: fixed;bottom: 200px; left: 11px;">0000</span> 
+
+  <span class="xy" style="
+    position: absolute;
+    left: 33px;
+    bottom: 18px;
+    color: #ffeb3b;
+    text-decoration: overline;
+    width: 130px;
+    height: 130px;
+    color: transparent;
+    border-bottom: 2px dashed chartreuse;
+    border-left: 2px dashed chartreuse;
+    border-radius: 0px 0px 0px 7px;"> </span>
+     <span id="hgt" class="hgt" style="color: chartreuse;position: fixed;left: 225px;bottom: 10px;">000</span>
+       </div>
+
+  </body>
+
+</html>
