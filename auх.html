@@ -8,25 +8,22 @@
     <link rel="stylesheet" href="audio/css/dev.css"/>
     <script src="https://blckhle.github.io/test/p2p-graph.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ipfs/dist/index.min.js"></script>
-<!--<script src="https://kit.fontawesome.com/969af07023.js" crossorigin="anonymous"></script>-->
+    <script src="https://kit.fontawesome.com/969af07023.js" crossorigin="anonymous"></script>
 
-<script> 
-    var w = window.innerWidth;
-    var h = window.innerHeight;
-            document.getElementById('wdt').innerHTML=(w);
-            document.getElementById('hgt').innerHTML=(h);
-            document.onreadystatechange = function () {
-        if (document.readyState == "complete") {
-            console.log( ' загружено');
-    } else {  }
-          }    </script>
+<script>/* var w = window.innerWidth;
+           var h = window.innerHeight;
+           document.getElementById('wdt').innerHTML=(w);
+           document.getElementById('hgt').innerHTML=(h);
+           document.onreadystatechange = function () {
+       if (document.readyState == "complete") {
+           console.log( ' загружено');
+    } else { }}*/</script>
   
               <style>
                   
         svg {transition: unset;fill:#7fff00;}
         line.link {transition: unset;stroke:#ffe928!important;}
-
-  @-webkit-keyframes f {
+        @-webkit-keyframes f {
     0% {display: none;
         opacity: 0;
     } 1% {
@@ -35,18 +32,18 @@
     } 100% {
         display: block;
         opacity: 1;
-    }
-  }
+           }
+        }
 /*-----------------------------------------------------------------*/
      text.text{font-size:7.5px;font-weight:bolder;opacity:.6;}
 /*-----------------------------------------------------------------*/
- body {
+     body {
        -webkit-animation: f 3.5s ease-out;overflow: hidden;margin: 0;
         background: linear-gradient(40deg, transparent 10%, rgba(255, 255, 255, 0.16) 60%, transparent 100%);
        -webkit-backdrop-filter: blur(7px);
         backdrop-filter: blur(7px);
         border-radius: 10px;
-      }
+          }
   .graph{position:fixed;top:60vh;width:100%;height:60vh;}
   
   #frame1{position: fixed;width: 100%;
