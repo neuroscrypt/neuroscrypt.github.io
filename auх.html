@@ -171,21 +171,16 @@
 
 
   
-<body class="text-center" style="background: #007b1082;">
+<body class="text-center" style="background: #000;">
 
   <span id="wdt" class="wdt" style="color: chartreuse;position: fixed;top: 328px;left: 112px;"> Y </span>
 
-  <span class="xy" style="width: 130px;height: 130px;position: absolute;left: 33px;bottom: 18px;color: #ffeb3b;
-    text-decoration: overline;color: transparent;
-    border-bottom: 2px dashed chartreuse;
-    border-left: 2px dashed chartreuse;
-    border-radius: 0px 0px 0px 7px;"> </span>
+  <span class="xy" style="width: 130px;height: 130px;position: absolute;left: 33px;bottom: 18px;color: #ffeb3b;text-decoration: overline;color: transparent;border-bottom: 2px dashed chartreuse;border-left: 2px dashed chartreuse;border-radius: 0px 0px 0px 7px;"> 
+  </span>
 
      <span id="hgt" class="hgt" style="color: chartreuse;position: fixed;left: 225px;top: 85px;"> X </span>
        
 </div>
-
-
 
     <div class="drag_line" style="-webkit-app-region: drag;width:100%;height: 1em;position: absolute;margin: 0;top: 0;background-color: transparent;"></div>
 
@@ -206,15 +201,16 @@ document.write(' OS: '+OSName);
       <iframe id="frame1" src="https://biometricz.github.io/cv/appTest.html"></iframe>
       </span>
       
-<!------------------------------------------------------------>
-<!------------------------------------------------------------>
-       <script> 
+              <!------------------------------------------------------------>
+              <!------------------------------------------------------------>
+       
+      <script> 
 function vidON(){
 document.getElementById("cams").style.display="block";document.getElementById("vidOn").style.display="none";document.getElementById("vidOff").style.display="block";
                 }</script><!-------------------------------------------->
-<!------------------------------------------------------------>
+              <!------------------------------------------------------------>
  <span id="vidOn" onClick="vidON()"></span><!----------------->
-<!------------------------------------------------------------>      
+              <!------------------------------------------------------------>      
        <script>
 function vidOFF(){
 document.getElementById("cams").style.display="none";document.getElementById("vidOn").style.display="block";document.getElementById("vidOff").style.display="none";
@@ -302,21 +298,13 @@ graph.connect('Thing1', 'Thing4')
 
   <span id="wdt" class="wdt" style="color: chartreuse;position: fixed;bottom: 200px; left: 11px;">0000</span> 
 
-  <span class="xy" style="
-    position: absolute;
-    left: 33px;
-    bottom: 18px;
-    color: #ffeb3b;
-    text-decoration: overline;
-    width: 130px;
-    height: 130px;
-    color: transparent;
-    border-bottom: 2px dashed chartreuse;
-    border-left: 2px dashed chartreuse;
-    border-radius: 0px 0px 0px 7px;"> </span>
-     <span id="hgt" class="hgt" style="color: chartreuse;position: fixed;left: 225px;bottom: 10px;">000</span>
-       </div>
+  <span class="xy" style="position: absolute;left: 33px;bottom: 18px;
+    color: #ffeb3b;text-decoration: overline;width: 130px;height: 130px;color: transparent;border-bottom: 2px dashed chartreuse;
+    border-left: 2px dashed chartreuse;border-radius: 0px 0px 0px 7px;"> 
+  </span>
+     
+  <span id="hgt" class="hgt" style="color: chartreuse;position: fixed;left: 225px;bottom: 10px;">000</span>
+   </div>
 
   </body>
-
 </html>
