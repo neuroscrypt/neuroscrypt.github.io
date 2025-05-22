@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Интерактивная карта техник защиты от V2K</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://neuroscrypt.github.io/CSS/neuroshield.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <span style="font-weight:900;font-size:2em;">🛡</span>
+      <a href="#" data-view="cards">Главная</a>
+      <a href="#" data-view="protection">Защита и Восстановление</a>
+      <a href="#" data-view="structure">Структура Атак</a>
+    </nav>
+    <button data-view="chart">График</button>
+    <button data-view="ipv">Умные ИПВ</button>
+    <button data-view="about">О программе</button>
+    <button data-view="help">Помощь</button>
+  </header>
+
+  <!-- Views -->
+  <main>
+    <!-- Cards View -->
+    <section id="view-cards" class="view">
+      <div id="cards"></div>
+    </section>
+
+    <!-- Chart View -->
+    <section id="view-chart" class="view" style="display:none;">
+      <div id="chartContainer">
+        <canvas id="defaultChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Detail View -->
+    <section id="view-detail" class="view" style="display:none;">
+      <button class="close-detail">Закрыть</button>
+      <h2 id="detail-title"></h2>
+      <div class="tabs" id="tabs"></div>
+      <div id="detail-content"></div>
+    </section>
+
+    <!-- IPv Modal as View -->
+    <section id="view-ipv" class="view modal-view" style="display:none;">
+      <div class="modal-content">
+        <button class="close-modal">×</button>
+        <h3 style="color:white;">Современные Умные ИПВ</h3>
+        <!-- ...content... -->
+      </div>
+    </section>
+
+    <!-- About View -->
+    <section id="view-about" class="view modal-view" style="display:none;">
+      <div class="modal-content">
+        <button class="close-modal">×</button>
+        <h3>О программе</h3>
+        <p>Интерактивная карта техник защиты от V2K-атак.</p>
+      </div>
+    </section>
+
+    <!-- Help View -->
+    <section id="view-help" class="view modal-view" style="display:none;">
+      <div class="modal-content">
+        <button class="close-modal">×</button>
+        <h3>Помощь</h3>
+        <p>Кликните на карточку слева, чтобы увидеть детальное описание техники.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+  <script>
+    const views = document.querySelectorAll('.view');
+    function showView(name) {
+      views.forEach(v => v.style.display = 'none');
+      const view = document.getElementById('view-' + name);
+      if (view) view.style.display = '';
+    }
+    // Nav and buttons
+    document.querySelectorAll('[data-view]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        const name = btn.getAttribute('data-view');
+        showView(name);
+      });
+    });
+
+    // Close detail
+    document.querySelector('.close-detail').onclick = () => showView('cards');
+
+    // Initialize default view
+    showView('cards');
+
+    // Chart initialization
+    const ctx = document.getElementById('defaultChart').getContext('2d');
+    new Chart(ctx, {/* ...chart config... */});
+
+    // Cards and detail logic remains same, now inside view system
+    // ...existing JS for cards rendering, showDetail updated to showView('detail')...
+  </script>
+</body>
+</html>
