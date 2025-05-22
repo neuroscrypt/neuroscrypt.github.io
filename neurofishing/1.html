@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Нейрофишинг — Canvas Map</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0f1318;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: radial-gradient(circle at center, #202b3a, #0f1318);
+    }
+    #tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      pointer-events: none;
+      font-family: monospace;
+      font-size: 14px;
+      display: none;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="tooltip"></div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const tooltip = document.getElementById('tooltip');
+
+    const nodes = [
+      { type: 'attack', label: '🎯 Нейрофишинг', x: 300, y: 200, radius: 70, color: '#ff4d4d', info: 'Центральное понятие: сбор нейроинформации скрытым способом.' },
+      { type: 'attack', label: '💻 Техно-атака', x: 600, y: 120, radius: 50, color: '#ff8a65', info: 'Скрытый BCI, ложный интерфейс.' },
+      { type: 'attack', label: '🌀 Психо-атака', x: 620, y: 300, radius: 50, color: '#ff8a65', info: 'Эмоциональный вброс, провокация реакций.' },
+      { type: 'defense', label: '🔐 Шифрование мысли', x: 300, y: 450, radius: 50, color: '#4caf50', info: 'Мысленная замена на образы-коды.' },
+      { type: 'defense', label: '🧘 Метапознание', x: 100, y: 300, radius: 50, color: '#81c784', info: 'Осознанность чужих паттернов.' },
+      { type: 'law', label: '⚖️ Ст.137 УК РФ', x: 800, y: 200, radius: 50, color: '#64b5f6', info: 'Нарушение частной жизни.' },
+    ];
+
+    const links = [
+      { from: 0, to: 1 },
+      { from: 0, to: 2 },
+      { from: 0, to: 3 },
+      { from: 0, to: 4 },
+      { from: 1, to: 5 },
+      { from: 2, to: 5 },
+    ];
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // линии
+      links.forEach(link => {
+        const from = nodes[link.from];
+        const to = nodes[link.to];
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+      // узлы
+      nodes.forEach(node => {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = node.color;
+        ctx.fill();
+        ctx.font = '14px monospace';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText(node.label, node.x, node.y + 4);
+      });
+    }
+
+    function detectHover(x, y) {
+      let found = null;
+      nodes.forEach(node => {
+        const dx = x - node.x;
+        const dy = y - node.y;
+        if (Math.sqrt(dx * dx + dy * dy) < node.radius) {
+          found = node;
+        }
+      });
+      return found;
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+      const node = detectHover(e.clientX, e.clientY);
+      if (node) {
+        tooltip.style.left = e.clientX + 15 + 'px';
+        tooltip.style.top = e.clientY + 15 + 'px';
+        tooltip.style.display = 'block';
+        tooltip.textContent = node.info;
+        canvas.style.cursor = 'pointer';
+      } else {
+        tooltip.style.display = 'none';
+        canvas.style.cursor = 'default';
+      }
+    });
+
+    draw();
+  </script>
+</body>
+</html>
