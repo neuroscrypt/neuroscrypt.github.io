@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>NeuroShield Unified Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+    :root {
+      --bg: #151b23;
+      --fg: #fff;
+      --card-bg: #1f2937;
+      --accent: #11171f;
+      --accent2: #2ecc71;
+      --accent3: #f1c40f;
+      --accent4: #9b59b6;
+      --accent5: #e74c3c;
+      --modal-bg: rgba(0,0,0,0.8);
+      --scrollbar-bg: rgba(255,255,255,0.1);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--fg);
+      font-family: 'Roboto Mono', monospace;
+      padding-top: 50px;
+      overflow-y: auto;
+    }
+    header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 50px; background: var(--card-bg);
+      display: flex; align-items: center; padding: 0 20px;
+      z-index: 10;
+    }
+    header nav { flex: 1; display: flex; align-items: center; }
+    header nav a {
+      color: var(--fg); margin-right: 16px; text-decoration: none;
+      font-weight: bold;
+    }
+    header nav span {
+      font-weight: 900; font-size: 2em; margin-right: 20px;
+    }
+    /* Sidebar cards and chart detail layout */
+    #cards {
+      margin-top: 0; width: 35%; padding: 20px;
+      overflow-y: auto; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .card {
+      background: var(--card-bg); border-left: 4px solid var(--accent);
+      border-radius: 6px; padding: 12px; cursor: pointer;
+      transition: transform .2s, border-color .2s;
+      display: flex; align-items: center;
+    }
+    .card:nth-child(3n+2) { border-color: var(--accent2); }
+    .card:nth-child(3n+3) { border-color: var(--accent3); }
+    .card:hover {
+      transform: translateY(-3px); border-color: var(--accent4);
+    }
+    .card .icon {
+      font-size: 1.5rem; margin-right: 8px;
+    }
+    .card h3 {
+      margin: 0; font-size: 1rem;
+    }
+    #chartContainer {
+      margin-top: 0; flex: 1; padding: 20px;
+      background: #1a222d; display: block;
+    }
+    #defaultChart {
+      width: 100%; height: 300px;
+      background: #11171f; border-radius: 8px;
+    }
+    #detail {
+      margin-top: 0; flex: 1; padding: 20px;
+      overflow-y: auto; position: relative;
+      background: #1a222d; display: none;
+    }
+    #detail h2 {
+      margin-top: 0; font-size: 1.5rem;
+      border-bottom: 2px solid var(--accent5); padding-bottom: 8px;
+    }
+    #detail .close {
+      position: absolute; top: 20px; right: 20px;
+      background: var(--accent5); border: none; color: #fff;
+      padding: 4px 8px; cursor: pointer; border-radius: 4px;
+    }
+    .tabs {
+      display: flex; border-bottom: 1px solid var(--scrollbar-bg);
+      margin-bottom: 12px;
+    }
+    .tabs button {
+      background: none; border: none; color: var(--fg);
+      padding: 8px 16px; cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: border-color .2s;
+    }
+    .tabs button.active {
+      border-color: #fff;
+    }
+    .tab-content { display: none; padding: 20px; }
+    #защита { display: flex; }
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--modal-bg); align-items: center; justify-content: center;
+      z-index: 20;
+    }
+    .modal .modal-content {
+      background: var(--card-bg); padding: 20px;
+      border-radius: 6px; width: 80%; max-width: 800px;
+      position: relative; color: #ddd;
+    }
+    .modal .modal-content h3 {
+      margin-top: 0; color: var(--accent);
+    }
+    .modal .close-modal {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--accent5); border: none; color: #fff;
+      padding: 4px 8px; cursor: pointer; border-radius: 4px;
+    }
+    .modal-content table {
+      width: 100%; border-collapse: collapse; margin-top: 12px;
+    }
+    .modal-content th, .modal-content td {
+      border: 1px solid var(--scrollbar-bg); padding: 6px;
+      text-align: center;
+    }
+    .modal-content th {
+      background: var(--card-bg);
+    }
+    /* Нейрофишинг section style */
+    #нейрофишинг-section {
+      background: #10151a; color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    #нейрофишинг-section header {
+      background: #1f2a38; padding: 20px 30px; text-align: center;
+      border-bottom: 2px solid #2e3c4c;
+    }
+    #нейрофишинг-section header h1 {
+      margin: 0; font-size: 32px; color: #00ffc3;
+    }
+    #нейрофишинг-section .section {
+      padding: 20px 30px; border-bottom: 1px solid #2a2a2a;
+    }
+    #нейрофишинг-section .section h2 {
+      font-size: 24px; color: #00bcd4; margin-bottom: 20px;
+    }
+    #нейрофишинг-section .infoblock {
+      display: flex; align-items: flex-start; gap: 20px;
+      margin: 20px 0; background: #1c232c; padding: 20px;
+      border-radius: 10px; border-left: 5px solid #00ffc3;
+    }
+    #нейрофишинг-section .infoblock-icon {
+      font-size: 36px;
+    }
+    #нейрофишинг-section .infoblock-content h3 {
+      margin: 0 0 8px; font-size: 18px; color: #fff;
+    }
+    #нейрофишинг-section .infoblock-content p {
+      margin: 0; font-size: 15px;
+    }
+    #нейрофишинг-section .highlight {
+      color: #ff8a65; font-weight: bold;
+    }
+    #нейрофишинг-section footer {
+      text-align: center; padding: 20px; color: #888; font-size: 14px;
+    }
+    /* Graphics section style */
+    #graphics-section { position: relative; background: #0f1318; padding: 20px; }
+    #graphics-section canvas {
+      width: 100%; height: 400px;
+      background: radial-gradient(circle at center, #202b3a, #0f1318);
+      display: block;
+    }
+    #graphics-section #tooltip {
+      position: absolute; background: rgba(0,0,0,0.8); color: #fff;
+      padding: 6px 10px; border-radius: 6px; pointer-events: none;
+      font-family: monospace; font-size: 14px; display: none; z-index: 10;
+    }
+    /* Tables in legal section */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #444; padding: 8px; }
+    th { background: #222; color: #fff; }
+  </style>
+  <!-- Chart.js libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+</head>
+<body>
+  <header>
+    <nav>
+      <span>🛡</span>
+      <a href="#" data-target="защита">Защита</a>
+      <a href="#" data-target="нейрофишинг">Нейрофишинг</a>
+      <a href="#" data-target="правовая">Правовая база</a>
+      <a href="#" data-target="графика">Графика</a>
+    </nav>
+  </header>
+  <!-- Защита и Восстановление -->
+  <div id="защита" class="tab-content">
+    <button id="btn-chart">График</button>
+    <button id="ipv">Умные ИПВ</button>
+    <button id="btn-about">О программе</button>
+    <button id="btn-help">Помощь</button>
+    <div id="cards"></div>
+    <div id="chartContainer">
+      <canvas id="defaultChart"></canvas>
+    </div>
+    <div id="detail">
+      <button class="close">Закрыть</button>
+      <h2 id="detail-title"></h2>
+      <div class="tabs" id="tabs"></div>
+      <div id="detail-content"></div>
+    </div>
+    <!-- О программе Modal -->
+    <div class="modal" id="modal-about">
+      <div class="modal-content">
+        <button class="close-modal">×</button>
+        <h3>О программе</h3>
+        <p>Интерактивная карта техник защиты от V2K-атак. Позволяет ознакомиться с каждым методом и получить подробные примеры.</p>
+      </div>
+    </div>
+    <!-- Помощь Modal -->
+    <div class="modal" id="modal-help">
+      <div class="modal-content">
+        <button class="close-modal">×</button>
+        <h3>Помощь</h3>
+        <p>Кликните на карточку слева, чтобы увидеть детальное описание техники. Используйте вкладки для навигации по разделам.</p>
+      </div>
+    </div>
+    <!-- Умные ИПВ Modal -->
+    <div class="modal" id="modal-ipv">
+      <div class="modal-content">
+        <button class="close-modal">×</button>
+        <h3 style="color:white;">Современные Умные ИПВ</h3>
+        <p style="font-weight:900;">
+          Это информационно-психологические операции, сочетающие:<br>
+          • Комбинацию из военных методик, техники (ПАК) и технологий<br>
+          • V2K — голоса в голове "ЭФФЕКТ ФРЕЯ"<br>
+          • ГИПНОЗ и чёрная психология<br>
+          • Гангсталкинг (ПРЕСЛЕДОВАНИЕ) и ИНФРАЗВУКовое подавление<br>
+          • Чтение мыслей, ДЕКОДИНГ образов и намерений на основе АКТИВНОСТИ МОЗГА
+        </p>
+        <table>
+          <thead>
+            <tr><th>Категория</th><th>0–7 дн</th><th>7–14 дн</th><th>14–30 дн</th><th>30–60 дн</th><th>60+ дн</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Обычный человек</td><td>Паника</td><td>Когнитивный спад</td><td>Эмоциональное выгорание</td><td>Дезориентация</td><td>Коллапс</td>
+            </tr>
+            <tr>
+              <td>Сотрудник спецслужб</td><td>Стресс</td><td>ПТСР</td><td>Цинизм</td><td>Выгорание</td><td>Отстранение</td>
+            </tr>
+            <tr>
+              <td>Разведчик</td><td>Нарушение фокуса</td><td>Паранойя</td><td>Профессиональное выгорание</td><td>Социальная изоляция</td><td>Потеря смысла</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- Нейрофишинг -->
+  <div id="нейрофишинг" class="tab-content">
+    <div id="нейрофишинг-section">
+      <header><h1>🧠 Нейрофишинг — Взлом Бессознательного</h1></header>
+      <div class="section">
+        <h2>Что такое нейрофишинг?</h2>
+        <div class="infoblock">
+          <div class="infoblock-icon">🎯</div>
+          <div class="infoblock-content">
+            <h3>Цель</h3>
+            <p>Кража или подмена <span class="highlight">мыслей, образов, эмоций</span> через нейроинтерфейсы или психоманипуляции.</p>
+          </div>
+        </div>
+        <div class="infoblock">
+          <div class="infoblock-icon">🕳️</div>
+          <div class="infoblock-content">
+            <h3>Уязвимость</h3>
+            <p>BCI, EEG, фМРТ, реакция на образы, «мысленные команды», биоповеденческие шаблоны.</p>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Сравнение: Классический vs Нейро-фишинг</h2>
+        <div class="infoblock">
+          <div class="infoblock-icon">🔐</div>
+          <div class="infoblock-content">
+            <h3>Форма атаки</h3>
+            <p><span class="highlight">Классический:</span> Фейк-сайт. <br><span class="highlight">Нейро:</span> Фейк-мыслеобраз или стимул.</p>
+          </div>
+        </div>
+        <div class="infoblock">
+          <div class="infoblock-icon">🧬</div>
+          <div class="infoblock-content">
+            <h3>Добыча</h3>
+            <p><span class="highlight">Классический:</span> Пароль. <br><span class="highlight">Нейро:</span> Интенция, эмоция, визуальный образ.</p>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Квалификация по УК РФ</h2>
+        <div class="infoblock">
+          <div class="infoblock-icon">⚖️</div>
+          <div class="infoblock-content">
+            <h3><span class="highlight">Статья 137 УК РФ</span> — Нарушение неприкосновенности частной жизни</h3>
+            <p>Нейрофишинг может квалифицироваться как незаконное получение сведений о личной жизни, включая мысли и эмоции без согласия лиц.</p>
+          </div>
+        </div>
+        <div class="infoblock">
+          <div class="infoblock-icon">🎭</div>
+          <div class="infoblock-content">
+            <h3><span class="highlight">Статья 159 УК РФ</span> — Мошенничество</h3>
+            <p>Получение доступа к банковским PIN-кодам и ключам через нейроданные и их использование для хищения средств.</p>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Методы защиты</h2>
+        <div class="infoblock">
+          <div class="infoblock-icon">🔑</div>
+          <div class="infoblock-content">
+            <h3>Нейрошифрование</h3>
+            <p>Замена мысли-цели на зашифрованный мыслеобраз: вместо «1234» — «ледяная гора».</p>
+          </div>
+        </div>
+        <div class="infoblock">
+          <div class="infoblock-icon">🧘</div>
+          <div class="infoblock-content">
+            <h3>Метапознание</h3>
+            <p>Осознание появления мысли извне: «этот образ не мой», маркировка «чужих» шаблонов.</p>
+          </div>
+        </div>
+        <div class="infoblock">
+          <div class="infoblock-icon">🎭</div>
+          <div class="infoblock-content">
+            <h3>Поведенческий шум</h3>
+            <p>Генерация ментального шума: случайные слова, образы, намерения для запутывания считывающих систем.</p>
+          </div>
+        </div>
+      </div>
+      <footer>
+        ⚠️ Инфографика создана в образовательных целях. Защитите свою психику — она ваш последний рубеж.<br>
+        ⚠️ Нейрофишинг — потенциально опасное вмешательство. Незаконные действия могут подпадать под несколько статей УК РФ.
+      </footer>
+    </div>
+  </div>
+  <!-- Правовая база -->
+  <div id="правовая" class="tab-content">
+    <section>
+      <h2>Методы разведки</h2>
+      <table>
+        <tr><th>Метод</th><th>Описание</th><th>Акты</th></tr>
+        <tr><td>ENROL</td><td>Набор и ведение «человеческого материала» — вербовка, агентурная работа.</td><td>ФЗ 2124-1; 5485-1</td></tr>
+        <tr><td>SIGINT</td><td>Перехват и анализ сигналов (прослушка, радиоразведка).</td><td>144-ФЗ; 150-ФЗ; 187-ПП</td></tr>
+        <tr><td>HUMINT</td><td>Агентурная работа с «человеческим материалом».</td><td>ФЗ 2124-1; ФЗ 5485-1</td></tr>
+      </table>
+    </section>
+    <section>
+      <h2>Статьи УК РФ</h2>
+      <table>
+        <tr><th>Статья</th><th>Описание</th></tr>
+        <tr><td>137</td><td>Нарушение неприкосновенности частной жизни.</td></tr>
+        <tr><td>138.1</td><td>Незаконный оборот специальных технических средств.</td></tr>
+      </table>
+    </section>
+    <section>
+      <h2>Нормативные акты РФ</h2>
+      <table>
+        <tr><th>Акт</th><th>Описание</th></tr>
+        <tr><td>ФЗ 5485-1</td><td>О государственной тайне</td></tr>
+        <tr><td>ФЗ 144-ФЗ</td><td>Об оперативно-розыскной деятельности</td></tr>
+      </table>
+    </section>
+  </div>
+  <!-- Графика -->
+  <div id="графика" class="tab-content">
+    <h2>Интерактивная карта атак и защит</h2>
+    <div id="graphics-section">
+      <canvas id="canvas"></canvas>
+      <div id="tooltip"></div>
+      <p>Наведите курсор на узел, чтобы увидеть информацию.</p>
+      <h3>Дополнительный контент</h3>
+      <iframe src="https://example.com" width="600" height="400"></iframe>
+      <p>Полезный ресурс: <a href="https://neuroscrypt.github.io/" target="_blank">Neurocrypt</a></p>
+    </div>
+  </div>
+  <script>
+    // Навигация по вкладкам
+    document.querySelectorAll('header nav a').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.tab-content').forEach(sec => sec.style.display = 'none');
+        const target = this.getAttribute('data-target');
+        const sec = document.getElementById(target);
+        if (target === 'защита') {
+          sec.style.display = 'flex';
+        } else {
+          sec.style.display = 'block';
+        }
+      });
+    });
+  </script>
+  <script>
+    // Инициализация графика Chart.js и взаимодействие
+    const ctx = document.getElementById('defaultChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['0','7','14','21','30','45','60','90'],
+        datasets: [
+          { label: 'Обычный человек', data: [0,20,40,60,80,90,95,100], borderColor: '#e74c3c', pointBackgroundColor: '#e74c3c', tension: 0.4 },
+          { label: 'Сотрудник спецслужб', data: [0,10,30,50,70,85,90,95], borderColor: '#3498db', pointBackgroundColor: '#3498db', tension: 0.4 },
+          { label: 'Разведчик', data: [0,5,20,40,60,75,85,90], borderColor: '#2ecc71', pointBackgroundColor: '#2ecc71', tension: 0.4 },
+          { label: 'Профессионал', data: [0,5,15,30,45,60,75,85], borderColor: '#f1c40f', pointBackgroundColor: '#f1c40f', tension: 0.4 },
+          { label: 'Энтузиаст', data: [0,25,50,70,85,95,100,100], borderColor: '#9b59b6', pointBackgroundColor: '#9b59b6', tension: 0.4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          annotation: {
+            annotations: {
+              zone2: { type: 'box', xMin: 7, xMax: 14, yMin: 0, yMax: 100, backgroundColor: 'rgba(52,152,219,0.1)' },
+              zone3: { type: 'box', xMin: 14, xMax: 30, yMin: 0, yMax: 100, backgroundColor: 'rgba(46,204,113,0.1)' },
+              zone4: { type: 'box', xMin: 30, xMax: 60, yMin: 0, yMax: 100, backgroundColor: 'rgba(241,196,15,0.1)' },
+              zone5: { type: 'box', xMin: 60, xMax: 90, yMin: 0, yMax: 100, backgroundColor: 'rgba(155,89,182,0.1)' }
+            }
+          },
+          title: { display: true, text: 'ИЗЛОМ ПОД ДАВЛЕНИЕМ', color: '#fff', font: { size: 18, family: 'monospace' } },
+          tooltip: {
+            mode: 'index', intersect: false,
+            backgroundColor: 'rgba(21,27,35,0.9)',
+            titleColor: '#fff', bodyColor: '#fff',
+            bodyFont: { size: 14, family: 'monospace' }, titleFont: { size: 16, family: 'monospace' },
+            callbacks: {
+              title: items => {
+                const days = items[0].label;
+                const dayWord = (days == '1') ? 'День' : ((days > 1 && days < 5) ? 'Дня' : 'Дней');
+                return `За: ${days} ${dayWord}\nТип личности:`;
+              },
+              label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%`
+            }
+          },
+          legend: { display: false }
+        },
+        interaction: { mode: 'nearest', axis: 'x', intersect: false },
+        scales: {
+          x: {
+            title: { display: true, text: 'Время воздействия (дни)', color: '#ddd', font: { size: 12, family: 'monospace' } },
+            ticks: { color: '#bbb', font: { family: 'monospace' } },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          },
+          y: {
+            title: { display: true, text: 'Уровень излома (%)', color: '#ddd', font: { size: 12, family: 'monospace' } },
+            beginAtZero: true, max: 100,
+            ticks: { color: '#bbb', callback: v => v + '%' },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          }
+        }
+      }
+    });
+    // Кнопки графика и ИПВ
+    document.getElementById('btn-chart').onclick = () => {
+      document.getElementById('chartContainer').style.display = 'block';
+      document.getElementById('detail').style.display = 'none';
+    };
+    document.getElementById('ipv').onclick = () => {
+      document.getElementById('modal-ipv').style.display = 'flex';
+    };
+    // Данные техник защиты
+    const techniques = [
+      {
+        title: "Метапознание",
+        icon: "🧠",
+        sections: [
+          { name: "Обзор", html: "<p>Осознанность того, что мысли могут быть чужими. Метка «не-я» помогает классифицировать сигналы.</p>" },
+          { name: "Примеры", html: "<p>При появлении «голоса» мысленно говорите «Это не моя мысль» и отмечайте его цветом.</p>" },
+          { name: "Сценарий", html: "<p>Во время медитации фиксируйте посторонние фразы в «V2K-журнале».</p>" }
+        ]
+      },
+      {
+        title: "Ментальный шум",
+        icon: "🌪️",
+        sections: [
+          { name: "Обзор", html: "<p>Генерация хаоса в сознании мешает выделять целевые паттерны.</p>" },
+          { name: "Примеры", html: "<p>Бессвязные слова и визуализация случайных образов.</p>" },
+          { name: "Сценарий", html: "<p>Каждые 45 сек генерируйте 10 случайных слов.</p>" }
+        ]
+      },
+      {
+        title: "Ментальная шифровка",
+        icon: "🔐",
+        sections: [
+          { name: "Обзор", html: "<p>Скрытие истинных намерений за кодовыми фразами и визуальными контейнерами.</p>" },
+          { name: "Примеры", html: "<p>«тёмная шляпа» вместо «иду домой», меняйте ключ каждый день.</p>" },
+          { name: "Сценарий", html: "<p>Перед звонком используйте «синий маяк» + мысленную пиктограмму.</p>" }
+        ]
+      },
+      {
+        title: "Эмо-якоря",
+        icon: "❤️",
+        sections: [
+          { name: "Обзор", html: "<p>Контр-образы и техника «стоп-кадр» для мгновенной регуляции эмоций.</p>" },
+          { name: "Примеры", html: "<p>Страх гасится пляжем, вина — образом поддержки друга.</p>" },
+          { name: "Сценарий", html: "<p>При внушении «ты провалишься» воспроизводите внутренний плейбек безопасного события.</p>" }
+        ]
+      },
+      {
+        title: "Телесная стабилизация",
+        icon: "💨",
+        sections: [
+          { name: "Обзор", html: "<p>Дыхание 4-7-8 и прогрессивная мышечная релаксация.</p>" },
+          { name: "Примеры", html: "<p>4-7-8: вдох 4с, задержка 7с, выдох 8с; сжимайте пальцы как якорь.</p>" },
+          { name: "Сценарий", html: "<p>Каждые 20 мин делайте 2 мин растяжки и дыхания.</p>" }
+        ]
+      },
+      {
+        title: "Технологии",
+        icon: "🛠️",
+        sections: [
+          { name: "Обзор", html: "<p>Наушники с шумом, экранирование, EEG-нейрофидбек, EMDR.</p>" },
+          { name: "Примеры", html: "<p>VR-игры с мягкой симуляцией, еженедельные сеансы EMDR.</p>" },
+          { name: "Сценарий", html: "<p>В «тихой комнате» включайте белый шум перед сном.</p>" }
+        ]
+      },
+      {
+        title: "Групповая защита",
+        icon: "👥",
+        sections: [
+          { name: "Обзор", html: "<p>Коллективное декодирование и мозговые штурмы.</p>" },
+          { name: "Примеры", html: "<p>Мини-группа обсуждает «голоса» и шифрует сообщения.</p>" },
+          { name: "Сценарий", html: "<p>Еженедельные офлайн-встречи и цифровой детокс.</p>" }
+        ]
+      },
+      {
+        title: "Долгосрочные практики",
+        icon: "📓",
+        sections: [
+          { name: "Обзор", html: "<p>Ведение журнала, медитации, когнитивные практики.</p>" },
+          { name: "Примеры", html: "<p>Записи инцидентов и анализ раз в месяц.</p>" },
+          { name: "Сценарий", html: "<p>Утром 5 мин медитации + обзор журнала.</p>" }
+        ]
+      },
+      {
+        title: "Перепрограммирование DMN",
+        icon: "🔄",
+        sections: [
+          { name: "Обзор", html: "<p>Нейропластичность через фотобиомодуляцию и медитацию.</p>" },
+          { name: "Примеры", html: "<p>10 мин медитации перед сном для снижения автоматизма.<br>30 минут фотобиомодуляции.</p>" },
+          { name: "Сценарий", html: "<p>Ежедневная практика осознанного дыхания.</p>" }
+        ]
+      },
+      {
+        title: "Читта-вритти-ниродха",
+        icon: "🧘",
+        sections: [
+          { name: "Обзор", html: "<p>Синхронизация психофизиологии через йогу и медитацию.</p>" },
+          { name: "Примеры", html: "<p>Асаны + пранаяма + нейтральное наблюдение мыслей.</p>" },
+          { name: "Сценарий", html: "<p>3 занятия йогой в неделю по 45 мин.</p>" }
+        ]
+      }
+    ];
+    const cardsEl = document.getElementById('cards');
+    const detailEl = document.getElementById('detail');
+    const titleEl = document.getElementById('detail-title');
+    const tabsEl = document.getElementById('tabs');
+    const contentEl = document.getElementById('detail-content');
+    const closeBtn = detailEl.querySelector('.close');
+    techniques.forEach((t,i) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<span class="icon">${t.icon}</span><h3>${i+1}. ${t.title}</h3>`;
+      card.onclick = () => {
+        document.getElementById('chartContainer').style.display = 'none';
+        detailEl.style.display = 'block';
+        titleEl.textContent = `${i+1}. ${t.title}`;
+        tabsEl.innerHTML = '';
+        contentEl.innerHTML = '';
+        t.sections.forEach((sec, si) => {
+          const btn = document.createElement('button');
+          btn.textContent = sec.name;
+          btn.className = si===0 ? 'active' : '';
+          btn.onclick = () => {
+            tabsEl.querySelectorAll('button').forEach((b,bi) => b.classList.toggle('active', bi===si));
+            contentEl.querySelectorAll('.tab-content').forEach((p,pi) => p.classList.toggle('active', pi===si));
+          };
+          tabsEl.appendChild(btn);
+          const pane = document.createElement('div');
+          pane.className = 'tab-content' + (si===0 ? ' active' : '');
+          pane.innerHTML = sec.html;
+          contentEl.appendChild(pane);
+        });
+      };
+      cardsEl.appendChild(card);
+    });
+    closeBtn.onclick = () => {
+      detailEl.style.display = 'none';
+      document.getElementById('chartContainer').style.display = 'block';
+    };
+    ['about','help'].forEach(id => {
+      const btn = document.getElementById('btn-' + id);
+      if (btn) btn.onclick = () => { document.getElementById(`modal-${id}`).style.display = 'flex'; };
+    });
+    document.querySelectorAll('.close-modal').forEach(btn => {
+      btn.onclick = () => btn.closest('.modal').style.display = 'none';
+    });
+  </script>
+  <script>
+    // Canvas interactive map
+    const canvas = document.getElementById('canvas');
+    const ctx2 = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+    const tooltip = document.getElementById('tooltip');
+    const nodes = [
+      { type: 'attack', label: '🎯 Нейрофишинг', x: 300, y: 200, radius: 70, color: '#ff4d4d', info: 'Центральное понятие: сбор нейроинформации скрытым способом.' },
+      { type: 'attack', label: '💻 Техно-атака', x: 600, y: 120, radius: 50, color: '#ff8a65', info: 'Скрытый BCI, ложный интерфейс.' },
+      { type: 'attack', label: '🌀 Психо-атака', x: 620, y: 300, radius: 50, color: '#ff8a65', info: 'Эмоциональный вброс, провокация реакций.' },
+      { type: 'defense', label: '🔐 Шифрование мысли', x: 300, y: 450, radius: 50, color: '#4caf50', info: 'Мысленная замена на образы-коды.' },
+      { type: 'defense', label: '🧘 Метапознание', x: 100, y: 300, radius: 50, color: '#81c784', info: 'Осознанность чужих паттернов.' },
+      { type: 'law', label: '⚖️ Ст.137 УК РФ', x: 800, y: 200, radius: 50, color: '#64b5f6', info: 'Нарушение частной жизни.' }
+    ];
+    const links = [
+      { from: 0, to: 1 },
+      { from: 0, to: 2 },
+      { from: 0, to: 3 },
+      { from: 0, to: 4 },
+      { from: 1, to: 5 },
+      { from: 2, to: 5 }
+    ];
+    function drawCanvas() {
+      ctx2.clearRect(0, 0, canvas.width, canvas.height);
+      // draw links
+      links.forEach(link => {
+        const from = nodes[link.from];
+        const to = nodes[link.to];
+        ctx2.beginPath();
+        ctx2.moveTo(from.x, from.y);
+        ctx2.lineTo(to.x, to.y);
+        ctx2.strokeStyle = '#888';
+        ctx2.lineWidth = 1.5;
+        ctx2.stroke();
+      });
+      // draw nodes
+      nodes.forEach(node => {
+        ctx2.beginPath();
+        ctx2.arc(node.x, node.y, node.radius, 0, Math.PI*2);
+        ctx2.fillStyle = node.color;
+        ctx2.fill();
+        ctx2.font = '14px monospace';
+        ctx2.fillStyle = '#fff';
+        ctx2.textAlign = 'center';
+        ctx2.fillText(node.label, node.x, node.y + 4);
+      });
+    }
+    function detectHover(x,y) {
+      return nodes.find(node => {
+        const dx = x - node.x, dy = y - node.y;
+        return Math.sqrt(dx*dx + dy*dy) < node.radius;
+      }) || null;
+    }
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const node = detectHover(mx,my);
+      if(node) {
+        tooltip.style.left = e.pageX + 15 + 'px';
+        tooltip.style.top = e.pageY + 15 + 'px';
+        tooltip.style.display = 'block';
+        tooltip.textContent = node.info;
+        canvas.style.cursor = 'pointer';
+      } else {
+        tooltip.style.display = 'none';
+        canvas.style.cursor = 'default';
+      }
+    });
+    drawCanvas();
+  </script>
+</body>
+</html>
