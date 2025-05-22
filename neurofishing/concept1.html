@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Интерактивная карта техник защиты от V2K</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://neuroscrypt.github.io/CSS/neuroshield.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <span style="font-weight:900;font-size:2em;">🛡</span>
+      <a href="#" data-view="cards">Главная</a>
+      <a href="#" data-view="protection">Защита и Восстановление</a>
+      <a href="#" data-view="structure">Структура Атак</a>
+    </nav>
+    <button data-view="chart">График</button>
+    <button data-view="ipv">Умные ИПВ</button>
+    <button data-view="about">О программе</button>
+    <button data-view="help">Помощь</button>
+  </header>
+
+  <main>
+    <section id="view-cards" class="view"></section>
+    <section id="view-chart" class="view" style="display:none;">
+      <canvas id="defaultChart"></canvas>
+    </section>
+    <section id="view-detail" class="view" style="display:none;">
+      <button class="close-detail">Закрыть</button>
+      <h2 id="detail-title"></h2>
+      <div id="tabs" class="tabs"></div>
+      <div id="detail-content"></div>
+    </section>
+    <section id="view-ipv" class="view modal-view" style="display:none;">
+      <div class="modal-content">
+        <button class="close-modal">×</button>
+        <h3 style="color:white;">Современные Умные ИПВ</h3>
+      </div>
+    </section>
+    <section id="view-about" class="view modal-view" style="display:none;">
+      <div class="modal-content">
+        <button class="close-modal">×</button>
+        <h3>О программе</h3>
+        <p>Интерактивная карта техник защиты от V2K-атак.</p>
+      </div>
+    </section>
+    <section id="view-help" class="view modal-view" style="display:none;">
+      <div class="modal-content">
+        <button class="close-modal">×</button>
+        <h3>Помощь</h3>
+        <p>Кликните на карточку, чтобы увидеть подробности.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+  <script>
+    // Views logic
+    const views = document.querySelectorAll('.view');
+    function showView(name) {
+      views.forEach(v => v.style.display = 'none');
+      const v = document.getElementById('view-' + name);
+      if (v) v.style.display = '';
+    }
+    document.querySelectorAll('[data-view]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        showView(btn.dataset.view);
+      });
+    });
+    document.querySelector('.close-detail').onclick = () => showView('cards');
+    document.querySelectorAll('.close-modal').forEach(b=>b.onclick=()=>showView(b.closest('.view').id.replace('view-','')));
+
+    // Initialize default view
+    showView('cards');
+
+    // Chart init once
+    const chartCtx = document.getElementById('defaultChart').getContext('2d');
+    const defaultChart = new Chart(chartCtx, {
+      type: 'line',
+      data: {/*...*/},
+      options: {/*...*/}
+    });
+
+    // Cards & detail
+    const cardsEl = document.getElementById('view-cards');
+    const detailTitle = document.getElementById('detail-title');
+    const tabsEl = document.getElementById('tabs');
+    const detailContent = document.getElementById('detail-content');
+    const techniques = [/*...*/];
+    techniques.forEach((t,i)=>{
+      const card = document.createElement('div');
+      card.className='card';
+      card.innerHTML=`<span class="icon">${t.icon}</span><h3>${i+1}. ${t.title}</h3>`;
+      card.onclick=()=>{
+        showView('detail');
+        detailTitle.textContent = t.title;
+        tabsEl.innerHTML=''; detailContent.innerHTML='';
+        t.sections.forEach((s,idx)=>{
+          const btn=document.createElement('button');
+          btn.textContent=s.name;
+          btn.className=idx? '':'active';
+          btn.onclick=()=>{
+            Array.from(tabsEl.children).forEach((b,bi)=>b.classList.toggle('active',bi===idx));
+            Array.from(detailContent.children).forEach((p,pi)=>p.style.display=pi===idx?'':'none');
+          };
+          tabsEl.appendChild(btn);
+          const pane=document.createElement('div'); pane.innerHTML=s.html;
+          pane.style.display=idx? 'none':'';
+          detailContent.appendChild(pane);
+        });
+      };
+      cardsEl.appendChild(card);
+    });
+  </script>
+</body>
+</html>
