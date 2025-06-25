@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Эмоциональный Композитор</title>
+  <style>
+    :root {
+      --bg: #151b23;
+      --fg: #fff;
+      --card-bg: #1f2937;
+      --accent: #11171f;
+      --accent2: #2ecc71;
+      --accent3: #f1c40f;
+      --accent4: #9b59b6;
+      --accent5: #e74c3c;
+      --modal-bg: rgba(0,0,0,0.8);
+      --scrollbar-bg: rgba(255,255,255,0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--fg); font-family: 'Inter', sans-serif; }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 1rem; }
+    .card { background: var(--card-bg); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: .5rem; font-weight: 600; }
+    select, input[type="range"], textarea { width: 100%; padding: .75rem; border: none; border-radius: .5rem; background: var(--accent); color: var(--fg); }
+    input[type="range"]::-webkit-slider-thumb { background: var(--accent2); }
+    .btn { display: inline-block; padding: .75rem 1.5rem; background: var(--accent3); color: var(--bg); font-weight: 600; border: none; border-radius: .75rem; cursor: pointer; transition: transform .1s ease; }
+    .btn:active { transform: scale(.97); }
+    .output { white-space: pre-wrap; background: var(--accent); padding: 1rem; border-radius: .5rem; font-family: monospace; height: 200px; overflow-y: auto; }
+    .downloads { margin-top: 1rem; }
+    .downloads a { margin-right: 1rem; color: var(--accent2); text-decoration: none; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Сублиминальный Нейропсихоакустический Композитор</h1>
+    <div class="card">
+      <label for="prompt">Введите промт / описание эмоции</label>
+      <textarea id="prompt" rows="2" placeholder="" ></textarea>
+      <!-- Поле ввода похоже на генеративные AI: здесь пользователь может точно описать желаемый настрой -->
+    </div>
+
+    <div class="card">
+      <label for="emotion">Выберите целевое состояние</label>
+      <select id="emotion">
+        <option value="anxiety">Тревожное ожидание</option>
+        <option value="triumph">Триумф</option>
+        <option value="nostalgia">Ностальгическое умиротворение</option>
+        <option value="euphoria">Эйфория</option>
+        <option value="melancholy">Тоска</option>
+        <option value="threat">Угроза</option>
+      </select>
+      <!-- Дропдаун для точного таргетинга эмоционального профиля -->
+
+      <label for="intensity">Интенсивность (0-100%)</label>
+      <input type="range" id="intensity" min="0" max="100" value="50" />
+      <!-- Управляет динамической кривой напряжения -->
+
+      <label for="duration">Длительность (сек)</label>
+      <input type="range" id="duration" min="10" max="300" value="120" />
+      <!-- Длительность генерируемого трека -->
+    </div>
+
+    <div class="card" style="text-align:center;">
+      <button class="btn" id="generateBtn">Сгенерировать</button>
+    </div>
+
+    <div class="card">
+      <h2>Результат генерации</h2>
+      <div class="output" id="jsonOutput">JSON будет здесь...</div>
+      <div class="downloads">
+        <a id="downloadJson" href="#" download="composition.json">Скачать JSON</a>
+        <a id="downloadMidi" href="#" download="composition.mid">Скачать MIDI</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // JS-логика: собираем параметры, отправляем запрос на генерацию
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const prompt = document.getElementById('prompt').value;
+      const emotion = document.getElementById('emotion').value;
+      const intensity = document.getElementById('intensity').value;
+      const duration = document.getElementById('duration').value;
+
+      const payload = { prompt, emotion, intensity, duration };
+
+      // Пример API-запроса к бэкенду генерации
+      // const resp = await fetch('/api/generate', {
+      //   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+      // });
+      // const data = await resp.json();
+
+      // Для прототипа используем заглушку:
+      const data = {
+        midiBase64: 'TVRoZAAAAAYAAQAC...см. байты MIDI...',
+        composition: { tracks: [], patterns: [] }
+      };
+
+      // Отображаем JSON
+      document.getElementById('jsonOutput').textContent = JSON.stringify(data.composition, null, 2);
+
+      // Подготовка ссылок для скачивания
+      const jsonBlob = new Blob([JSON.stringify(data.composition)], { type: 'application/json' });
+      document.getElementById('downloadJson').href = URL.createObjectURL(jsonBlob);
+
+      const midiBlob = base64ToBlob(data.midiBase64, 'audio/midi');
+      document.getElementById('downloadMidi').href = URL.createObjectURL(midiBlob);
+    });
+
+    function base64ToBlob(base64, mime) {
+      const bytes = atob(base64);
+      const buffer = new Uint8Array(bytes.length);
+      for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
+      return new Blob([buffer], { type: mime });
+    }
+  </script>
+</body>
+</html>
