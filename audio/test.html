@@ -18,7 +18,7 @@
       --scrollbar-bg: rgba(255,255,255,0.1);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--fg); font-family: 'Inter', sans-serif; }
+    body { background: var(--bg); color: var(--fg); font-family: monospace; }
     .container { max-width: 1200px; margin: 2rem auto; padding: 1rem; }
     .card { background: var(--card-bg); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
     h1 { font-size: 2.5rem; margin-bottom: 1rem; }
@@ -52,6 +52,8 @@
         <option value="threat">Угроза</option>
       </select>
       <!-- Дропдаун для точного таргетинга эмоционального профиля -->
+
+<br>
 
       <label for="intensity">Интенсивность (0-100%)</label>
       <input type="range" id="intensity" min="0" max="100" value="50" />
