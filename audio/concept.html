@@ -1,0 +1,293 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIDI to ALS Converter</title>
+  <style>
+    /* Общие стили */
+    :root {
+      --bg: #151b23;
+      --fg: #fff;
+      --card-bg: #1f2937;
+      --accent: #11171f;
+      --accent2: #2ecc71;
+      --accent3: #f1c40f;
+      --accent4: #9b59b6;
+      --accent5: #e74c3c;
+      --modal-bg: rgba(0, 0, 0, 0.8);
+      --scrollbar-bg: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 800px;
+      width: 100%;
+      padding: 30px;
+      border-radius: 10px;
+      background-color: var(--card-bg);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: var(--accent2);
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: var(--fg);
+      margin-bottom: 30px;
+    }
+
+    .file-input {
+      background-color: var(--accent3);
+      border: none;
+      color: var(--fg);
+      padding: 10px 20px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1.2rem;
+    }
+
+    .file-input:hover {
+      background-color: var(--accent4);
+    }
+
+    .output-container {
+      background-color: var(--accent);
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 10px;
+      color: var(--fg);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      display: none;
+    }
+
+    .output-container pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 1rem;
+      color: var(--fg);
+    }
+
+    .btn-convert {
+      background-color: var(--accent2);
+      border: none;
+      color: var(--fg);
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 30px;
+    }
+
+    .btn-convert:hover {
+      background-color: var(--accent4);
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--modal-bg);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      width: 400px;
+      color: var(--fg);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content button {
+      background-color: var(--accent2);
+      padding: 10px 20px;
+      border-radius: 50px;
+      border: none;
+      color: var(--fg);
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .modal-content button:hover {
+      background-color: var(--accent4);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Конвертер MIDI в ALS</h1>
+    <p>Загрузите файл MIDI и (по желанию) файл JSON для настройки конвертации.</p>
+    
+    <!-- File Input for MIDI -->
+    <input type="file" id="midiFile" class="file-input" accept=".mid" />
+    <br><br>
+    <!-- File Input for JSON -->
+    <input type="file" id="jsonFile" class="file-input" accept=".json" />
+    
+    <!-- Convert Button -->
+    <button class="btn-convert" onclick="convertMidiToALS()">Конвертировать</button>
+
+    <!-- Output Display -->
+    <div class="output-container fade-in" id="outputContainer">
+      <h3>Результат конвертации:</h3>
+      <h4>Структура ALS:</h4>
+      <pre id="outputALS"></pre>
+      
+      <h4>JSON-данные:</h4>
+      <pre id="outputJSON"></pre>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2>Ошибка!</h2>
+      <p>Пожалуйста, загрузите файл MIDI.</p>
+      <button onclick="closeModal()">Закрыть</button>
+    </div>
+  </div>
+
+  <script>
+    function convertMidiToALS() {
+      const midiFile = document.getElementById('midiFile').files[0];
+      const jsonFile = document.getElementById('jsonFile').files[0];
+
+      if (!midiFile) {
+        openModal();
+        return;
+      }
+
+      const reader = new FileReader();
+
+      // Чтение JSON данных, если они были загружены
+      let jsonData = {};
+      if (jsonFile) {
+        const jsonReader = new FileReader();
+        jsonReader.onload = function(event) {
+          jsonData = JSON.parse(event.target.result);
+          processMidiData(midiFile, jsonData);
+        };
+        jsonReader.readAsText(jsonFile);
+      } else {
+        processMidiData(midiFile, jsonData);
+      }
+    }
+
+    // Обработка MIDI данных
+    function processMidiData(midiFile, jsonData) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const midiData = new TextDecoder().decode(event.target.result);
+        
+        // Генерация ALS
+        const alsData = generateALS({ 
+          version: '11.0', 
+          tracks: [{ name: "Track 1", type: "MIDI", clips: [{ name: "Clip 1", data: midiData }] }]
+        });
+
+        // Если JSON передан, можно изменить данные на основе JSON
+        if (jsonData && jsonData.settings) {
+          // Например, меняем темп, если передан параметр в JSON
+          alsData.replace('<Tempo>', `<Tempo>${jsonData.settings.tempo || 120}</Tempo>`);
+        }
+
+        // JSON данные
+        const jsonOutput = {
+          version: '11.0',
+          tracks: [{
+            name: "Track 1",
+            type: "MIDI",
+            clips: [{
+              name: "Clip 1",
+              data: midiData
+            }]
+          }],
+          settings: jsonData.settings || {}
+        };
+
+        // Отображение ALS и JSON
+        document.getElementById('outputALS').textContent = alsData;
+        document.getElementById('outputJSON').textContent = JSON.stringify(jsonOutput, null, 2);
+        
+        document.getElementById('outputContainer').style.display = 'block';
+      };
+      reader.readAsArrayBuffer(midiFile);
+    }
+
+    // Генерация базового ALS
+    function generateALS(set) {
+      const xmlString = `<AbletonLiveSet version="${set.version}">
+        <Tracks>
+          ${set.tracks.map(track => `
+            <Track name="${track.name}" type="${track.type}">
+              <Clips>
+                ${track.clips.map(clip => `
+                  <Clip name="${clip.name}">
+                    <Data>${clip.data}</Data>
+                  </Clip>
+                `).join('')}
+              </Clips>
+            </Track>
+          `).join('')}
+        </Tracks>
+      </AbletonLiveSet>`;
+
+      return xmlString;
+    }
+
+    // Открыть модальное окно ошибки
+    function openModal() {
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    // Закрыть модальное окно
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
