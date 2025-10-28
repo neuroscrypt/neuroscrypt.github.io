@@ -22,6 +22,7 @@
             --card-bg: rgba(44, 62, 80, 0.9);
             --text-color: #e0e0e0;
             --light-text: #ffffff;
+            --sidebar-width: 280px;
         }
 
         body {
@@ -32,33 +33,95 @@
             height: 100vh;
         }
 
-        .timeline-container {
-            position: relative;
-            width: 100%;
+        .container {
+            display: flex;
             height: 100vh;
-            overflow: hidden;
         }
 
-        .timeline-slides {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.5s ease-in-out;
+        /* Стили для боковой панели */
+        .timeline-nav {
+            width: var(--sidebar-width);
+            background: rgba(13, 27, 42, 0.9);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        .nav-title {
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            color: var(--light-text);
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            background: rgba(52, 152, 219, 0.3);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .nav-link {
+            display: block;
+            padding: 15px;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item.active .nav-link {
+            color: var(--light-text);
+            font-weight: bold;
+        }
+
+        .era-name {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .era-years {
+            font-size: 0.85rem;
+            color: var(--primary-color);
+        }
+
+        /* Стили для основного контента */
+        .timeline-content {
+            flex: 1;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            height: 100vh;
         }
 
         .era-screen {
-            flex: 0 0 100%;
-            height: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             padding: 20px;
+            scroll-snap-align: start;
             position: relative;
-            overflow-y: auto;
         }
 
         .era-content {
-            max-width: 1000px;
+            max-width: 900px;
             margin: 0 auto;
             background: var(--card-bg);
             border-radius: 15px;
@@ -186,104 +249,101 @@
             color: #b0b0b0;
         }
 
-        /* Навигация */
-        .timeline-nav {
+        /* Индикатор прогресса */
+        .progress-indicator {
             position: fixed;
-            right: 30px;
+            right: 20px;
             top: 50%;
             transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             z-index: 100;
         }
 
-        .nav-dot {
-            display: block;
+        .progress-dot {
             width: 12px;
             height: 12px;
-            margin: 15px 0;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.3);
+            margin: 8px 0;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .nav-dot.active {
+        .progress-dot.active {
             background: var(--primary-color);
             transform: scale(1.4);
         }
 
-        .nav-arrows {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            z-index: 100;
-        }
-
-        .nav-arrow {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.5rem;
-            color: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .nav-arrow:hover {
-            background: var(--secondary-color);
-            transform: scale(1.1);
-        }
-
-        .era-counter {
-            position: fixed;
-            top: 30px;
-            left: 30px;
-            font-size: 1.2rem;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 8px 15px;
-            border-radius: 20px;
-            z-index: 100;
+        .progress-line {
+            width: 2px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 5px 0;
         }
 
         /* Адаптивность */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
+            .timeline-nav {
+                width: 220px;
+            }
+            
             .era-title {
                 font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .timeline-nav {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .nav-list {
+                display: flex;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            
+            .nav-item {
+                flex: 0 0 auto;
+                margin-right: 10px;
+                margin-bottom: 0;
+            }
+            
+            .nav-link {
+                padding: 10px 15px;
+                white-space: nowrap;
+            }
+            
+            .era-years {
+                display: none;
+            }
+            
+            .progress-indicator {
+                display: none;
             }
             
             .era-content {
                 padding: 20px;
             }
             
-            .timeline-nav {
-                right: 15px;
-            }
-            
-            .nav-arrows {
-                bottom: 20px;
-            }
-            
-            .era-counter {
-                top: 15px;
-                left: 15px;
-            }
-            
-            .leader {
-                width: 120px;
-                padding: 10px;
+            .era-title {
+                font-size: 1.6rem;
             }
         }
 
         @media (max-width: 480px) {
             .era-title {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
             }
             
             .era-period {
@@ -307,10 +367,66 @@
     </style>
 </head>
 <body>
-    <div class="timeline-container">
-        <div class="timeline-slides">
+    <div class="container">
+        <!-- Боковая панель навигации -->
+        <nav class="timeline-nav">
+            <h2 class="nav-title">Исторические эпохи</h2>
+            <ul class="nav-list">
+                <li class="nav-item active">
+                    <a href="#era1" class="nav-link">
+                        <div class="era-name">Эпоха Позднего СССР</div>
+                        <div class="era-years">1960-е - 1985</div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#era2" class="nav-link">
+                        <div class="era-name">Перестройка</div>
+                        <div class="era-years">1985 - 1991</div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#era3" class="nav-link">
+                        <div class="era-name">Эпоха Ельцина</div>
+                        <div class="era-years">1991 - 1999</div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#era4" class="nav-link">
+                        <div class="era-name">Эпоха Путина I</div>
+                        <div class="era-years">2000 - 2007</div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#era5" class="nav-link">
+                        <div class="era-name">Тандемократия</div>
+                        <div class="era-years">2008 - 2012</div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#era6" class="nav-link">
+                        <div class="era-name">Консервативный поворот</div>
+                        <div class="era-years">2012 - 2013</div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#era7" class="nav-link">
+                        <div class="era-name">Защита от внешнего врага</div>
+                        <div class="era-years">2014 - 2021</div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#era8" class="nav-link">
+                        <div class="era-name">Военная мобилизация</div>
+                        <div class="era-years">2022 - 2025</div>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Основной контент -->
+        <main class="timeline-content" id="timeline-content">
             <!-- Эпоха Позднего СССР -->
-            <div class="era-screen" id="era1">
+            <section class="era-screen" id="era1">
                 <div class="era-content">
                     <h2 class="era-title"><i class="fas fa-hammer"></i> Эпоха Позднего СССР</h2>
                     <div class="era-period">1960-е - 1985</div>
@@ -353,10 +469,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Перестройка -->
-            <div class="era-screen" id="era2">
+            <section class="era-screen" id="era2">
                 <div class="era-content">
                     <h2 class="era-title"><i class="fas fa-exchange-alt"></i> Перестройка</h2>
                     <div class="era-period">1985 - 1991</div>
@@ -389,10 +505,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Эпоха Ельцина -->
-            <div class="era-screen" id="era3">
+            <section class="era-screen" id="era3">
                 <div class="era-content">
                     <h2 class="era-title"><i class="fas fa-democrat"></i> Эпоха Ельцина</h2>
                     <div class="era-period">1991 - 1999</div>
@@ -427,10 +543,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Эпоха Путина I -->
-            <div class="era-screen" id="era4">
+            <section class="era-screen" id="era4">
                 <div class="era-content">
                     <h2 class="era-title"><i class="fas fa-balance-scale"></i> Эпоха Путина I</h2>
                     <div class="era-period">2000 - 2007</div>
@@ -464,10 +580,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Тандемократия -->
-            <div class="era-screen" id="era5">
+            <section class="era-screen" id="era5">
                 <div class="era-content">
                     <h2 class="era-title"><i class="fas fa-handshake"></i> Тандемократия</h2>
                     <div class="era-period">2008 - 2012</div>
@@ -505,10 +621,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Консервативный поворот -->
-            <div class="era-screen" id="era6">
+            <section class="era-screen" id="era6">
                 <div class="era-content">
                     <h2 class="era-title"><i class="fas fa-shield-alt"></i> Консервативный поворот</h2>
                     <div class="era-period">2012 - 2013</div>
@@ -526,4 +642,255 @@
                     <div class="info-section key-events">
                         <h3><i class="fas fa-list"></i> Ключевые события</h3>
                         <ul>
-                            <li>2012 
+                            <li>2012 - "Дело Pussy Riot", ужесточение законов о митингах</li>
+                            <li>2012 - Принятие "закона об иноагентах"</li>
+                            <li>2013 - "Закон Димы Яковлева"</li>
+                            <li>2013 - Статья Путина в NYT об "исключительности" США</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="leaders">
+                        <div class="leader">
+                            <div class="leader-img" style="background: #2ecc71;"></div>
+                            <div class="leader-name">В. Путин</div>
+                            <div class="leader-role">Президент России</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Защита от внешнего врага -->
+            <section class="era-screen" id="era7">
+                <div class="era-content">
+                    <h2 class="era-title"><i class="fas fa-flag"></i> Защита от внешнего врага</h2>
+                    <div class="era-period">2014 - 2021</div>
+                    
+                    <div class="info-section rhetoric">
+                        <h3><i class="fas fa-bullhorn"></i> Официальная риторика</h3>
+                        <p>"Крымнаш", "Возвращение исторических земель", "Защита соотечественников", "Борьба с фашизмом", "Санкции как стимул"</p>
+                    </div>
+                    
+                    <div class="info-section reality">
+                        <h3><i class="fas fa-eye"></i> Реальная обстановка</h3>
+                        <p>Аннексия Крыма, война в Донбассе, санкции Запада, стагнация уровня жизни, изоляция России, конституционная реформа 2020 года, пандемия COVID-19</p>
+                    </div>
+                    
+                    <div class="info-section key-events">
+                        <h3><i class="fas fa-list"></i> Ключевые события</h3>
+                        <ul>
+                            <li>2014 - Аннексия Крыма, война в Донбассе, санкции</li>
+                            <li>2015 - Военная операция в Сирии</li>
+                            <li>2018 - Переизбрание Путина, пенсионная реформа</li>
+                            <li>2020 - Поправки к Конституции, пандемиция COVID-19</li>
+                            <li>2021 - Наращивание войск у границы Украины</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="leaders">
+                        <div class="leader">
+                            <div class="leader-img" style="background: #2ecc71;"></div>
+                            <div class="leader-name">В. Путин</div>
+                            <div class="leader-role">Президент России</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Военная мобилизация -->
+            <section class="era-screen" id="era8">
+                <div class="era-content">
+                    <h2 class="era-title"><i class="fas fa-star-of-david"></i> Военная мобилизация</h2>
+                    <div class="era-period">2022 - 2025</div>
+                    
+                    <div class="info-section rhetoric">
+                        <h3><i class="fas fa-bullhorn"></i> Официальная риторика</h3>
+                        <p>"Специальная военная операция" (СВО), "Денацификация и демилитаризация", "Борьба с коллективным Западом", "Суверенизация", "Традиционные ценности"</p>
+                    </div>
+                    
+                    <div class="info-section reality">
+                        <h3><i class="fas fa-eye"></i> Реальная обстановка</h3>
+                        <p>Полномасштабная война в Украине, жесткие санкции, изоляция России, милитаризация экономики, мобилизация, репрессии, отток населения, превращение России в автаркию</p>
+                    </div>
+                    
+                    <div class="info-section key-events">
+                        <h3><i class="fas fa-list"></i> Ключевые события</h3>
+                        <ul>
+                            <li>2022 - Начало полномасштабной войны в Украине</li>
+                            <li>2022 - Частичная мобилизация, релокация предприятий</li>
+                            <li>2023 - Продолжение боевых действий, падение рубля</li>
+                            <li>2024 - Президентские выборы, ужесточение законодательства</li>
+                            <li>2025 - Прогнозируемое продолжение конфликта</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="leaders">
+                        <div class="leader">
+                            <div class="leader-img" style="background: #2ecc71;"></div>
+                            <div class="leader-name">В. Путин</div>
+                            <div class="leader-role">Президент России</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Индикатор прогресса -->
+        <div class="progress-indicator">
+            <div class="progress-dot active" data-target="era1"></div>
+            <div class="progress-line"></div>
+            <div class="progress-dot" data-target="era2"></div>
+            <div class="progress-line"></div>
+            <div class="progress-dot" data-target="era3"></div>
+            <div class="progress-line"></div>
+            <div class="progress-dot" data-target="era4"></div>
+            <div class="progress-line"></div>
+            <div class="progress-dot" data-target="era5"></div>
+            <div class="progress-line"></div>
+            <div class="progress-dot" data-target="era6"></div>
+            <div class="progress-line"></div>
+            <div class="progress-dot" data-target="era7"></div>
+            <div class="progress-line"></div>
+            <div class="progress-dot" data-target="era8"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const timelineContent = document.getElementById('timeline-content');
+            const navItems = document.querySelectorAll('.nav-item');
+            const progressDots = document.querySelectorAll('.progress-dot');
+            const eraScreens = document.querySelectorAll('.era-screen');
+            
+            // Функция для обновления активного элемента навигации
+            function updateActiveNav(targetId) {
+                // Обновляем боковое меню
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    const link = item.querySelector('.nav-link');
+                    if (link.getAttribute('href') === `#${targetId}`) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                // Обновляем индикатор прогресса
+                progressDots.forEach(dot => {
+                    dot.classList.remove('active');
+                    if (dot.getAttribute('data-target') === targetId) {
+                        dot.classList.add('active');
+                    }
+                });
+            }
+            
+            // Обработчики для кликов по навигации
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.querySelector('.nav-link').getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    // Плавная прокрутка к целевой секции
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    
+                    updateActiveNav(targetId);
+                });
+            });
+            
+            // Обработчики для кликов по индикатору прогресса
+            progressDots.forEach(dot => {
+                dot.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetElement = document.getElementById(targetId);
+                    
+                    // Плавная прокрутка к целевой секции
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    
+                    updateActiveNav(targetId);
+                });
+            });
+            
+            // Обработчик прокрутки для определения активной секции
+            let scrollTimeout;
+            timelineContent.addEventListener('scroll', function() {
+                // Используем debounce для оптимизации
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    // Находим текущую активную секцию
+                    let currentActive = null;
+                    eraScreens.forEach(screen => {
+                        const rect = screen.getBoundingClientRect();
+                        // Если секция находится в видимой области
+                        if (rect.top >= 0 && rect.top <= window.innerHeight / 2) {
+                            currentActive = screen.id;
+                        }
+                    });
+                    
+                    if (currentActive) {
+                        updateActiveNav(currentActive);
+                    }
+                }, 100);
+            });
+            
+            // Обработчики для свайпов (мобильные устройства)
+            let startY = 0;
+            let endY = 0;
+            
+            timelineContent.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+            });
+            
+            timelineContent.addEventListener('touchend', (e) => {
+                endY = e.changedTouches[0].clientY;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const currentEra = document.querySelector('.nav-item.active');
+                let currentIndex = Array.from(navItems).indexOf(currentEra);
+                
+                if (startY - endY > swipeThreshold) {
+                    // Свайп вверх - следующая эпоха
+                    if (currentIndex < navItems.length - 1) {
+                        const nextEra = navItems[currentIndex + 1];
+                        nextEra.querySelector('.nav-link').click();
+                    }
+                } else if (endY - startY > swipeThreshold) {
+                    // Свайп вниз - предыдущая эпоха
+                    if (currentIndex > 0) {
+                        const prevEra = navItems[currentIndex - 1];
+                        prevEra.querySelector('.nav-link').click();
+                    }
+                }
+            }
+            
+            // Обработчики для клавиатуры
+            document.addEventListener('keydown', (e) => {
+                const currentEra = document.querySelector('.nav-item.active');
+                let currentIndex = Array.from(navItems).indexOf(currentEra);
+                
+                if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+                    // Следующая эпоха
+                    e.preventDefault();
+                    if (currentIndex < navItems.length - 1) {
+                        const nextEra = navItems[currentIndex + 1];
+                        nextEra.querySelector('.nav-link').click();
+                    }
+                } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                    // Предыдущая эпоха
+                    e.preventDefault();
+                    if (currentIndex > 0) {
+                        const prevEra = navItems[currentIndex - 1];
+                        prevEra.querySelector('.nav-link').click();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
