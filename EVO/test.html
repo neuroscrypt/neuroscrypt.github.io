@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Уравнение композционной вероятности — подробное интерактивное объяснение</title>
+<style>
+  :root{
+    --bg:#0f1724; --card:#111827; --muted:#9ca3af; --accent:#22c55e; --accent2:#f59e0b; --danger:#ef4444; --glass:rgba(255,255,255,0.03);
+    --radius:14px; --maxw:1100px; --fg:#eef2ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:var(--fg);background:linear-gradient(180deg,#081024 0%,#07121a 60%);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:var(--maxw);margin:28px auto;padding:20px}
+  header{display:flex;flex-direction:column;gap:8px}
+  h1{margin:0;font-size:20px}
+  p.lead{margin:0;color:var(--muted)}
+
+  .layout{display:grid;grid-template-columns:1fr 380px;gap:18px;margin-top:18px}
+  @media (max-width:980px){.layout{grid-template-columns:1fr}}
+
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:18px;border-radius:var(--radius);box-shadow:0 6px 24px rgba(2,6,23,0.6)}
+
+  /* Equation panel */
+  .equation{display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;padding:26px}
+  .formula{font-family:var(--mono,ui-monospace,Menlo,Monaco);font-size:22px;background:var(--glass);padding:12px 18px;border-radius:10px}
+  .formula sup{font-size:12px}
+  .bigP{font-size:28px;font-weight:700;color:var(--accent)}
+  .subtitle{color:var(--muted);font-size:13px}
+
+  /* controls */
+  .controls{display:flex;flex-direction:column;gap:12px}
+  .param{display:flex;flex-direction:column;gap:6px}
+  .param row{display:flex}
+  label{font-size:13px;color:var(--muted)}
+  input[type=range]{width:100%}
+  .val{font-weight:700;color:#fff}
+
+  .contribs{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+  .bar{height:12px;border-radius:8px;background:rgba(255,255,255,0.04);overflow:hidden}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#21a25a);width:10%}
+
+  /* right column */
+  .info{display:flex;flex-direction:column;gap:12px}
+  .var-card{background:linear-gradient(90deg, rgba(255,255,255,0.01), transparent);padding:12px;border-radius:10px}
+  .var-card h3{margin:0;font-size:14px}
+  .var-card p{margin:6px 0 0;color:var(--muted);font-size:13px}
+  .impact{margin-top:10px;color:var(--muted);font-size:13px}
+
+  /* footer examples */
+  .examples{display:flex;gap:10px;flex-wrap:wrap}
+  .chip{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,0.02);cursor:pointer;border:1px solid rgba(255,255,255,0.02)}
+
+  footer{margin-top:18px;color:var(--muted);font-size:13px}
+
+  /* responsive typography small screens */
+  @media (max-width:560px){.formula{font-size:18px}.bigP{font-size:22px}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Композитная (композиционная) вероятность обратного эффекта</h1>
+      <p class="lead">Интерактивная визуализация уравнения
+        <strong>P = p<sub>P</sub> × p<sub>F|P</sub> × p<sub>A|F</sub> × p<sub>D|A</sub> × p<sub>B|D</sub></strong>
+        с подробными определениями переменных и анализом влияния.</p>
+    </header>
+
+    <div class="layout">
+      <!-- ЛЕВАЯ: формула, контролы, графики вклада -->
+      <div class="card equation">
+        <div class="formula" aria-hidden="false">
+          <div style="margin-bottom:8px;color:var(--muted);font-size:13px">Уравнение (цепная модель событий)</div>
+          <div class="bigP">P<sub>backfire</sub> = p<sub>P</sub> × p<sub>F|P</sub> × p<sub>A|F</sub> × p<sub>D|A</sub> × p<sub>B|D</sub></div>
+          <div class="subtitle">Каждый множитель — условная или начальная вероятность перехода по цепочке.</div>
+        </div>
+
+        <div style="width:100%;max-width:760px;margin-top:8px" class="controls">
+          <!-- Слайдеры для каждой переменной -->
+          <div class="param">
+            <label>p<sub>P</sub> — вероятность, что агент обладает/проявит «гордыню» (предрасположенность)</label>
+            <input id="pP" type="range" min="0" max="1" step="0.01" value="0.60" aria-label="pP">
+            <div><span class="val" id="vP">0.60</span> — чем выше, тем больше доля агентов начального риска.</div>
+          </div>
+
+          <div class="param">
+            <label>p<sub>F|P</sub> — вероятность фрустрации при наличии гордыни</label>
+            <input id="pF" type="range" min="0" max="1" step="0.01" value="0.70">
+            <div><span class="val" id="vF">0.70</span> — отражает, насколько легко гордыня превращается во фрустрацию.</div>
+          </div>
+
+          <div class="param">
+            <label>p<sub>A|F</sub> — вероятность ошибки атрибуции при фрустрации</label>
+            <input id="pA" type="range" min="0" max="1" step="0.01" value="0.50">
+            <div><span class="val" id="vA">0.50</span> — склонность объяснять негативный результат враждебностью других.</div>
+          </div>
+
+          <div class="param">
+            <label>p<sub>D|A</sub> — вероятность дефекции (некооперативного решения) при ошибке атрибуции</label>
+            <input id="pD" type="range" min="0" max="1" step="0.01" value="0.65">
+            <div><span class="val" id="vD">0.65</span> — насколько часто ошибочная атрибуция приводит к уходу от сотрудничества.</div>
+          </div>
+
+          <div class="param">
+            <label>p<sub>B|D</sub> — вероятность обратного эффекта (самонаказание) при дефекции</label>
+            <input id="pB" type="range" min="0" max="1" step="0.01" value="0.40">
+            <div><span class="val" id="vB">0.40</span> — вероятность, что дефекция приведёт к вреду для того, кто дефектовал.</div>
+          </div>
+
+          <div style="margin-top:8px;display:flex;gap:12px;align-items:center;justify-content:center">
+            <div style="text-align:center">
+              <div style="color:var(--muted);font-size:13px">Композиционная вероятность</div>
+              <div style="font-size:20px;font-weight:700;color:var(--accent);margin-top:6px" id="composite">10.92%</div>
+              <div style="color:var(--muted);font-size:12px">(произведение указанных вероятностей)</div>
+            </div>
+
+            <div style="width:40%;">
+              <div style="color:var(--muted);font-size:13px">Вклад каждой переменной (визуализация)</div>
+              <div class="contribs" id="contribs">
+                <!-- JS заполнит бары с относительным вкладом -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ПРАВАЯ: детальные описания переменных и аналитика влияния -->
+      <aside class="info">
+        <div class="card var-card">
+          <h3>Что такое «композиционная вероятность»?</h3>
+          <p>
+            Композиционная (или композитная) вероятность — это простое, интуитивное число,
+            показывающее вероятность последовательного наступления всех событий цепочки для одного агента.
+            Формула: <em>P = ∏ p<sub>i</sub></em>.
+          </p>
+          <p class="impact">
+            Важно: это приближение. Оно предполагает, что каждое последующее событие требуется для перехода к следующему.
+            В реальных системах возможны дополнительные источники фрустрации, обратные связи и сетевые эффекты.
+          </p>
+        </div>
+
+        <div class="card var-card">
+          <h3>Подробное описание переменных</h3>
+          <p style="margin-top:8px"><strong>p<sub>P</sub> — Гордыня</strong><br>Доля агентов, которые изначально склонны к субъективному чувству превосходства, нежеланию признавать ошибки или чувствительности к урону статуса. Рост p<sub>P</sub> прямо увеличивает количество агентов, которые могут пройти всю цепочку.</p>
+
+          <p><strong>p<sub>F|P</sub> — Фрустрация при гордыне</strong><br>Отражает вероятность того, что предрасположенность выльется в реальную эмоциональную фрустрацию при неблагоприятном событии. Снижение этого параметра — одна из эффективных точек вмешательства (управление ожиданиями, мягкая коммуникация).</p>
+
+          <p><strong>p<sub>A|F</sub> — Ошибка атрибуции</strong><br>Вероятность того, что фрустрация будет интерпретирована как враждебность или злой умысел других. Это когнитивное смещение. Интервенции: факт-чекинг, мета-коммуникация.</p>
+
+          <p><strong>p<sub>D|A</sub> — Дефекция</strong><br>Вероятность выбора некооперативной стратегии (дефекции) после ошибочной атрибуции. Это влияет на коллективную динамику: высокая p<sub>D|A</sub> приводит к парадоксу сотрудничества и трагедии общих ресурсов.</p>
+
+          <p><strong>p<sub>B|D</sub> — Обратный эффект</strong><br>Вероятность, что дефекция окончится нанесением вреда тому, кто дефектовал. Примеры: утрата репутации, юридические санкции, экономические убытки.</p>
+        </div>
+
+        <div class="card var-card">
+          <h3>Как интерпретировать влияние переменной?</h3>
+          <p class="impact">Для данной мультипликативной модели относительная (процентная) смена любой отдельной переменной приводит примерно к той же относительной смене итоговой композиционной вероятности.</p>
+          <ul style="color:var(--muted);font-size:13px;margin-top:8px;">
+            <li><strong>Эластичность:</strong> ∂P/∂p<sub>i</sub> = P / p<sub>i</sub> — то есть небольшое относительное изменение p<sub>i</sub> даст примерно такое же относительное изменение P.</li>
+            <li><strong>Абсолютный эффект:</strong> зависит от текущего значения p<sub>i</sub>. Например, увеличение p<sub>i</sub> на 0.1 при p<sub>i</sub>=0.9 даст меньший абсолютный рост P, чем при p<sub>i</sub>=0.2.</li>
+            <li><strong>Практика:</strong> снижая условные вероятности (p<sub>F|P</sub>, p<sub>A|F</sub>, p<sub>D|A</sub>, p<sub>B|D</sub>) мы прямо уменьшаем риск «backfire». Чем ближе переменная к нулю — тем сильнее её снижение влияет на P в абсолютных единицах.</li>
+          </ul>
+        </div>
+
+        <div class="card var-card">
+          <h3>Пресеты — примеры сценариев</h3>
+          <div class="examples">
+            <div class="chip" onclick="applyPreset('default')">По умолчанию</div>
+            <div class="chip" onclick="applyPreset('fragile')">Хрупкая группа</div>
+            <div class="chip" onclick="applyPreset('mediated')">С интервенцией</div>
+            <div class="chip" onclick="applyPreset('lowrisk')">Низкий риск</div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+
+    <footer>
+      Примечание: модель — образовательная и упрощённая. Для принятия решений используйте калиброванные модели и эмпирические данные.
+    </footer>
+  </div>
+
+<script>
+  // JS: логика интерактивности и вычислений
+  // Получаем элементы
+  const pP = document.getElementById('pP');
+  const pF = document.getElementById('pF');
+  const pA = document.getElementById('pA');
+  const pD = document.getElementById('pD');
+  const pB = document.getElementById('pB');
+
+  const vP = document.getElementById('vP');
+  const vF = document.getElementById('vF');
+  const vA = document.getElementById('vA');
+  const vD = document.getElementById('vD');
+  const vB = document.getElementById('vB');
+
+  const composite = document.getElementById('composite');
+  const contribs = document.getElementById('contribs');
+
+  // Функция вычисления композиционной вероятности (произведение)
+  function computeComposite(values){
+    // values: {pP,pF,pA,pD,pB}
+    return values.pP * values.pF * values.pA * values.pD * values.pB;
+  }
+
+  // Функция расчета вкладов: относительный вклад визуально
+  // Мы используем простую меру: вклад_i = -log(p_i) / sum(-log(p_j))? Но логарифмическая мера
+  // может быть неинтуитивной. Здесь мы показываем относительную *чувствительность* —
+  // насколько уменьшение переменной на 10% повлияет на P.
+  // Для мультипликативной модели относительная (%)-смена любой переменной приводит к той же относительной смене P.
+  // Чтобы дать понятие абсолютного вклада, используем contribution = (P - P_if_i_zero) / P_total
+  // но P_if_i_zero = 0, так что простая идея — показать "условную долю" в лог-пространстве.
+
+  function buildContribBars(values){
+    // Создаём простой индификатор: weight_i = Math.abs(Math.log(Math.max(p_i,0.0001)))
+    const eps = 1e-4;
+    const ws = [values.pP, values.pF, values.pA, values.pD, values.pB].map(v => Math.abs(Math.log(Math.max(v, eps))));
+    const sum = ws.reduce((a,b)=>a+b,0);
+    const labels = ['pP','pF|P','pA|F','pD|A','pB|D'];
+    const colors = ['#2ecc71','#f59e0b','#9b59b6','#3b82f6','#ef4444'];
+    const out = labels.map((lab,i)=>({lab, frac: sum? (ws[i]/sum):0, color:colors[i], val: [values.pP,values.pF,values.pA,values.pD,values.pB][i]}));
+    return out;
+  }
+
+  function render(){
+    const values = {pP:+pP.value, pF:+pF.value, pA:+pA.value, pD:+pD.value, pB:+pB.value};
+    // обновим текстовые значения
+    vP.textContent = values.pP.toFixed(2);
+    vF.textContent = values.pF.toFixed(2);
+    vA.textContent = values.pA.toFixed(2);
+    vD.textContent = values.pD.toFixed(2);
+    vB.textContent = values.pB.toFixed(2);
+
+    const P = computeComposite(values);
+    composite.textContent = (P*100).toFixed(2) + '%';
+
+    // строим вкладовые бары
+    const bars = buildContribBars(values);
+    contribs.innerHTML = '';
+    bars.forEach(b =>{
+      const el = document.createElement('div');
+      el.style.display='flex';el.style.flexDirection='column';el.style.gap='6px';
+      const title = document.createElement('div');
+      title.style.display='flex';title.style.justifyContent='space-between';title.style.fontSize='12px';title.style.color='var(--muted)';
+      title.innerHTML = `<span>${b.lab} = ${b.val.toFixed(2)}</span><span>${(b.frac*100).toFixed(1)}%</span>`;
+      const barwrap = document.createElement('div');
+      barwrap.className='bar';
+      const bar = document.createElement('i');
+      bar.style.width = (b.frac*100) + '%';
+      bar.style.background = b.color;
+      barwrap.appendChild(bar);
+      el.appendChild(title);el.appendChild(barwrap);
+      contribs.appendChild(el);
+    });
+
+    // Accessibility: set aria-live
+    composite.setAttribute('aria-live','polite');
+  }
+
+  // Слушатели изменений ползунков
+  [pP,pF,pA,pD,pB].forEach(el=>el.addEventListener('input',render));
+
+  // Пресеты
+  function applyPreset(name){
+    const presets = {
+      default:[0.6,0.7,0.5,0.65,0.4],
+      fragile:[0.85,0.8,0.65,0.75,0.5],
+      mediated:[0.4,0.5,0.2,0.25,0.15],
+      lowrisk:[0.2,0.3,0.1,0.1,0.05]
+    };
+    const p = presets[name];
+    if(!p) return;
+    pP.value=p[0];pF.value=p[1];pA.value=p[2];pD.value=p[3];pB.value=p[4];render();
+  }
+
+  // Инициализация
+  render();
+
+  // Дополнительная пояснительная логика (демонстрация чувствительности):
+  // При мультипликативной модели относительная (процентная) смена любой p_i
+  // приводит к пропорциональной относительной смене итоговой P:
+  //   dP/P ≈ d p_i / p_i  (для малых d p_i)
+  // Это значит, что если вы уменьшите любую p_i на 10% (в относительных единицах), P уменьшится тоже примерно на 10%.
+  // Практический вывод: работать стоит там, где можно добиться существенного относительного снижения p_i.
+
+</script>
+</body>
+</html>
