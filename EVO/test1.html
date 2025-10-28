@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Инфографика — Гордыня → Фрустрация → Атрибуция (с зависимостями)</title>
+
+  <!--
+    Полностью автономная HTML-страница на русском языке.
+    Интерфейс сделан в стиле предыдущей версии (двухколоночный макет + нижняя панель)
+    и интегрирует функциональность "С Зависимостями Параметров (coupled)".
+
+    В файле подробно подписан и объяснён каждый фрагмент JavaScript-кода на русском языке.
+    Откройте страницу в браузере — все функции работают без сервера.
+  -->
+
+  <style>
+    ::-webkit-scrollbar { width: 0; }
+    :root {
+      --bg: #151b23;
+      --fg: #fff;
+      --card-bg: #1f2937;
+      --accent: #11171f;
+      --accent2: #2ecc71;
+      --accent3: #f1c40f;
+      --accent4: #9b59b6;
+      --accent5: #e74c3c;
+      --modal-bg: rgba(0,0,0,0.8);
+      --radius-lg: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", monospace;
+    }
+
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background:radial-gradient(1000px 400px at 10% 10%, rgba(255,255,255,0.02), transparent), var(--bg);
+      color:var(--fg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.4;
+    }
+
+    .container{max-width:1200px;margin:24px auto;padding:20px;display:grid;grid-template-columns:1fr 380px;gap:20px;}
+    header{grid-column:1/-1;margin-bottom:6px}
+
+    .card{background:var(--card-bg);border-radius:var(--radius-lg);padding:18px;box-shadow:0 6px 18px rgba(0,0,0,0.6);}
+    h1{margin:0;font-size:22px}
+    .lead{color:rgba(255,255,255,0.72);margin:6px 0 0;font-size:13px}
+
+    .controls{display:flex;flex-direction:column;gap:12px}
+    label.small{font-size:13px;color:rgba(255,255,255,0.85);display:block;margin-bottom:6px}
+
+    input[type=range]{width:100%;}
+    .muted{color:rgba(255,255,255,0.6);font-size:13px}
+    .big-num{font-weight:700;font-size:20px}
+
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:var(--accent);color:var(--fg);cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    .btn.green{background:linear-gradient(90deg,var(--accent2),#27ae60)}
+    .btn.orange{background:linear-gradient(90deg,var(--accent3),#d39e00)}
+
+    .svg-area{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:12px;border-radius:12px}
+    svg text{font-family:inherit;fill:var(--fg)}
+    .hint{font-size:12px;color:rgba(255,255,255,0.6);}
+
+    .bottom{grid-column:1/-1;display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-top:10px}
+
+    .node-info{padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);}
+
+    @media (max-width:980px){
+      .container{grid-template-columns:1fr;}
+      .bottom{grid-template-columns:1fr}
+    }
+
+    .tag{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;background:rgba(255,255,255,0.03)}
+    #chartWrap{height:320px;padding:12px;border-radius:12px}
+    .mono{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,0.65)}
+
+    .controls-section{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:12px;border-radius:10px}
+    .flex-row{display:flex;gap:8px;align-items:center}
+    .small-note{font-size:12px;color:rgba(255,255,255,0.6)}
+  </style>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="card">
+        <h1>Интерактивная инфографика: Гордыня → Фрустрация → Ошибка атрибуции → Дефекция → Обратный эффект</h1>
+        <p class="lead">Полностью на русском языке. Интерфейс как в предыдущей версии — левая диаграмма, правая панель с контролами, снизу симуляция и информация об узлах. Включена логика зависимостей между параметрами (coupling).</p>
+      </div>
+    </header>
+
+    <!-- Левая большая панель — SVG-диаграмма -->
+    <section class="card svg-area" id="diagramCard">
+      <svg id="dagSvg" viewBox="0 0 1000 360" style="width:100%;height:360px;">
+
+        <!-- Узел: Гордыня -->
+        <g id="node-pride" class="node" style="cursor:pointer;">
+          <circle cx="120" cy="60" r="40" fill="transparent" stroke="white" stroke-width="1.4"></circle>
+          <text x="120" y="60" text-anchor="middle" dominant-baseline="central" font-size="13">Гордыня</text>
+          <text id="val-pride" x="120" y="85" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.7)"></text>
+        </g>
+
+        <!-- Ребро: Гордыня -> Фрустрация -->
+        <path id="edge-p-f" d="M160,60 C260,60 360,60 420,60" fill="none" stroke-linecap="round"></path>
+        <polygon id="arrow-p-f" points="420,60 410,52 410,68"></polygon>
+
+        <!-- Узел: Фрустрация -->
+        <g id="node-frustration" class="node" style="cursor:pointer;">
+          <rect x="460" y="30" width="120" height="60" rx="10" fill="transparent" stroke="white" stroke-width="1.4"></rect>
+          <text x="520" y="55" text-anchor="middle" dominant-baseline="central" font-size="13">Фрустрация</text>
+          <text id="val-frustration" x="520" y="75" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.7)"></text>
+        </g>
+
+        <!-- Frustration -> Attribution -->
+        <path id="edge-f-a" d="M580,60 C700,60 760,60 820,60" fill="none" stroke-linecap="round"></path>
+        <polygon id="arrow-f-a" points="820,60 810,52 810,68"></polygon>
+
+        <!-- Узел: Ошибка атрибуции -->
+        <g id="node-attribution" class="node" style="cursor:pointer;">
+          <ellipse cx="880" cy="60" rx="60" ry="36" fill="transparent" stroke="white" stroke-width="1.4"></ellipse>
+          <text x="880" y="60" text-anchor="middle" dominant-baseline="central" font-size="13">Ошибка атрибуции</text>
+          <text id="val-attribution" x="880" y="78" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.7)"></text>
+        </g>
+
+        <!-- Attribution -> Decision -->
+        <path id="edge-a-d" d="M900,100 C760,140 600,140 480,180" fill="none" stroke-linecap="round"></path>
+        <polygon id="arrow-a-d" points="480,180 490,172 470,172"></polygon>
+
+        <!-- Узел: Решение (Кооперация / Дефекция) -->
+        <g id="node-decision" class="node" style="cursor:pointer;">
+          <rect x="360" y="160" width="200" height="70" rx="8" fill="transparent" stroke="white" stroke-width="1.4"></rect>
+          <text x="460" y="190" text-anchor="middle" dominant-baseline="central" font-size="13">Кооперация / Дефекция</text>
+          <text id="val-decision" x="460" y="206" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.7)"></text>
+        </g>
+
+        <!-- Defection -> Backfire -->
+        <path id="edge-d-b" d="M360,230 C260,270 160,300 80,320" fill="none" stroke-linecap="round"></path>
+        <polygon id="arrow-d-b" points="80,320 92,312 92,328"></polygon>
+
+        <!-- Узел: Обратный эффект -->
+        <g id="node-backfire" class="node" style="cursor:pointer;">
+          <circle cx="120" cy="320" r="36" fill="transparent" stroke="white" stroke-width="1.4"></circle>
+          <text x="120" y="320" text-anchor="middle" dominant-baseline="central" font-size="12">Использование силы против себя</text>
+          <text id="val-backfire" x="120" y="338" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.7)"></text>
+        </g>
+
+      </svg>
+
+      <div class="hint" style="margin-top:8px">Толщина стрелок отражает силу/вероятность перехода; нажмите на узел для подробной информации.</div>
+    </section>
+
+    <!-- Правая панель: управляющие элементы (полностью на русском) -->
+    <aside class="card controls">
+      <div class="controls-section">
+        <div class="flex-row" style="justify-content:space-between;align-items:center">
+          <div class="tag">Параметры модели</div>
+          <div class="small-note">Режим зависимостей включён по умолчанию</div>
+        </div>
+
+        <!-- Включение/настройка зависимостей -->
+        <div style="margin-top:10px">
+          <label class="small">Включить взаимозависимости <input type="checkbox" id="enableCoupling" checked></label>
+          <div style="margin-top:8px"><label class="small">Интенсивность взаимовлияния (0..1)</label>
+            <input id="couplingStrength" type="range" min="0" max="1" step="0.01" value="0.6">
+            <div class="mono small-note">Текущая сила: <span id="lblCouple">0.60</span></div>
+          </div>
+
+          <div style="margin-top:8px"><label class="small">Режим объединения влияний</label>
+            <select id="couplingMode" style="width:100%;padding:6px;border-radius:8px;background:transparent;color:var(--fg);border:1px solid rgba(255,255,255,0.04)">
+              <option value="add">аддитивный (линейный)</option>
+              <option value="mult">мультипликативный</option>
+              <option value="logit">логистический (через logit)</option>
+            </select>
+            <div class="small-note" style="margin-top:6px">Режим определяет, как изменения одной базовой переменной влияют на другие.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Базовые (intrinsic) параметры — пользователь их меняет напрямую -->
+      <div style="margin-top:12px">
+        <div class="small">Базовые параметры (intrinsic): измените эти значения — эффекты распространения будут вычислены автоматически</div>
+
+        <div style="margin-top:8px"><label class="small">p(Gордыня) — базовая вероятность</label>
+          <input id="basePride" type="range" min="0" max="1" step="0.01" value="0.6">
+          <div class="mono small-note">Значение: <span id="lblBasePride">0.60</span></div>
+        </div>
+
+        <div style="margin-top:8px"><label class="small">p(Фрустрация | Гордыня) — базовая условная</label>
+          <input id="baseF" type="range" min="0" max="1" step="0.01" value="0.7">
+          <div class="mono small-note">Значение: <span id="lblBaseF">0.70</span></div>
+        </div>
+
+        <div style="margin-top:8px"><label class="small">p(Ошибка атрибуции | Фрустрация) — базовая условная</label>
+          <input id="baseA" type="range" min="0" max="1" step="0.01" value="0.5">
+          <div class="mono small-note">Значение: <span id="lblBaseA">0.50</span></div>
+        </div>
+
+        <div style="margin-top:8px"><label class="small">p(Дефекция | Атрибуция) — базовая условная</label>
+          <input id="baseD" type="range" min="0" max="1" step="0.01" value="0.65">
+          <div class="mono small-note">Значение: <span id="lblBaseD">0.65</span></div>
+        </div>
+
+        <div style="margin-top:8px"><label class="small">p(Обратный эффект | Дефекция) — базовая условная</label>
+          <input id="baseB" type="range" min="0" max="1" step="0.01" value="0.4">
+          <div class="mono small-note">Значение: <span id="lblBaseB">0.40</span></div>
+        </div>
+      </div>
+
+      <!-- Кнопки применения / экспорта -->
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="btnApply" class="btn">Применить</button>
+        <button id="btnExport" class="btn secondary">Экспорт параметров</button>
+      </div>
+
+      <!-- Композиционная вероятность и симуляция -->
+      <div style="border-top:1px solid rgba(255,255,255,0.04);padding-top:10px;margin-top:12px">
+        <div class="small">Композиционная вероятность обратного эффекта (оценка цепного риска): <strong id="composite">—</strong></div>
+        <div class="mono small-note" style="margin-top:6px">P(composite) = pPride * pF|P * pA|F * pD|A * pB|D</div>
+
+        <div style="margin-top:8px" class="small">Симуляция агентов</div>
+        <div style="display:flex;gap:6px;margin-top:6px"><input id="numAgents" type="number" value="200" style="width:90px;padding:6px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04)"><input id="numRounds" type="number" value="20" style="width:90px;padding:6px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04)"></div>
+        <div style="display:flex;gap:8px;margin-top:8px"><button id="runSim" class="btn">Запустить симуляцию</button><button id="btnReset" class="btn secondary">Сброс</button></div>
+      </div>
+
+    </aside>
+
+    <!-- Нижняя панель: график и панель с информацией об узле -->
+    <section class="bottom">
+      <div class="card" id="chartWrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="muted">Динамика: кооперация / дефекция / обратный эффект (по раундам)</div>
+          <div class="muted">Легенда: <span style="color:var(--accent2)">Кооп.</span> <span style="color:var(--accent3);margin-left:8px">Деф.</span> <span style="color:var(--accent5);margin-left:8px">Обратный эффект</span></div>
+        </div>
+        <canvas id="simChart"></canvas>
+      </div>
+
+      <aside class="card node-info">
+        <div id="nodeTitle" style="font-weight:700">Нажмите на узел схемы</div>
+        <div id="nodeDesc" class="muted" style="margin-top:8px">Здесь появится подробная информация об узле и рекомендации по интервенциям.</div>
+        <div id="nodeInterventions" style="margin-top:10px"></div>
+      </aside>
+    </section>
+
+  </div>
+
+  <!--
+    Подробные комментарии в JavaScript на русском языке.
+    Код реализует:
+      - хранение базовых параметров (baseline)
+      - матрицу влияния coeffs
+      - 3 режима объединения влияний: аддитивный, мультипликативный, логистический
+      - вычисление effective параметров (те, что используются в симуляции)
+      - агентную симуляцию (ABM-like)
+      - Chart.js для графика
+  -->
+
+  <script>
+    // =================== УТИЛИТЫ ===================
+
+    // Функция детерминированного PRNG (mulberry32) — для воспроизводимости симуляций
+    function mulberry32(seed){
+      return function(){
+        seed |= 0;
+        seed = (seed + 0x6D2B79F5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      }
+    }
+
+    // Ограничение в диапазоне 0..1
+    function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+
+    // Форматирование процентов
+    function pct(x){ return (x*100).toFixed(2) + '%'; }
+
+    // =================== DOM-элементы ===================
+    const basePride = document.getElementById('basePride');
+    const baseF = document.getElementById('baseF');
+    const baseA = document.getElementById('baseA');
+    const baseD = document.getElementById('baseD');
+    const baseB = document.getElementById('baseB');
+
+    const lblBasePride = document.getElementById('lblBasePride');
+    const lblBaseF = document.getElementById('lblBaseF');
+    const lblBaseA = document.getElementById('lblBaseA');
+    const lblBaseD = document.getElementById('lblBaseD');
+    const lblBaseB = document.getElementById('lblBaseB');
+
+    const enableCoupling = document.getElementById('enableCoupling');
+    const couplingStrength = document.getElementById('couplingStrength');
+    const lblCouple = document.getElementById('lblCouple');
+    const couplingMode = document.getElementById('couplingMode');
+
+    const btnApply = document.getElementById('btnApply');
+    const btnExport = document.getElementById('btnExport');
+    const btnReset = document.getElementById('btnReset');
+
+    const numAgents = document.getElementById('numAgents');
+    const numRounds = document.getElementById('numRounds');
+    const runSim = document.getElementById('runSim');
+
+    const compositeEl = document.getElementById('composite');
+
+    // SVG labels и ребра
+    const valP = document.getElementById('val-pride');
+    const valF = document.getElementById('val-frustration');
+    const valA = document.getElementById('val-attribution');
+    const valD = document.getElementById('val-decision');
+    const valB = document.getElementById('val-backfire');
+
+    const edgePF = document.getElementById('edge-p-f');
+    const edgeFA = document.getElementById('edge-f-a');
+    const edgeAD = document.getElementById('edge-a-d');
+    const edgeDB = document.getElementById('edge-d-b');
+
+    const nodeTitle = document.getElementById('nodeTitle');
+    const nodeDesc = document.getElementById('nodeDesc');
+    const nodeInterventions = document.getElementById('nodeInterventions');
+
+    // =================== ИНИЦИАЛЬНЫЕ ЗНАЧЕНИЯ ===================
+    // baseline — базовые (intrinsic) параметры, которыми управляет пользователь
+    let baseline = {
+      pPride: parseFloat(basePride.value),
+      pF: parseFloat(baseF.value),
+      pA: parseFloat(baseA.value),
+      pD: parseFloat(baseD.value),
+      pB: parseFloat(baseB.value)
+    };
+
+    // baseline0 — эталонное состояние базовых параметров (снимок при загрузке)
+    const baseline0 = {...baseline};
+
+    // effective — скорректированные параметры, учитывающие взаимовлияния (используются в симуляции)
+    let effective = {...baseline};
+
+    // Матрица коэффициентов влияния coeffs. Структура: coeffs[source][target] = коэффициент влияния
+    // Диапазон коэффициентов предполагается в [-1,1], где положительные значения означают, что
+    // увеличение source увеличивает target, отрицательные — уменьшает.
+    // Здесь задана логическая цепочная структура с дополнительными слабыми кросс-влияниями.
+    const coeffs = {
+      pPride: { pF: 0.6, pA: 0.12, pD: 0.0, pB: 0.0 },
+      pF:     { pPride: 0.0, pA: 0.5, pD: 0.05, pB: 0.0 },
+      pA:     { pPride: 0.0, pF: 0.0, pD: 0.6, pB: 0.04 },
+      pD:     { pPride: 0.0, pF: 0.0, pA: 0.0, pB: 0.7 },
+      pB:     { pPride: 0.0, pF: 0.0, pA: 0.0, pD: 0.0 }
+    };
+
+    // флаг, чтобы при программном обновлении слайдеров не входить в рекурсию
+    let updatingProgrammatically = false;
+
+    // =================== ВЫЧИСЛЕНИЕ EFFECTIVE ПАРАМЕТРОВ ===================
+    /*
+      computeEffectiveParams():
+        - Считывает baseline и baseline0
+        - Вычисляет дельты delta_j = baseline[j] - baseline0[j]
+        - Для каждой целевой переменной i суммирует влияние всех источников j: sum_j coeffs[j][i] * delta_j
+        - Умножает суммарное влияние на couplingStrength (s)
+        - Применяет режим объединения influenceMode:
+            * 'add' (аддитивный): eff[i] = baseline[i] + s * sum_influences
+            * 'mult' (мультипликативный): eff[i] = baseline[i] * (1 + s * sum_influences)
+            * 'logit' (логит): переводим baseline в логит-пространство, прибавляем scaled influence, инверсируем
+        - Наконец, клаперуем значения в [0,1]
+
+      Примечание: выбранные coeffs — эвристика. Для прикладных задач их нужно калибровать по данным.
+    */
+    function computeEffectiveParams(){
+      const s = parseFloat(couplingStrength.value); // сила взаимовлияния 0..1
+      const mode = couplingMode.value; // режим объединения
+
+      // дельты относительно начального состояния
+      const deltas = {
+        pPride: baseline.pPride - baseline0.pPride,
+        pF: baseline.pF - baseline0.pF,
+        pA: baseline.pA - baseline0.pA,
+        pD: baseline.pD - baseline0.pD,
+        pB: baseline.pB - baseline0.pB
+      };
+
+      // список ключей для итераций
+      const keys = ['pPride','pF','pA','pD','pB'];
+
+      // накопление аддитивных влияний
+      const addInfluence = { pPride:0,pF:0,pA:0,pD:0,pB:0 };
+
+      keys.forEach(j => {
+        keys.forEach(i => {
+          const c = coeffs[j] && coeffs[j][i] ? coeffs[j][i] : 0;
+          addInfluence[i] += c * deltas[j] * s;
+        });
+      });
+
+      // начинаем с копии baseline
+      const eff = {...baseline};
+
+      if(mode === 'add'){
+        // аддитивно добавляем влияние
+        keys.forEach(k => { eff[k] = clamp01(eff[k] + addInfluence[k]); });
+      } else if(mode === 'mult'){
+        // мультипликативный режим: рассматриваем addInfluence как относительное изменение
+        keys.forEach(k => {
+          const rel = Math.max(-0.9, Math.min(5, addInfluence[k])); // ограничение, чтобы избежать взрывного роста
+          eff[k] = clamp01(eff[k] * (1 + rel));
+        });
+      } else if(mode === 'logit'){
+        // логистическое преобразование: более гибко при значениях близких к 0 или 1
+        function logit(p){ p = clamp01(p); return Math.log((p+1e-9)/(1-p+1e-9)); }
+        function invlogit(x){ return 1/(1+Math.exp(-x)); }
+        keys.forEach(k => {
+          const L = logit(eff[k]);
+          const added = addInfluence[k] * 3; // масштабируем влияние на логит-уровне
+          eff[k] = clamp01(invlogit(L + added));
+        });
+      }
+
+      // окончательное округление/стабилизация
+      keys.forEach(k => eff[k] = Number(eff[k].toFixed(4)));
+      return eff;
+    }
+
+    // Обновление UI (метки, стрелки, композиционная вероятность) на основе effective
+    function updateEffectiveUI(){
+      const eff = computeEffectiveParams();
+      effective = eff;
+
+      // Защита от рекурсии при программном обновлении label-ов
+      updatingProgrammatically = true;
+
+      // Обновляем подписи в SVG
+      valP.textContent = 'P=' + effective.pPride.toFixed(2);
+      valF.textContent = 'cond=' + effective.pF.toFixed(2);
+      valA.textContent = 'p=' + effective.pA.toFixed(2);
+      valD.textContent = 'p(def|attr)=' + effective.pD.toFixed(2);
+      valB.textContent = 'p=' + effective.pB.toFixed(2);
+
+      // Композиционная оценка риска — простое произведение цепных вероятностей
+      const composite = effective.pPride * effective.pF * effective.pA * effective.pD * effective.pB;
+      compositeEl.textContent = (composite*100).toFixed(2) + '%';
+
+      // Обновление толщины стрелок для визуального представления влияния
+      function sw(v){ return 2 + v*8; }
+      edgePF.setAttribute('stroke-width', sw(effective.pF));
+      edgeFA.setAttribute('stroke-width', sw(effective.pA));
+      edgeAD.setAttribute('stroke-width', sw(effective.pD));
+      edgeDB.setAttribute('stroke-width', sw(effective.pB));
+
+      updatingProgrammatically = false;
+    }
+
+    // =================== ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ СЛАЙДЕРОВ ===================
+    // При изменении базовых ползунков обновляем baseline и пересчитываем effective (если coupling включён)
+    [basePride, baseF, baseA, baseD, baseB].forEach(el => el.addEventListener('input', ()=>{
+      if(updatingProgrammatically) return; // защита
+      baseline = {
+        pPride: parseFloat(basePride.value),
+        pF: parseFloat(baseF.value),
+        pA: parseFloat(baseA.value),
+        pD: parseFloat(baseD.value),
+        pB: parseFloat(baseB.value)
+      };
+      // обновляем подписи рядом со слайдерами
+      lblBasePride.textContent = baseline.pPride.toFixed(2);
+      lblBaseF.textContent = baseline.pF.toFixed(2);
+      lblBaseA.textContent = baseline.pA.toFixed(2);
+      lblBaseD.textContent = baseline.pD.toFixed(2);
+      lblBaseB.textContent = baseline.pB.toFixed(2);
+
+      // Пересчёт effective (если coupling выключен, effective == baseline)
+      if(enableCoupling.checked) updateEffectiveUI(); else { effective = {...baseline}; updateEffectiveUI(); }
+    }));
+
+    couplingStrength.addEventListener('input', ()=>{ lblCouple.textContent = parseFloat(couplingStrength.value).toFixed(2); updateEffectiveUI(); });
+    couplingMode.addEventListener('change', ()=> updateEffectiveUI());
+    enableCoupling.addEventListener('change', ()=> updateEffectiveUI());
+
+    // Кнопка "Применить" — дополнительный явный триггер
+    btnApply.addEventListener('click', ()=>{ updateEffectiveUI(); alert('Параметры применены. Смотрите диаграмму и композиционную вероятность.'); });
+
+    // Экспорт конфигурации (baseline + effective + coeffs + coupling)
+    btnExport.addEventListener('click', ()=>{
+      const cfg = { baseline, effective, coeffs, coupling: { enabled: enableCoupling.checked, strength: couplingStrength.value, mode: couplingMode.value } };
+      const blob = new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'config_coupled_ru.json'; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    // Кнопка сброса — возвращает baseline к исходному snapshot baseline0
+    btnReset.addEventListener('click', ()=>{
+      baseline = {...baseline0};
+      basePride.value = baseline0.pPride; baseF.value = baseline0.pF; baseA.value = baseline0.pA; baseD.value = baseline0.pD; baseB.value = baseline0.pB;
+      [lblBasePride,lblBaseF,lblBaseA,lblBaseD,lblBaseB].forEach((el,i)=>el.textContent=[baseline0.pPride,baseline0.pF,baseline0.pA,baseline0.pD,baseline0.pB][i].toFixed(2));
+      updateEffectiveUI();
+      updateChart(runSimulation(200,20));
+    });
+
+    // =================== АГЕНТНАЯ СИМУЛЯЦИЯ (ABM-like) ===================
+    /*
+      runSimulation(N, R): запускает симуляцию с N агентами и R раундами.
+      Для каждого агента: инициализируем pride (true с prob effective.pPride), затем по раундам
+      последовательно применяем переходы:
+        pride -> frustrated с prob effective.pF
+        frustrated -> attrBias с prob effective.pA
+        attrBias -> defect с prob effective.pD
+        defect -> backfire с prob effective.pB
+
+      Возвращает историю массива объектов {round, coop, defect, back}
+    */
+    function runSimulation(N, R){
+      const rnd = mulberry32(Math.floor(Math.random()*1e9));
+      const agents = new Array(N).fill(0).map(()=>({ pride: rnd() < effective.pPride, frustrated:false, attr:false, defect:false, back:false }));
+      const history = [];
+
+      for(let r=0;r<R;r++){
+        let coop=0, defect=0, back=0;
+        for(let i=0;i<agents.length;i++){
+          const a = agents[i];
+          if(a.back){ back++; continue; }
+          if(!a.frustrated && a.pride && rnd() < effective.pF) a.frustrated = true;
+          if(!a.attr && a.frustrated && rnd() < effective.pA) a.attr = true;
+          if(!a.defect && a.attr && rnd() < effective.pD) a.defect = true;
+          if(!a.back && a.defect && rnd() < effective.pB) a.back = true;
+          if(a.back) back++; else if(a.defect) defect++; else coop++;
+        }
+        history.push({round:r+1,coop,defect,back});
+      }
+      return history;
+    }
+
+    // =================== Chart.js: инициализация графика ===================
+    const ctx = document.getElementById('simChart').getContext('2d');
+    const simChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          { label:'Кооп', data:[], borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim(), backgroundColor:'transparent', tension:0.25, pointRadius:0 },
+          { label:'Дефекция', data:[], borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent3').trim(), backgroundColor:'transparent', tension:0.25, pointRadius:0 },
+          { label:'Обратный эффект', data:[], borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent5').trim(), backgroundColor:'transparent', tension:0.25, pointRadius:0 }
+        ]
+      },
+      options: {
+        responsive:true,
+        maintainAspectRatio:false,
+        scales:{ x:{ title:{display:true,text:'Раунд'} }, y:{ beginAtZero:true } },
+        plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}}
+      }
+    });
+
+    function updateChart(history){
+      simChart.data.labels = history.map(h=>h.round);
+      simChart.data.datasets[0].data = history.map(h=>h.coop);
+      simChart.data.datasets[1].data = history.map(h=>h.defect);
+      simChart.data.datasets[2].data = history.map(h=>h.back);
+      simChart.update();
+    }
+
+    // Обработчик кнопки "Запустить симуляцию"
+    runSim.addEventListener('click', ()=>{
+      const N = parseInt(numAgents.value,10) || 200;
+      const R = parseInt(numRounds.value,10) || 20;
+      const hist = runSimulation(N,R);
+      updateChart(hist);
+    });
+
+    // =================== Интерактивность узлов: показ описаний и интервенций ===================
+    const nodeInfo = {
+      pride: {
+        title: 'Гордыня',
+        description: 'Переоценка собственной значимости и нежелание признавать ошибки. Источник предрасположенности к реакциям.',
+        interventions: ['Тренинги по регуляции эмоций', 'Распределение ответственности', 'Публичные обязательства (commitments)']
+      },
+      frustration:{
+        title: 'Фрустрация',
+        description: 'Эмоциональная реакция при несоответствии ожиданий и реальности; повышает готовность к упрощённым объяснениям.',
+        interventions: ['Управление ожиданиями', 'Превентивная коммуникация', 'Поддержка и адаптивные меры']
+      },
+      attribution:{
+        title: 'Ошибка атрибуции',
+        description: 'Склонность приписывать негативные исходы злому умыслу других, а не объективным факторам.',
+        interventions: ['Мета-коммуникация', 'Факт-чекинг', 'Независимая модерация/арбитраж']
+      },
+      cooperation:{
+        title: 'Кооперация / Дефекция',
+        description: 'Решение агента сотрудничать или действовать в собственных интересах; дефекция ведёт к снижению общего блага.',
+        interventions: ['Механизмы поощрения/штрафа', 'Pre-commitment', 'Транзакционные правила']
+      },
+      backfire:{
+        title: 'Обратный эффект',
+        description: 'Агрессивные/силовые действия приводят к ухудшению собственной позиции — потеря ресурсов или легитимности.',
+        interventions: ['Внешняя модерация', 'Компенсационные механизмы', 'Институциональные ограничения']
+      }
+    };
+
+    document.getElementById('node-pride').addEventListener('click', ()=> showNode('pride'));
+    document.getElementById('node-frustration').addEventListener('click', ()=> showNode('frustration'));
+    document.getElementById('node-attribution').addEventListener('click', ()=> showNode('attribution'));
+    document.getElementById('node-decision').addEventListener('click', ()=> showNode('cooperation'));
+    document.getElementById('node-backfire').addEventListener('click', ()=> showNode('backfire'));
+
+    function showNode(key){
+      const n = nodeInfo[key];
+      if(!n) return;
+      nodeTitle.textContent = n.title;
+      nodeDesc.textContent = n.description;
+      nodeInterventions.innerHTML = '<div style="font-weight:600;margin-top:8px;font-size:13px">Рекомендации:</div><ul style="margin-top:6px;padding-left:18px">' + n.interventions.map(i=>'<li style="margin-bottom:6px">'+i+'</li>').join('') + '</ul>';
+    }
+
+    // =================== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ ===================
+    // Обновляем подписи базовых ползунков
+    lblBasePride.textContent = baseline.pPride.toFixed(2);
+    lblBaseF.textContent = baseline.pF.toFixed(2);
+    lblBaseA.textContent = baseline.pA.toFixed(2);
+    lblBaseD.textContent = baseline.pD.toFixed(2);
+    lblBaseB.textContent = baseline.pB.toFixed(2);
+    lblCouple.textContent = parseFloat(couplingStrength.value).toFixed(2);
+
+    // Начальный расчёт effective и первичная симуляция
+    updateEffectiveUI();
+    updateChart(runSimulation(200,20));
+
+    // =================== Конечные замечания (в коде) ===================
+    /*
+      Объяснение "композиционной вероятности обратного эффекта":
+
+      - В данной визуализации композиционная вероятность (composite) — это простая оценка того, насколько
+        вероятно, что для одного агента произойдёт цепочка событий от начального состояния (гордыня) до
+        нежелательного исхода (обратный эффект), если рассматривать каждое условное событие как последовательное
+        и независимое на своей стадии.
+
+      - Формула: P(composite) = P(pride) * P(frustration | pride) * P(attribution | frustration) * P(defection | attribution) * P(backfire | defection)
+
+      - Ограничения: это приближение. Оно предполагает, что каждая стадия необходима для перехода к следующей
+        и что условные вероятности не зависят от других факторов (кроме тех, что мы моделируем через coupling).
+
+      Зачем нужен режим взаимозависимостей:
+      - В реальных социальных системах переменные не независимы: изменение одной (например, уровня гордыни)
+        влияет на другие (например, вероятность фрустрации). Модель с coupling позволяет имитировать такие эффекты.
+
+      Рекомендации по использованию:
+      - Для диагностических целей: выключите coupling — это помогает понять локальную чувствительность каждой переменной.
+      - Для сценарного анализа: включите coupling и подберите coeffs или используйте режим 'logit' для более реалистичного распространения влияний.
+
+      Дальнейшие улучшения (не реализованы здесь, но возможны):
+      - Калибровка coeffs по эмпирическим данным методом регрессии/оптимизации.
+      - Добавление сетевых эффектов (агенты связаны в сети и влияние распространяется по связям).
+      - Разделение агентов по типам (разные профили P, F, A, D, B) и учёт гетерогенности.
+    */
+
+  </script>
+</body>
+</html>
