@@ -239,71 +239,33 @@
             gap: 20px;
         }
 
-        .brain-waves {
-            height: 300px;
+        .brain-waves-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        .waves-container {
-            position: relative;
-            height: 100%;
+        .wave-card {
             background: var(--card-bg);
             border-radius: var(--border-radius);
-            overflow: hidden;
-        }
-
-        .wave {
-            position: absolute;
-            width: 100%;
-            height: 25%;
-            opacity: 0.8;
-        }
-
-        .wave-1 {
-            top: 0;
-            background: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%);
-            animation: waveMove 8s linear infinite;
-        }
-
-        .wave-2 {
-            top: 25%;
-            background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
-            animation: waveMove 6s linear infinite reverse;
-        }
-
-        .wave-3 {
-            top: 50%;
-            background: linear-gradient(90deg, transparent 0%, var(--secondary) 50%, transparent 100%);
-            animation: waveMove 10s linear infinite;
-        }
-
-        .wave-4 {
-            top: 75%;
-            background: linear-gradient(90deg, transparent 0%, #FF9A8B 50%, transparent 100%);
-            animation: waveMove 7s linear infinite reverse;
-        }
-
-        @keyframes waveMove {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .wave-labels {
-            position: absolute;
-            left: 20px;
-            top: 0;
-            height: 100%;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 20px 0;
-            z-index: 2;
+            height: 220px;
         }
 
-        .wave-label {
+        .wave-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .wave-title {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
         }
 
@@ -311,6 +273,21 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
+        }
+
+        .wave-value {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .wave-canvas-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .wave-canvas {
+            width: 100%;
+            height: 100%;
         }
 
         .metrics {
@@ -394,7 +371,9 @@
             grid-area: controls;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
+            max-height: 100%;
+            overflow-y: auto;
         }
 
         .recording-controls {
@@ -448,9 +427,9 @@
         }
 
         .session-data {
-            flex: 1;
             display: flex;
             flex-direction: column;
+            height: 200px;
         }
 
         .data-list {
@@ -476,7 +455,7 @@
         }
 
         .brainprint {
-            height: 200px;
+            height: 180px;
             position: relative;
             background: var(--card-bg);
             border-radius: var(--border-radius);
@@ -523,6 +502,96 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* System Control Panel */
+        .system-controls {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+        }
+
+        .control-section {
+            margin-bottom: 20px;
+        }
+
+        .control-section h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--gray);
+        }
+
+        .control-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-option {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .control-option:hover {
+            background: rgba(108, 99, 255, 0.2);
+        }
+
+        .control-option.active {
+            background: var(--primary);
+        }
+
+        /* Marked Samples */
+        .marked-samples {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .samples-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .sample-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sample-time {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .sample-label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .sample-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .sample-btn {
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .sample-btn:hover {
+            color: var(--primary);
+        }
+
         /* Responsive Design */
         @media (max-width: 1200px) {
             .container {
@@ -536,6 +605,10 @@
             
             .metrics {
                 grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .brain-waves-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -604,7 +677,7 @@
                     <i class="fas fa-bolt"></i>
                     Быстрые действия
                 </h2>
-                <button class="btn btn-primary">
+                <button class="btn btn-primary" id="recordBtn">
                     <i class="fas fa-record-vinyl"></i>
                     Начать запись
                 </button>
@@ -620,56 +693,76 @@
         </aside>
 
         <main class="main-content">
-            <div class="card brain-waves">
-                <h2 class="card-title">
-                    <i class="fas fa-water"></i>
-                    Мозговые волны в реальном времени
-                </h2>
-                <div class="waves-container">
-                    <div class="wave-labels">
-                        <div class="wave-label">
-                            <div class="wave-color" style="background: var(--primary);"></div>
+            <div class="brain-waves-grid">
+                <div class="wave-card">
+                    <div class="wave-header">
+                        <div class="wave-title">
+                            <div class="wave-color" style="background: #6C63FF;"></div>
                             <span>Дельта (0.5-4 Гц)</span>
                         </div>
-                        <div class="wave-label">
-                            <div class="wave-color" style="background: var(--accent);"></div>
+                        <div class="wave-value">12.4 uVrms</div>
+                    </div>
+                    <div class="wave-canvas-container">
+                        <canvas class="wave-canvas" id="deltaChart"></canvas>
+                    </div>
+                </div>
+                <div class="wave-card">
+                    <div class="wave-header">
+                        <div class="wave-title">
+                            <div class="wave-color" style="background: #36D1DC;"></div>
                             <span>Тета (4-8 Гц)</span>
                         </div>
-                        <div class="wave-label">
-                            <div class="wave-color" style="background: var(--secondary);"></div>
+                        <div class="wave-value">8.7 uVrms</div>
+                    </div>
+                    <div class="wave-canvas-container">
+                        <canvas class="wave-canvas" id="thetaChart"></canvas>
+                    </div>
+                </div>
+                <div class="wave-card">
+                    <div class="wave-header">
+                        <div class="wave-title">
+                            <div class="wave-color" style="background: #FF6584;"></div>
                             <span>Альфа (8-12 Гц)</span>
                         </div>
-                        <div class="wave-label">
+                        <div class="wave-value">15.2 uVrms</div>
+                    </div>
+                    <div class="wave-canvas-container">
+                        <canvas class="wave-canvas" id="alphaChart"></canvas>
+                    </div>
+                </div>
+                <div class="wave-card">
+                    <div class="wave-header">
+                        <div class="wave-title">
                             <div class="wave-color" style="background: #FF9A8B;"></div>
                             <span>Бета (12-30 Гц)</span>
                         </div>
+                        <div class="wave-value">9.8 uVrms</div>
                     </div>
-                    <div class="wave wave-1"></div>
-                    <div class="wave wave-2"></div>
-                    <div class="wave wave-3"></div>
-                    <div class="wave wave-4"></div>
+                    <div class="wave-canvas-container">
+                        <canvas class="wave-canvas" id="betaChart"></canvas>
+                    </div>
                 </div>
             </div>
 
             <div class="metrics">
                 <div class="card metric-card">
                     <i class="fas fa-heartbeat" style="font-size: 24px; color: var(--secondary);"></i>
-                    <div class="metric-value">72</div>
+                    <div class="metric-value" id="heartRate">72</div>
                     <div class="metric-label">Пульс (уд/мин)</div>
                 </div>
                 <div class="card metric-card">
                     <i class="fas fa-lungs" style="font-size: 24px; color: var(--accent);"></i>
-                    <div class="metric-value">16</div>
+                    <div class="metric-value" id="breathingRate">16</div>
                     <div class="metric-label">Дыхание (вдох/мин)</div>
                 </div>
                 <div class="card metric-card">
                     <i class="fas fa-temperature-high" style="font-size: 24px; color: #FF9A8B;"></i>
-                    <div class="metric-value">36.6</div>
+                    <div class="metric-value" id="temperature">36.6</div>
                     <div class="metric-label">Температура (°C)</div>
                 </div>
                 <div class="card metric-card">
                     <i class="fas fa-brain" style="font-size: 24px; color: var(--primary);"></i>
-                    <div class="metric-value">0.87</div>
+                    <div class="metric-value" id="focusLevel">0.87</div>
                     <div class="metric-label">Фокус</div>
                 </div>
             </div>
@@ -690,17 +783,93 @@
         </main>
 
         <aside class="controls-panel">
-            <div class="card recording-controls">
+            <div class="system-controls">
+                <div class="control-section">
+                    <h3>Data Stream</h3>
+                    <div class="control-options">
+                        <div class="control-option active">Time Series</div>
+                        <div class="control-option">FFT Plot</div>
+                        <div class="control-option">Head Plot</div>
+                    </div>
+                </div>
+                <div class="control-section">
+                    <h3>Filter Settings</h3>
+                    <div class="control-options">
+                        <div class="control-option active">BP Fit: 5-50 Hz</div>
+                        <div class="control-option">Notch: 60 Hz</div>
+                        <div class="control-option">Smooth</div>
+                    </div>
+                </div>
+                <div class="control-section">
+                    <h3>Display Options</h3>
+                    <div class="control-options">
+                        <div class="control-option">Vert Scale: 200 uV</div>
+                        <div class="control-option">Window: 10 sec</div>
+                        <div class="control-option">Log/Lin</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="marked-samples">
+                <h2 class="card-title">
+                    <i class="fas fa-tags"></i>
+                    Размеченные сэмплы
+                </h2>
+                <div class="samples-list" id="samplesList">
+                    <div class="sample-item">
+                        <div>
+                            <div class="sample-time">14:05:23</div>
+                            <div class="sample-label">Спокойствие</div>
+                        </div>
+                        <div class="sample-actions">
+                            <button class="sample-btn"><i class="fas fa-play"></i></button>
+                            <button class="sample-btn"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="sample-item">
+                        <div>
+                            <div class="sample-time">14:07:45</div>
+                            <div class="sample-label">Радость</div>
+                        </div>
+                        <div class="sample-actions">
+                            <button class="sample-btn"><i class="fas fa-play"></i></button>
+                            <button class="sample-btn"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="sample-item">
+                        <div>
+                            <div class="sample-time">14:09:12</div>
+                            <div class="sample-label">Фокус</div>
+                        </div>
+                        <div class="sample-actions">
+                            <button class="sample-btn"><i class="fas fa-play"></i></button>
+                            <button class="sample-btn"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="sample-item">
+                        <div>
+                            <div class="sample-time">14:11:34</div>
+                            <div class="sample-label">Расслабление</div>
+                        </div>
+                        <div class="sample-actions">
+                            <button class="sample-btn"><i class="fas fa-play"></i></button>
+                            <button class="sample-btn"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recording-controls">
                 <h2 class="card-title">
                     <i class="fas fa-record-vinyl"></i>
                     Запись и разметка
                 </h2>
                 <div class="recording-status">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div class="recording-dot"></div>
-                        <span>Идет запись</span>
+                        <div class="recording-dot" id="recordingIndicator"></div>
+                        <span id="recordingStatus">Запись остановлена</span>
                     </div>
-                    <span>00:05:23</span>
+                    <span id="recordingTimer">00:00:00</span>
                 </div>
                 <div>
                     <h3 style="font-size: 16px; margin-bottom: 10px;">Отметить эмоцию:</h3>
@@ -717,36 +886,7 @@
                 </div>
             </div>
 
-            <div class="card session-data">
-                <h2 class="card-title">
-                    <i class="fas fa-database"></i>
-                    Данные сессии
-                </h2>
-                <div class="data-list">
-                    <div class="data-item">
-                        <span class="data-time">14:05:23</span>
-                        <span class="data-value">Спокойствие (0.87)</span>
-                    </div>
-                    <div class="data-item">
-                        <span class="data-time">14:05:45</span>
-                        <span class="data-value">Радость (0.92)</span>
-                    </div>
-                    <div class="data-item">
-                        <span class="data-time">14:06:12</span>
-                        <span class="data-value">Фокус (0.78)</span>
-                    </div>
-                    <div class="data-item">
-                        <span class="data-time">14:06:40</span>
-                        <span class="data-value">Удивление (0.65)</span>
-                    </div>
-                    <div class="data-item">
-                        <span class="data-time">14:07:05</span>
-                        <span class="data-value">Спокойствие (0.83)</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card brainprint">
+            <div class="brainprint">
                 <h2 class="card-title">
                     <i class="fas fa-fingerprint"></i>
                     BrainPrint
@@ -759,19 +899,222 @@
     </div>
 
     <script>
+        // Конфигурация для каждого графика волн
+        const waveConfigs = {
+            delta: {
+                canvas: document.getElementById('deltaChart'),
+                ctx: null,
+                color: '#6C63FF',
+                dataPoints: 200,
+                values: [],
+                amplitude: 1.2,
+                frequency: 0.5
+            },
+            theta: {
+                canvas: document.getElementById('thetaChart'),
+                ctx: null,
+                color: '#36D1DC',
+                dataPoints: 200,
+                values: [],
+                amplitude: 0.9,
+                frequency: 2.5
+            },
+            alpha: {
+                canvas: document.getElementById('alphaChart'),
+                ctx: null,
+                color: '#FF6584',
+                dataPoints: 200,
+                values: [],
+                amplitude: 1.1,
+                frequency: 4.5
+            },
+            beta: {
+                canvas: document.getElementById('betaChart'),
+                ctx: null,
+                color: '#FF9A8B',
+                dataPoints: 200,
+                values: [],
+                amplitude: 0.8,
+                frequency: 8
+            }
+        };
+
+        // Инициализация всех графиков
+        function initWaveCharts() {
+            for (const waveType in waveConfigs) {
+                const config = waveConfigs[waveType];
+                config.ctx = config.canvas.getContext('2d');
+                
+                // Инициализация данных
+                for (let i = 0; i < config.dataPoints; i++) {
+                    config.values.push(0);
+                }
+                
+                // Установка размеров canvas
+                resizeCanvas(config);
+            }
+            
+            // Запуск анимации
+            requestAnimationFrame(drawAllCharts);
+        }
+
+        // Изменение размера canvas
+        function resizeCanvas(config) {
+            const container = config.canvas.parentElement;
+            config.canvas.width = container.clientWidth;
+            config.canvas.height = container.clientHeight;
+        }
+
+        // Генерация данных для волн
+        function generateWaveData(config) {
+            const time = Date.now() / 1000;
+            
+            // Удаляем старые данные
+            config.values.shift();
+            
+            // Генерируем новые данные с реалистичными паттернами
+            const value = Math.sin(time * config.frequency) * config.amplitude + 
+                         Math.sin(time * config.frequency * 2.3) * (config.amplitude * 0.3) + 
+                         (Math.random() - 0.5) * 0.2;
+            
+            // Добавляем новые данные
+            config.values.push(value);
+        }
+
+        // Отрисовка одного графика
+        function drawWaveChart(config) {
+            generateWaveData(config);
+            
+            const ctx = config.ctx;
+            const width = config.canvas.width;
+            const height = config.canvas.height;
+            
+            // Очистка canvas
+            ctx.fillStyle = 'rgba(42, 45, 62, 0.1)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Рисуем сетку
+            drawGrid(ctx, width, height);
+            
+            // Рисуем волну
+            ctx.strokeStyle = config.color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const sliceWidth = width / (config.dataPoints - 1);
+            let x = 0;
+            
+            for (let i = 0; i < config.dataPoints; i++) {
+                const v = config.values[i];
+                const y = height / 2 + v * height / 3;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                
+                x += sliceWidth;
+            }
+            
+            ctx.stroke();
+        }
+
+        // Отрисовка сетки
+        function drawGrid(ctx, width, height) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            
+            // Вертикальные линии
+            for (let x = 0; x < width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // Горизонтальные линии
+            for (let y = 0; y < height; y += 25) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Центральная линия
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+        }
+
+        // Отрисовка всех графиков
+        function drawAllCharts() {
+            for (const waveType in waveConfigs) {
+                drawWaveChart(waveConfigs[waveType]);
+            }
+            requestAnimationFrame(drawAllCharts);
+        }
+
+        // Управление записью
+        let isRecording = false;
+        let recordingStartTime = 0;
+        let recordingTimerInterval = null;
+
+        function toggleRecording() {
+            isRecording = !isRecording;
+            const recordBtn = document.getElementById('recordBtn');
+            const recordingIndicator = document.getElementById('recordingIndicator');
+            const recordingStatus = document.getElementById('recordingStatus');
+            
+            if (isRecording) {
+                recordingStartTime = Date.now();
+                recordBtn.innerHTML = '<i class="fas fa-stop"></i> Остановить запись';
+                recordingIndicator.style.background = 'var(--secondary)';
+                recordingStatus.textContent = 'Идет запись';
+                startRecordingTimer();
+            } else {
+                recordBtn.innerHTML = '<i class="fas fa-record-vinyl"></i> Начать запись';
+                recordingIndicator.style.background = 'var(--gray)';
+                recordingStatus.textContent = 'Запись остановлена';
+                stopRecordingTimer();
+            }
+        }
+
+        function startRecordingTimer() {
+            clearInterval(recordingTimerInterval);
+            recordingTimerInterval = setInterval(updateRecordingTimer, 1000);
+        }
+
+        function stopRecordingTimer() {
+            clearInterval(recordingTimerInterval);
+            document.getElementById('recordingTimer').textContent = '00:00:00';
+        }
+
+        function updateRecordingTimer() {
+            const elapsed = Date.now() - recordingStartTime;
+            const hours = Math.floor(elapsed / 3600000);
+            const minutes = Math.floor((elapsed % 3600000) / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            
+            document.getElementById('recordingTimer').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
         // Имитация обновления данных в реальном времени
         function updateMetrics() {
             // Обновляем значения метрик
-            const heartRate = document.querySelector('.metric-card:nth-child(1) .metric-value');
-            const breathing = document.querySelector('.metric-card:nth-child(2) .metric-value');
-            const temperature = document.querySelector('.metric-card:nth-child(3) .metric-value');
-            const focus = document.querySelector('.metric-card:nth-child(4) .metric-value');
+            const heartRate = document.getElementById('heartRate');
+            const breathingRate = document.getElementById('breathingRate');
+            const temperature = document.getElementById('temperature');
+            const focusLevel = document.getElementById('focusLevel');
             
             // Генерируем случайные значения в реалистичных диапазонах
             heartRate.textContent = Math.floor(65 + Math.random() * 15);
-            breathing.textContent = Math.floor(14 + Math.random() * 4);
+            breathingRate.textContent = Math.floor(14 + Math.random() * 4);
             temperature.textContent = (36.4 + Math.random() * 0.4).toFixed(1);
-            focus.textContent = (0.7 + Math.random() * 0.25).toFixed(2);
+            focusLevel.textContent = (0.7 + Math.random() * 0.25).toFixed(2);
             
             // Обновляем активность областей мозга
             document.querySelectorAll('.brain-area').forEach(area => {
@@ -783,48 +1126,89 @@
             const qualityFill = document.querySelector('.quality-fill');
             qualityFill.style.width = `${85 + Math.random() * 10}%`;
         }
+
+        // Добавление размеченного сэмпла
+        function addMarkedSample(emotion) {
+            const samplesList = document.getElementById('samplesList');
+            const now = new Date();
+            const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                             now.getMinutes().toString().padStart(2, '0') + ':' + 
+                             now.getSeconds().toString().padStart(2, '0');
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'sample-item';
+            newItem.innerHTML = `
+                <div>
+                    <div class="sample-time">${timeString}</div>
+                    <div class="sample-label">${emotion}</div>
+                </div>
+                <div class="sample-actions">
+                    <button class="sample-btn"><i class="fas fa-play"></i></button>
+                    <button class="sample-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            
+            samplesList.prepend(newItem);
+            
+            // Ограничиваем список 8 последними записями
+            if (samplesList.children.length > 8) {
+                samplesList.removeChild(samplesList.lastChild);
+            }
+            
+            // Добавляем обработчики для новых кнопок
+            newItem.querySelector('.sample-btn:nth-child(2)').addEventListener('click', function() {
+                samplesList.removeChild(newItem);
+            });
+        }
         
-        // Обновляем данные каждые 3 секунды
-        setInterval(updateMetrics, 3000);
-        
-        // Обработчики для эмоциональных тегов
-        document.querySelectorAll('.emotion-tag').forEach(tag => {
-            tag.addEventListener('click', function() {
-                document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Добавляем запись в список данных
-                const dataList = document.querySelector('.data-list');
-                const now = new Date();
-                const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
-                                 now.getMinutes().toString().padStart(2, '0') + ':' + 
-                                 now.getSeconds().toString().padStart(2, '0');
-                
-                const newItem = document.createElement('div');
-                newItem.className = 'data-item';
-                newItem.innerHTML = `
-                    <span class="data-time">${timeString}</span>
-                    <span class="data-value">${this.textContent} (${(Math.random() * 0.3 + 0.7).toFixed(2)})</span>
-                `;
-                
-                dataList.prepend(newItem);
-                
-                // Ограничиваем список 10 последними записями
-                if (dataList.children.length > 10) {
-                    dataList.removeChild(dataList.lastChild);
+        // Инициализация при загрузке страницы
+        window.addEventListener('load', () => {
+            initWaveCharts();
+            
+            // Обработчики для кнопок
+            document.getElementById('recordBtn').addEventListener('click', toggleRecording);
+            
+            // Обработчики для эмоциональных тегов
+            document.querySelectorAll('.emotion-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Добавляем размеченный сэмпл, если идет запись
+                    if (isRecording) {
+                        addMarkedSample(this.textContent);
+                    }
+                });
+            });
+            
+            // Обработчики для кнопок удаления сэмплов
+            document.querySelectorAll('.sample-btn:nth-child(2)').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sampleItem = this.closest('.sample-item');
+                    sampleItem.parentNode.removeChild(sampleItem);
+                });
+            });
+            
+            // Обработчики для опций управления
+            document.querySelectorAll('.control-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    if (this.parentElement.querySelectorAll('.control-option.active').length > 1 || 
+                        !this.classList.contains('active')) {
+                        this.classList.toggle('active');
+                    }
+                });
+            });
+            
+            // Обновляем данные каждые 3 секунды
+            setInterval(updateMetrics, 3000);
+            
+            // Обработка изменения размера окна
+            window.addEventListener('resize', function() {
+                for (const waveType in waveConfigs) {
+                    resizeCanvas(waveConfigs[waveType]);
                 }
             });
         });
-        
-        // Имитация записи времени
-        let recordingSeconds = 323; // 5 минут 23 секунды
-        setInterval(() => {
-            recordingSeconds++;
-            const minutes = Math.floor(recordingSeconds / 60);
-            const seconds = recordingSeconds % 60;
-            document.querySelector('.recording-status span:last-child').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }, 1000);
     </script>
 </body>
 </html>
