@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Документация по формату данных для нейрокоммуникации</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #9b59b6;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f7fa;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        h3 {
+            color: var(--secondary);
+            margin: 1.5rem 0 0.5rem;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        .json-key {
+            color: #f8c555;
+        }
+        
+        .json-string {
+            color: #a5e075;
+        }
+        
+        .json-number {
+            color: #6cb5f5;
+        }
+        
+        .json-boolean {
+            color: #ff6b8b;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background-color: var(--success);
+        }
+        
+        .status-inactive {
+            background-color: var(--danger);
+        }
+        
+        .emotion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 1rem 0;
+        }
+        
+        .emotion-item {
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            background-color: var(--light);
+            transition: all 0.2s ease;
+        }
+        
+        .emotion-item:hover {
+            background-color: var(--secondary);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 2rem;
+            color: var(--dark);
+            border-top: 1px solid var(--light);
+        }
+        
+        .note {
+            background-color: #fff9e6;
+            border-left: 4px solid var(--warning);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {grid-template-columns: 1fr;} 
+            h1 {font-size: 2rem;}
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Форматы данных для нейрокоммуникации</h1>
+            <p class="subtitle">Документация по структуре файлов и протоколам обмена эмоциональными состояниями и мысленными командами с использованием нейрогарнитуры OpenBCI</p>
+        </div>
+    </header>
+
+  <img style="width:100%;border-radius:10px;" src="https://neuroscrypt.github.io/img/openBci.jpg"/>
+
+    <div class="container">
+        <div class="card">
+            <h2>Введение</h2>
+            <p>Эта документация описывает форматы данных и протоколы для обмена эмоциональными состояниями между пользователями нейрогарнитур. Система позволяет кодировать, передавать и визуализировать эмоциональные состояния, полученные на основе анализа ЭЭГ-сигналов.</p>
+            
+            <div class="note">
+                <p><strong>Примечание:</strong> В текущей версии система работает с базовыми эмоциональными состояниями. В перспективе планируется расширение для передачи более сложных когнитивных паттернов.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Базовые эмоциональные состояния</h2>
+            <p>Система поддерживает следующие базовые эмоции, которые могут быть распознаны по паттернам ЭЭГ:</p>
+            
+            <div class="emotion-grid">
+                <div class="emotion-item">Радость</div>
+                <div class="emotion-item">Грусть</div>
+                <div class="emotion-item">Спокойствие</div>
+                <div class="emotion-item">Страх</div>
+                <div class="emotion-item">Удивление</div>
+                <div class="emotion-item">Отвращение</div>
+                <div class="emotion-item">Гнев</div>
+                <div class="emotion-item">Интерес</div>
+                <div class="emotion-item">Сонливость</div>
+                <div class="emotion-item">Сосредоточенность</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Формат файла эмоции</h2>
+                <p>Файлы эмоций содержат метаданные и параметры эмоционального состояния для передачи между устройствами.</p>
+                
+                <h3>Структура JSON:</h3>
+                <pre><code>{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"timestamp"</span>: <span class="json-string">"2023-11-15T14:30:00Z"</span>,
+  <span class="json-key">"user_id"</span>: <span class="json-string">"user_12345"</span>,
+  <span class="json-key">"session_id"</span>: <span class="json-string">"session_abc123"</span>,
+  <span class="json-key">"emotion"</span>: {
+    <span class="json-key">"primary"</span>: <span class="json-string">"joy"</span>,
+    <span class="json-key">"intensity"</span>: <span class="json-number">0.85</span>,
+    <span class="json-key">"valence"</span>: <span class="json-number">0.9</span>,
+    <span class="json-key">"arousal"</span>: <span class="json-number">0.7</span>,
+    <span class="json-key">"confidence"</span>: <span class="json-number">0.78</span>
+  },
+  <span class="json-key">"eeg_data"</span>: {
+    <span class="json-key">"channels"</span>: <span class="json-number">8</span>,
+    <span class="json-key">"sample_rate"</span>: <span class="json-number">250</span>,
+    <span class="json-key">"features"</span>: {
+      <span class="json-key">"alpha_power"</span>: [<span class="json-number">0.45</span>, <span class="json-number">0.38</span>, ...],
+      <span class="json-key">"beta_power"</span>: [<span class="json-number">0.32</span>, <span class="json-number">0.29</span>, ...],
+      <span class="json-key">"theta_power"</span>: [<span class="json-number">0.21</span>, <span class="json-number">0.18</span>, ...]
+    }
+  },
+  <span class="json-key">"visualization"</span>: {
+    <span class="json-key">"color"</span>: <span class="json-string">"#FFD700"</span>,
+    <span class="json-key">"pattern"</span>: <span class="json-string">"pulsing"</span>,
+    <span class="json-key">"intensity"</span>: <span class="json-number">0.8</span>
+  }
+}</code></pre>
+            </div>
+
+            <div class="card">
+                <h2>Формат файла сессии</h2>
+                <p>Файлы сессии содержат данные о всей сессии записи, включая временные метки и последовательности эмоциональных состояний.</p>
+                
+                <h3>Структура JSON:</h3>
+                <pre><code>{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"session_id"</span>: <span class="json-string">"session_abc123"</span>,
+  <span class="json-key">"user_id"</span>: <span class="json-string">"user_12345"</span>,
+  <span class="json-key">"start_time"</span>: <span class="json-string">"2023-11-15T14:00:00Z"</span>,
+  <span class="json-key">"end_time"</span>: <span class="json-string">"2023-11-15T14:30:00Z"</span>,
+  <span class="json-key">"device_info"</span>: {
+    <span class="json-key">"type"</span>: <span class="json-string">"OpenBCI Ultracortex"</span>,
+    <span class="json-key">"channels"</span>: <span class="json-number">16</span>,
+    <span class="json-key">"sampling_rate"</span>: <span class="json-number">250</span>
+  },
+  <span class="json-key">"emotional_timeline"</span>: [
+    {
+      <span class="json-key">"timestamp"</span>: <span class="json-string">"2023-11-15T14:05:23Z"</span>,
+      <span class="json-key">"emotion"</span>: <span class="json-string">"calm"</span>,
+      <span class="json-key">"intensity"</span>: <span class="json-number">0.6</span>
+    },
+    {
+      <span class="json-key">"timestamp"</span>: <span class="json-string">"2023-11-15T14:07:45Z"</span>,
+      <span class="json-key">"emotion"</span>: <span class="json-string">"joy"</span>,
+      <span class="json-key">"intensity"</span>: <span class="json-number">0.8</span>
+    }
+  ],
+  <span class="json-key">"metadata"</span>: {
+    <span class="json-key">"environment"</span>: <span class="json-string">"quiet_room"</span>,
+    <span class="json-key">"activity"</span>: <span class="json-string">"meditation"</span>
+  }
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Протокол обмена в реальном времени</h2>
+            <p>Для обмена эмоциональными состояниями в реальном времени используется WebSocket-протокол со следующей структурой сообщений:</p>
+            
+            <h3>Структура сообщения:</h3>
+            <pre><code>{
+  <span class="json-key">"type"</span>: <span class="json-string">"emotion_update"</span>,
+  <span class="json-key">"sender"</span>: <span class="json-string">"user_12345"</span>,
+  <span class="json-key">"timestamp"</span>: <span class="json-number">1699986600000</span>,
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"emotion"</span>: <span class="json-string">"joy"</span>,
+    <span class="json-key">"intensity"</span>: <span class="json-number">0.85</span>,
+    <span class="json-key">"color"</span>: <span class="json-string">"#FFD700"</span>,
+    <span class="json-key">"animation"</span>: <span class="json-string">"pulse"</span>
+  }
+}</code></pre>
+            
+            <h3>Типы сообщений:</h3>
+            <ul>
+                <li><strong>emotion_update</strong> - обновление эмоционального состояния</li>
+                <li><strong>session_start</strong> - начало сессии</li>
+                <li><strong>session_end</strong> - завершение сессии</li>
+                <li><strong>device_status</strong> - статус подключения устройства</li>
+                <li><strong>error</strong> - сообщение об ошибке</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Визуализация эмоций</h2>
+            <p>Каждое эмоциональное состояние связано с определенной визуализацией для отображения на устройствах:</p>
+            
+            <div class="grid">
+                <div class="card">
+                    <h3>Цветовая схема</h3>
+                    <ul>
+                        <li>Радость: <span style="color:#FFD700;">Желтый (#FFD700)</span></li>
+                        <li>Грусть: <span style="color:#3498DB;">Синий (#3498DB)</span></li>
+                        <li>Спокойствие: <span style="color:#2ECC71;">Зеленый (#2ECC71)</span></li>
+                        <li>Страх: <span style="color:#9B59B6;">Фиолетовый (#9B59B6)</span></li>
+                        <li>Гнев: <span style="color:#E74C3C;">Красный (#E74C3C)</span></li>
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h3>Анимационные паттерны</h3>
+                    <ul>
+                        <li>Пульсация - для спокойных состояний</li>
+                        <li>Бегущая волна - для радости и возбуждения</li>
+                        <li>Мерцание - для удивления</li>
+                        <li>Плавное изменение - для переходов между состояниями</li>
+                        <li>Быстрое мигание - для интенсивных эмоций</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Перспективы развития</h2>
+            <p>В будущем система может быть расширена для передачи более сложных когнитивных состояний:</p>
+            
+            <ul>
+                <li><strong>Мысленные команды</strong> - передача намерений и простых команд</li>
+                <li><strong>Когнитивная нагрузка</strong> - оценка уровня умственного напряжения</li>
+                <li><strong>Визуальные образы</strong> - передача простых геометрических форм</li>
+                <li><strong>Сенсорные ощущения</strong> - ассоциации с тактильными ощущениями</li>
+                <li><strong>Сложные эмоциональные паттерны</strong> - смешанные и тонкие эмоции</li>
+            </ul>
+            
+            <div class="note">
+                <p><strong>Важно:</strong> Для реализации передачи мыслей потребуются дополнительные исследования и более сложные алгоритмы машинного обучения для декодирования нейронных паттернов.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Документация по форматам данных для нейрокоммуникации | Версия 1.0 | Ноябрь 2023</p>
+            <p>Для связи: neurocomm@example.com</p>
+        </div>
+    </footer>
+
+    <script>
+        // Простой скрипт для демонстрации работы с форматами данных
+        document.addEventListener('DOMContentLoaded', function() {
+            // Пример создания объекта эмоции
+            const exampleEmotion = {
+                version: "1.0",
+                timestamp: new Date().toISOString(),
+                user_id: "demo_user",
+                session_id: "demo_session",
+                emotion: {
+                    primary: "calm",
+                    intensity: 0.75,
+                    valence: 0.8,
+                    arousal: 0.3,
+                    confidence: 0.82
+                },
+                eeg_data: {
+                    channels: 8,
+                    sample_rate: 250,
+                    features: {
+                        alpha_power: [0.45, 0.38, 0.42, 0.39, 0.41, 0.37, 0.43, 0.40],
+                        beta_power: [0.32, 0.29, 0.31, 0.28, 0.30, 0.27, 0.33, 0.29],
+                        theta_power: [0.21, 0.18, 0.20, 0.19, 0.22, 0.17, 0.23, 0.20]
+                    }
+                },
+                visualization: {
+                    color: "#2ECC71",
+                    pattern: "pulsing",
+                    intensity: 0.7
+                }
+            };
+            
+            // Можно использовать этот объект для демонстрации
+            console.log("Пример объекта эмоции:", exampleEmotion);
+        });
+    </script>
+</body>
+</html>
