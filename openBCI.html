@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroSync | OpenBCI Simulator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-dark: #554fd8;
+            --secondary: #FF6584;
+            --accent: #36D1DC;
+            --dark: #2A2D3E;
+            --darker: #1F2232;
+            --light: #F7F9FC;
+            --gray: #A0A4B8;
+            --success: #4CD964;
+            --warning: #FFCC00;
+            --danger: #FF3B30;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            grid-template-rows: 80px 1fr;
+            grid-template-areas:
+                "header header header"
+                "sidebar main controls";
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        header {
+            grid-area: header;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 0 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(76, 217, 100, 0.1);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid rgba(76, 217, 100, 0.3);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        .device-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-label {
+            color: var(--gray);
+        }
+
+        .info-value {
+            font-weight: 600;
+        }
+
+        .signal-quality {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quality-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .quality-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
+            width: 85%;
+            border-radius: 4px;
+        }
+
+        .quality-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            grid-area: main;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .brain-waves {
+            height: 300px;
+        }
+
+        .waves-container {
+            position: relative;
+            height: 100%;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .wave {
+            position: absolute;
+            width: 100%;
+            height: 25%;
+            opacity: 0.8;
+        }
+
+        .wave-1 {
+            top: 0;
+            background: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%);
+            animation: waveMove 8s linear infinite;
+        }
+
+        .wave-2 {
+            top: 25%;
+            background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
+            animation: waveMove 6s linear infinite reverse;
+        }
+
+        .wave-3 {
+            top: 50%;
+            background: linear-gradient(90deg, transparent 0%, var(--secondary) 50%, transparent 100%);
+            animation: waveMove 10s linear infinite;
+        }
+
+        .wave-4 {
+            top: 75%;
+            background: linear-gradient(90deg, transparent 0%, #FF9A8B 50%, transparent 100%);
+            animation: waveMove 7s linear infinite reverse;
+        }
+
+        @keyframes waveMove {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .wave-labels {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 0;
+            z-index: 2;
+        }
+
+        .wave-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .wave-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 10px 0;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .brain-map {
+            flex: 1;
+            min-height: 300px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brain-areas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .brain-area {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(108, 99, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .brain-area:hover {
+            background: rgba(108, 99, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        .area-1 { width: 80px; height: 80px; top: 20%; left: 30%; }
+        .area-2 { width: 70px; height: 70px; top: 40%; left: 50%; }
+        .area-3 { width: 90px; height: 90px; top: 60%; left: 40%; }
+        .area-4 { width: 60px; height: 60px; top: 30%; left: 60%; }
+        .area-5 { width: 75px; height: 75px; top: 50%; left: 25%; }
+
+        /* Controls Panel */
+        .controls-panel {
+            grid-area: controls;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .recording-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .recording-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: rgba(255, 101, 132, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 101, 132, 0.2);
+        }
+
+        .recording-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--secondary);
+            animation: recordingPulse 1.5s infinite;
+        }
+
+        @keyframes recordingPulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .emotion-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .emotion-tag {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .emotion-tag:hover, .emotion-tag.active {
+            background: var(--primary);
+        }
+
+        .session-data {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .data-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .data-time {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .data-value {
+            font-weight: 600;
+        }
+
+        .brainprint {
+            height: 200px;
+            position: relative;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .brainprint-visual {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brainprint-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                var(--primary) 0%,
+                var(--accent) 25%,
+                var(--secondary) 50%,
+                #FF9A8B 75%,
+                var(--primary) 100%
+            );
+            animation: rotate 20s linear infinite;
+            position: relative;
+        }
+
+        .brainprint-circle::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: var(--darker);
+            border-radius: 50%;
+            top: 20px;
+            left: 20px;
+        }
+
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "header"
+                    "main"
+                    "sidebar"
+                    "controls";
+            }
+            
+            .metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="logo-text">NeuroSync</div>
+            </div>
+            <div class="connection-status">
+                <div class="status-dot"></div>
+                <span>OpenBCI Connected</span>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <div class="card device-info">
+                <h2 class="card-title">
+                    <i class="fas fa-microchip"></i>
+                    Устройство
+                </h2>
+                <div class="info-item">
+                    <span class="info-label">Модель:</span>
+                    <span class="info-value">Ultracortex Mark IV</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Каналы:</span>
+                    <span class="info-value">16 EEG + 3 AUX</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Частота:</span>
+                    <span class="info-value">250 Hz</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Батарея:</span>
+                    <span class="info-value">87%</span>
+                </div>
+            </div>
+
+            <div class="card signal-quality">
+                <h2 class="card-title">
+                    <i class="fas fa-wave-square"></i>
+                    Качество сигнала
+                </h2>
+                <div class="quality-bar">
+                    <div class="quality-fill"></div>
+                </div>
+                <div class="quality-labels">
+                    <span>Низкое</span>
+                    <span>Высокое</span>
+                </div>
+            </div>
+
+            <div class="card quick-actions">
+                <h2 class="card-title">
+                    <i class="fas fa-bolt"></i>
+                    Быстрые действия
+                </h2>
+                <button class="btn btn-primary">
+                    <i class="fas fa-record-vinyl"></i>
+                    Начать запись
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-sliders-h"></i>
+                    Настройки
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Экспорт данных
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="card brain-waves">
+                <h2 class="card-title">
+                    <i class="fas fa-water"></i>
+                    Мозговые волны в реальном времени
+                </h2>
+                <div class="waves-container">
+                    <div class="wave-labels">
+                        <div class="wave-label">
+                            <div class="wave-color" style="background: var(--primary);"></div>
+                            <span>Дельта (0.5-4 Гц)</span>
+                        </div>
+                        <div class="wave-label">
+                            <div class="wave-color" style="background: var(--accent);"></div>
+                            <span>Тета (4-8 Гц)</span>
+                        </div>
+                        <div class="wave-label">
+                            <div class="wave-color" style="background: var(--secondary);"></div>
+                            <span>Альфа (8-12 Гц)</span>
+                        </div>
+                        <div class="wave-label">
+                            <div class="wave-color" style="background: #FF9A8B;"></div>
+                            <span>Бета (12-30 Гц)</span>
+                        </div>
+                    </div>
+                    <div class="wave wave-1"></div>
+                    <div class="wave wave-2"></div>
+                    <div class="wave wave-3"></div>
+                    <div class="wave wave-4"></div>
+                </div>
+            </div>
+
+            <div class="metrics">
+                <div class="card metric-card">
+                    <i class="fas fa-heartbeat" style="font-size: 24px; color: var(--secondary);"></i>
+                    <div class="metric-value">72</div>
+                    <div class="metric-label">Пульс (уд/мин)</div>
+                </div>
+                <div class="card metric-card">
+                    <i class="fas fa-lungs" style="font-size: 24px; color: var(--accent);"></i>
+                    <div class="metric-value">16</div>
+                    <div class="metric-label">Дыхание (вдох/мин)</div>
+                </div>
+                <div class="card metric-card">
+                    <i class="fas fa-temperature-high" style="font-size: 24px; color: #FF9A8B;"></i>
+                    <div class="metric-value">36.6</div>
+                    <div class="metric-label">Температура (°C)</div>
+                </div>
+                <div class="card metric-card">
+                    <i class="fas fa-brain" style="font-size: 24px; color: var(--primary);"></i>
+                    <div class="metric-value">0.87</div>
+                    <div class="metric-label">Фокус</div>
+                </div>
+            </div>
+
+            <div class="card brain-map">
+                <h2 class="card-title">
+                    <i class="fas fa-map"></i>
+                    Карта активности мозга
+                </h2>
+                <div class="brain-areas">
+                    <div class="brain-area area-1">ФП1</div>
+                    <div class="brain-area area-2">ФП2</div>
+                    <div class="brain-area area-3">С3</div>
+                    <div class="brain-area area-4">С4</div>
+                    <div class="brain-area area-5">О1</div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="controls-panel">
+            <div class="card recording-controls">
+                <h2 class="card-title">
+                    <i class="fas fa-record-vinyl"></i>
+                    Запись и разметка
+                </h2>
+                <div class="recording-status">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="recording-dot"></div>
+                        <span>Идет запись</span>
+                    </div>
+                    <span>00:05:23</span>
+                </div>
+                <div>
+                    <h3 style="font-size: 16px; margin-bottom: 10px;">Отметить эмоцию:</h3>
+                    <div class="emotion-tags">
+                        <div class="emotion-tag">Спокойствие</div>
+                        <div class="emotion-tag active">Радость</div>
+                        <div class="emotion-tag">Грусть</div>
+                        <div class="emotion-tag">Страх</div>
+                        <div class="emotion-tag">Удивление</div>
+                        <div class="emotion-tag">Гнев</div>
+                        <div class="emotion-tag">Фокус</div>
+                        <div class="emotion-tag">Расслабление</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card session-data">
+                <h2 class="card-title">
+                    <i class="fas fa-database"></i>
+                    Данные сессии
+                </h2>
+                <div class="data-list">
+                    <div class="data-item">
+                        <span class="data-time">14:05:23</span>
+                        <span class="data-value">Спокойствие (0.87)</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-time">14:05:45</span>
+                        <span class="data-value">Радость (0.92)</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-time">14:06:12</span>
+                        <span class="data-value">Фокус (0.78)</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-time">14:06:40</span>
+                        <span class="data-value">Удивление (0.65)</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-time">14:07:05</span>
+                        <span class="data-value">Спокойствие (0.83)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card brainprint">
+                <h2 class="card-title">
+                    <i class="fas fa-fingerprint"></i>
+                    BrainPrint
+                </h2>
+                <div class="brainprint-visual">
+                    <div class="brainprint-circle"></div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Имитация обновления данных в реальном времени
+        function updateMetrics() {
+            // Обновляем значения метрик
+            const heartRate = document.querySelector('.metric-card:nth-child(1) .metric-value');
+            const breathing = document.querySelector('.metric-card:nth-child(2) .metric-value');
+            const temperature = document.querySelector('.metric-card:nth-child(3) .metric-value');
+            const focus = document.querySelector('.metric-card:nth-child(4) .metric-value');
+            
+            // Генерируем случайные значения в реалистичных диапазонах
+            heartRate.textContent = Math.floor(65 + Math.random() * 15);
+            breathing.textContent = Math.floor(14 + Math.random() * 4);
+            temperature.textContent = (36.4 + Math.random() * 0.4).toFixed(1);
+            focus.textContent = (0.7 + Math.random() * 0.25).toFixed(2);
+            
+            // Обновляем активность областей мозга
+            document.querySelectorAll('.brain-area').forEach(area => {
+                const intensity = Math.random();
+                area.style.background = `rgba(108, 99, 255, ${0.2 + intensity * 0.3})`;
+            });
+            
+            // Обновляем качество сигнала
+            const qualityFill = document.querySelector('.quality-fill');
+            qualityFill.style.width = `${85 + Math.random() * 10}%`;
+        }
+        
+        // Обновляем данные каждые 3 секунды
+        setInterval(updateMetrics, 3000);
+        
+        // Обработчики для эмоциональных тегов
+        document.querySelectorAll('.emotion-tag').forEach(tag => {
+            tag.addEventListener('click', function() {
+                document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Добавляем запись в список данных
+                const dataList = document.querySelector('.data-list');
+                const now = new Date();
+                const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                                 now.getMinutes().toString().padStart(2, '0') + ':' + 
+                                 now.getSeconds().toString().padStart(2, '0');
+                
+                const newItem = document.createElement('div');
+                newItem.className = 'data-item';
+                newItem.innerHTML = `
+                    <span class="data-time">${timeString}</span>
+                    <span class="data-value">${this.textContent} (${(Math.random() * 0.3 + 0.7).toFixed(2)})</span>
+                `;
+                
+                dataList.prepend(newItem);
+                
+                // Ограничиваем список 10 последними записями
+                if (dataList.children.length > 10) {
+                    dataList.removeChild(dataList.lastChild);
+                }
+            });
+        });
+        
+        // Имитация записи времени
+        let recordingSeconds = 323; // 5 минут 23 секунды
+        setInterval(() => {
+            recordingSeconds++;
+            const minutes = Math.floor(recordingSeconds / 60);
+            const seconds = recordingSeconds % 60;
+            document.querySelector('.recording-status span:last-child').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    </script>
+</body>
+</html>
