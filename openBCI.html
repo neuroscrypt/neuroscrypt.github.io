@@ -3,24 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeuroSync | OpenBCI </title>
+    <title>NeuroSync | OpenBCI 16-Channel EEG</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        ::-webkit-scrollbar {width:0px;}
         :root {
             --primary: #6C63FF;
             --primary-dark: #554fd8;
             --secondary: #FF6584;
             --accent: #36D1DC;
-            --dark: #2A2D3E;
-            --darker: #1F2232;
+            --dark: #1a1c2c;
+            --darker: #0f101a;
             --light: #F7F9FC;
             --gray: #A0A4B8;
             --success: #4CD964;
             --warning: #FFCC00;
             --danger: #FF3B30;
             --card-bg: rgba(255, 255, 255, 0.08);
-            --border-radius: 16px;
+            --border-radius: 8px;
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
@@ -32,22 +31,27 @@
         }
 
         body {
-            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            background: var(--dark);
             color: var(--light);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
+        /* Скрываем скроллбар */
+        ::-webkit-scrollbar {
+            width: 0px;
+        }
+
         .container {
             display: grid;
-            grid-template-columns: 280px 1fr 320px;
-            grid-template-rows: 80px 1fr;
+            grid-template-columns: 250px 1fr 300px;
+            grid-template-rows: 60px 1fr;
             grid-template-areas:
                 "header header header"
                 "sidebar main controls";
             height: 100vh;
-            gap: 20px;
-            padding: 20px;
+            gap: 15px;
+            padding: 15px;
         }
 
         /* Header Styles */
@@ -56,11 +60,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
+            background: var(--darker);
             border-radius: var(--border-radius);
-            padding: 0 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 0 20px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
@@ -71,19 +73,19 @@
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 10px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 16px;
         }
 
         .logo-text {
             font-weight: 700;
-            font-size: 24px;
+            font-size: 20px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -94,14 +96,15 @@
             align-items: center;
             gap: 10px;
             background: rgba(76, 217, 100, 0.1);
-            padding: 8px 16px;
-            border-radius: 50px;
+            padding: 6px 12px;
+            border-radius: 4px;
             border: 1px solid rgba(76, 217, 100, 0.3);
+            font-size: 14px;
         }
 
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: var(--success);
             animation: pulse 2s infinite;
@@ -118,31 +121,23 @@
             grid-area: sidebar;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
 
         .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
+            background: var(--darker);
             border-radius: var(--border-radius);
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 15px;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: var(--transition);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
         }
 
         .card-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .card-title i {
@@ -152,14 +147,15 @@
         .device-info {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .info-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
+            padding: 6px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
         }
 
         .info-label {
@@ -173,13 +169,13 @@
         .signal-quality {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .quality-bar {
-            height: 8px;
+            height: 6px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+            border-radius: 3px;
             overflow: hidden;
         }
 
@@ -187,7 +183,7 @@
             height: 100%;
             background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
             width: 85%;
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .quality-labels {
@@ -200,20 +196,21 @@
         .quick-actions {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .btn {
-            padding: 14px 20px;
-            border-radius: 12px;
+            padding: 10px 15px;
+            border-radius: 6px;
             border: none;
             font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             cursor: pointer;
             transition: var(--transition);
+            font-size: 14px;
         }
 
         .btn-primary {
@@ -222,150 +219,166 @@
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
         }
 
-        /* Main Content Styles */
+        /* Main Content Styles - Time Series Display */
         .main-content {
             grid-area: main;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-        }
-
-        .brain-waves-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .wave-card {
-            background: var(--card-bg);
+            background: var(--darker);
             border-radius: var(--border-radius);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            height: 220px;
+            padding: 15px;
+            overflow: hidden;
         }
 
-        .wave-header {
+        .display-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
 
-        .wave-title {
+        .display-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .display-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .control-value {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        /* Channels Grid */
+        .channels-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .channel-card {
+            background: rgba(30, 32, 48, 0.7);
+            border-radius: 6px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .channel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .channel-info {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 16px;
+        }
+
+        .channel-number {
             font-weight: 600;
+            color: var(--primary);
         }
 
-        .wave-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .wave-value {
-            font-size: 14px;
+        .channel-impedance {
             color: var(--gray);
         }
 
-        .wave-canvas-container {
-            flex: 1;
-            position: relative;
+        .channel-scale {
+            color: var(--gray);
         }
 
-        .wave-canvas {
+        .channel-canvas-container {
+            height: 80px;
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .channel-canvas {
             width: 100%;
             height: 100%;
         }
 
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
-
-        .metric-card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 20px;
+        .channel-footer {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            transition: var(--transition);
-        }
-
-        .metric-card:hover {
-            transform: translateY(-5px);
-            background: rgba(108, 99, 255, 0.1);
-        }
-
-        .metric-value {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 10px 0;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .metric-label {
-            font-size: 14px;
-            color: var(--gray);
-        }
-
-        .brain-map {
-            flex: 1;
-            min-height: 300px;
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .brain-areas {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
-        .brain-area {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(108, 99, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             font-size: 12px;
+            color: var(--gray);
+        }
+
+        .channel-status {
+            display: flex;
+            gap: 10px;
+        }
+
+        .status-rail {
+            color: var(--success);
+        }
+
+        .status-percent {
+            color: var(--warning);
+        }
+
+        .channel-rms {
             font-weight: 600;
-            transition: var(--transition);
-            cursor: pointer;
         }
 
-        .brain-area:hover {
-            background: rgba(108, 99, 255, 0.4);
-            transform: scale(1.1);
+        /* Timeline */
+        .timeline {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .area-1 { width: 80px; height: 80px; top: 20%; left: 30%; }
-        .area-2 { width: 70px; height: 70px; top: 40%; left: 50%; }
-        .area-3 { width: 90px; height: 90px; top: 60%; left: 40%; }
-        .area-4 { width: 60px; height: 60px; top: 30%; left: 60%; }
-        .area-5 { width: 75px; height: 75px; top: 50%; left: 25%; }
+        .timeline-scale {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .timeline-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            height: 100%;
+            width: 30%;
+            background: var(--primary);
+            border-radius: 2px;
+        }
 
         /* Controls Panel */
         .controls-panel {
@@ -380,22 +393,22 @@
         .recording-controls {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
         }
 
         .recording-status {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px;
+            padding: 12px;
             background: rgba(255, 101, 132, 0.1);
-            border-radius: 12px;
+            border-radius: 6px;
             border: 1px solid rgba(255, 101, 132, 0.2);
         }
 
         .recording-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: var(--secondary);
             animation: recordingPulse 1.5s infinite;
@@ -410,15 +423,15 @@
         .emotion-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-top: 8px;
         }
 
         .emotion-tag {
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50px;
-            font-size: 14px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            font-size: 12px;
             cursor: pointer;
             transition: var(--transition);
         }
@@ -427,54 +440,132 @@
             background: var(--primary);
         }
 
-        .session-data {
-            display: flex;
-            flex-direction: column;
+        /* Brain Map */
+        .brain-map {
             height: 200px;
-        }
-
-        .data-list {
-            flex: 1;
-            overflow-y: auto;
-            margin-top: 16px;
-        }
-
-        .data-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .data-time {
-            color: var(--gray);
-            font-size: 14px;
-        }
-
-        .data-value {
-            font-weight: 600;
-        }
-
-        .brainprint {
-            height: 180px;
             position: relative;
-            background: var(--card-bg);
+            background: var(--darker);
             border-radius: var(--border-radius);
             overflow: hidden;
-        }
-
-        .brainprint-visual {
-            position: absolute;
-            width: 100%;
-            height: 60%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
+        .brain-map-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0.7;
+        }
+
+        .brain-map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brain-regions {
+            position: relative;
+            width: 80%;
+            height: 80%;
+        }
+
+        .brain-region {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(108, 99, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .brain-region:hover {
+            background: rgba(108, 99, 255, 0.6);
+            transform: scale(1.1);
+        }
+
+        .region-1 { width: 40px; height: 40px; top: 30%; left: 35%; }
+        .region-2 { width: 35px; height: 35px; top: 45%; left: 50%; }
+        .region-3 { width: 45px; height: 45px; top: 60%; left: 40%; }
+        .region-4 { width: 30px; height: 30px; top: 35%; left: 60%; }
+        .region-5 { width: 38px; height: 38px; top: 50%; left: 25%; }
+
+        /* Metrics */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .metric-card {
+            background: var(--darker);
+            border-radius: var(--border-radius);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .metric-card:hover {
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 5px 0;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        /* BrainPrint */
+        .brainprint {
+            height: 150px;
+            position: relative;
+            background: var(--darker);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .brainprint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+        }
+
+        .brainprint-visual {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: 0;
+        }
+
         .brainprint-circle {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             background: conic-gradient(
                 from 0deg,
@@ -491,10 +582,9 @@
         .brainprint-circle::after {
             content: '';
             position: absolute;
-            width: 80px;
-            height: 80px;
-         /* background: var(--darker); */
-            background-color:#3a3d4c;
+            width: 60px;
+            height: 60px;
+            background: var(--darker);
             border-radius: 50%;
             top: 20px;
             left: 20px;
@@ -504,45 +594,12 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* System Control Panel */
-        .system-controls {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 20px;
-        }
-
-        .control-section {margin-bottom: 20px;}
-
-        .control-section h3 {
-            font-size: 16px;
-            margin-bottom: 10px;
-            color: var(--gray);
-        }
-
-        .control-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .control-option {
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .control-option:hover {background: rgba(108, 99, 255, 0.2);}
-        .control-option.active {background: var(--primary);}
-
         /* Marked Samples */
         .marked-samples {
-            background: var(--card-bg);
+            background: var(--darker);
             border-radius: var(--border-radius);
-            padding: 20px;
-            height: 250px;
+            padding: 15px;
+            height: 200px;
             display: flex;
             flex-direction: column;
         }
@@ -556,13 +613,23 @@
         .sample-item {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
         }
 
-        .sample-time {color: var(--gray);font-size: 14px;}
-        .sample-label {font-weight: 600;font-size: 14px;}
-        .sample-actions {display: flex;gap: 8px;}
+        .sample-time {
+            color: var(--gray);
+        }
+
+        .sample-label {
+            font-weight: 600;
+        }
+
+        .sample-actions {
+            display: flex;
+            gap: 8px;
+        }
 
         .sample-btn {
             background: none;
@@ -570,9 +637,178 @@
             color: var(--gray);
             cursor: pointer;
             transition: var(--transition);
+            font-size: 12px;
         }
 
-        .sample-btn:hover {color: var(--primary);}
+        .sample-btn:hover {
+            color: var(--primary);
+        }
+
+        /* Export Controls */
+        .export-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .export-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: var(--primary);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--darker);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 24px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--light);
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-section h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .settings-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .setting-label {
+            font-size: 14px;
+        }
+
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: var(--light);
+            padding: 6px 10px;
+            font-size: 14px;
+        }
 
         /* Responsive Design */
         @media (max-width: 1200px) {
@@ -585,12 +821,9 @@
                     "controls";
             }
             
-            .metrics {grid-template-columns: repeat(2, 1fr);} 
-            .brain-waves-grid {grid-template-columns: 1fr;}
-        }
-
-        @media (max-width: 768px) {
-            .metrics {grid-template-columns: 1fr;}
+            .channels-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -601,11 +834,11 @@
                 <div class="logo-icon">
                     <i class="fas fa-brain"></i>
                 </div>
-                <div class="logo-text">NeuroSync STREAM</div>
+                <div class="logo-text">NeuroSync</div>
             </div>
             <div class="connection-status">
                 <div class="status-dot"></div>
-                <span>OpenBCI Connected</span>
+                <span>OpenBCI Connected - 16 Channels</span>
             </div>
         </header>
 
@@ -621,7 +854,7 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">Каналы:</span>
-                    <span class="info-value">16 EEG + 3 AUX</span>
+                    <span class="info-value">16 EEG</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Частота:</span>
@@ -656,132 +889,84 @@
                     <i class="fas fa-record-vinyl"></i>
                     Начать запись
                 </button>
-                <button class="btn btn-secondary">
+                <button class="btn btn-secondary" id="settingsBtn">
                     <i class="fas fa-sliders-h"></i>
                     Настройки
                 </button>
-                <button class="btn btn-secondary">
+                <button class="btn btn-secondary" id="exportAllBtn">
                     <i class="fas fa-download"></i>
-                    Экспорт данных
+                    Экспорт всех данных
                 </button>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="brain-waves-grid">
-                <div class="wave-card">
-                    <div class="wave-header">
-                        <div class="wave-title">
-                            <div class="wave-color" style="background: #6C63FF;"></div>
-                            <span>Дельта (0.5-4 Гц)</span>
-                        </div>
-                        <div class="wave-value">12.4 uVrms</div>
+            <div class="display-header">
+                <div class="display-title">Time Series</div>
+                <div class="display-controls">
+                    <div class="control-group">
+                        <span>Vert Scale</span>
+                        <div class="control-value">200 uV</div>
                     </div>
-                    <div class="wave-canvas-container">
-                        <canvas class="wave-canvas" id="deltaChart"></canvas>
-                    </div>
-                </div>
-                <div class="wave-card">
-                    <div class="wave-header">
-                        <div class="wave-title">
-                            <div class="wave-color" style="background: #36D1DC;"></div>
-                            <span>Тета (4-8 Гц)</span>
-                        </div>
-                        <div class="wave-value">8.7 uVrms</div>
-                    </div>
-                    <div class="wave-canvas-container">
-                        <canvas class="wave-canvas" id="thetaChart"></canvas>
+                    <div class="control-group">
+                        <span>Window</span>
+                        <div class="control-value">5 sec</div>
                     </div>
                 </div>
-                <div class="wave-card">
-                    <div class="wave-header">
-                        <div class="wave-title">
-                            <div class="wave-color" style="background: #FF6584;"></div>
-                            <span>Альфа (8-12 Гц)</span>
-                        </div>
-                        <div class="wave-value">15.2 uVrms</div>
-                    </div>
-                    <div class="wave-canvas-container">
-                        <canvas class="wave-canvas" id="alphaChart"></canvas>
-                    </div>
+            </div>
+
+            <div class="channels-container" id="channelsContainer">
+                <!-- Channels will be generated by JavaScript -->
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-scale">
+                    <span>-5</span>
+                    <span>-4</span>
+                    <span>-3</span>
+                    <span>-2</span>
+                    <span>-1</span>
+                    <span id="currentTime">0:00:46.657</span>
                 </div>
-                <div class="wave-card">
-                    <div class="wave-header">
-                        <div class="wave-title">
-                            <div class="wave-color" style="background: #FF9A8B;"></div>
-                            <span>Бета (12-30 Гц)</span>
-                        </div>
-                        <div class="wave-value">9.8 uVrms</div>
-                    </div>
-                    <div class="wave-canvas-container">
-                        <canvas class="wave-canvas" id="betaChart"></canvas>
+                <div class="timeline-bar">
+                    <div class="timeline-progress"></div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="controls-panel">
+            <div class="brain-map">
+                <div class="brain-map-overlay">
+                    <div class="brain-regions">
+                        <div class="brain-region region-1">FP1</div>
+                        <div class="brain-region region-2">FP2</div>
+                        <div class="brain-region region-3">C3</div>
+                        <div class="brain-region region-4">C4</div>
+                        <div class="brain-region region-5">O1</div>
                     </div>
                 </div>
             </div>
 
             <div class="metrics">
                 <div class="card metric-card">
-                    <i class="fas fa-heartbeat" style="font-size: 24px; color: var(--secondary);"></i>
+                    <i class="fas fa-heartbeat" style="font-size: 18px; color: var(--secondary);"></i>
                     <div class="metric-value" id="heartRate">72</div>
                     <div class="metric-label">Пульс (уд/мин)</div>
                 </div>
                 <div class="card metric-card">
-                    <i class="fas fa-lungs" style="font-size: 24px; color: var(--accent);"></i>
+                    <i class="fas fa-lungs" style="font-size: 18px; color: var(--accent);"></i>
                     <div class="metric-value" id="breathingRate">16</div>
                     <div class="metric-label">Дыхание (вдох/мин)</div>
                 </div>
                 <div class="card metric-card">
-                    <i class="fas fa-temperature-high" style="font-size: 24px; color: #FF9A8B;"></i>
+                    <i class="fas fa-temperature-high" style="font-size: 18px; color: #FF9A8B;"></i>
                     <div class="metric-value" id="temperature">36.6</div>
                     <div class="metric-label">Температура (°C)</div>
                 </div>
                 <div class="card metric-card">
-                    <i class="fas fa-brain" style="font-size: 24px; color: var(--primary);"></i>
+                    <i class="fas fa-brain" style="font-size: 18px; color: var(--primary);"></i>
                     <div class="metric-value" id="focusLevel">0.87</div>
                     <div class="metric-label">Фокус</div>
-                </div>
-            </div>
-
-            <div class="card brain-map">
-                <h2 class="card-title">
-                    <i class="fas fa-map"></i>
-                    Карта активности мозга
-                </h2>
-                <div class="brain-areas">
-                    <div class="brain-area area-1">ФП1</div>
-                    <div class="brain-area area-2">ФП2</div>
-                    <div class="brain-area area-3">С3</div>
-                    <div class="brain-area area-4">С4</div>
-                    <div class="brain-area area-5">О1</div>
-                </div>
-            </div>
-        </main>
-
-        <aside class="controls-panel">
-            <div class="system-controls">
-                <div class="control-section">
-                    <h3>Data Stream</h3>
-                    <div class="control-options">
-                        <div class="control-option active">Time Series</div>
-                        <div class="control-option">FFT Plot</div>
-                        <div class="control-option">Head Plot</div>
-                    </div>
-                </div>
-                <div class="control-section">
-                    <h3>Filter Settings</h3>
-                    <div class="control-options">
-                        <div class="control-option active">BP Fit: 5-50 Hz</div>
-                        <div class="control-option">Notch: 60 Hz</div>
-                        <div class="control-option">Smooth</div>
-                    </div>
-                </div>
-                <div class="control-section">
-                    <h3>Display Options</h3>
-                    <div class="control-options">
-                        <div class="control-option">Vert Scale: 200 uV</div>
-                        <div class="control-option">Window: 10 sec</div>
-                        <div class="control-option">Log/Lin</div>
-                    </div>
                 </div>
             </div>
 
@@ -791,81 +976,52 @@
                     Размеченные сэмплы
                 </h2>
                 <div class="samples-list" id="samplesList">
-                    <div class="sample-item">
-                        <div>
-                            <div class="sample-time">14:05:23</div>
-                            <div class="sample-label">Спокойствие</div>
-                        </div>
-                        <div class="sample-actions">
-                            <button class="sample-btn"><i class="fas fa-play"></i></button>
-                            <button class="sample-btn"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <div class="sample-item">
-                        <div>
-                            <div class="sample-time">14:07:45</div>
-                            <div class="sample-label">Радость</div>
-                        </div>
-                        <div class="sample-actions">
-                            <button class="sample-btn"><i class="fas fa-play"></i></button>
-                            <button class="sample-btn"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <div class="sample-item">
-                        <div>
-                            <div class="sample-time">14:09:12</div>
-                            <div class="sample-label">Фокус</div>
-                        </div>
-                        <div class="sample-actions">
-                            <button class="sample-btn"><i class="fas fa-play"></i></button>
-                            <button class="sample-btn"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <div class="sample-item">
-                        <div>
-                            <div class="sample-time">14:11:34</div>
-                            <div class="sample-label">Расслабление</div>
-                        </div>
-                        <div class="sample-actions">
-                            <button class="sample-btn"><i class="fas fa-play"></i></button>
-                            <button class="sample-btn"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
+                    <!-- Samples will be generated by JavaScript -->
+                </div>
+                <div class="export-controls">
+                    <button class="export-btn" id="exportSamplesBtn">
+                        <i class="fas fa-download"></i>
+                        Экспорт всех сэмплов
+                    </button>
                 </div>
             </div>
 
-            <div class="recording-controls">
+            <div class="card recording-controls">
                 <h2 class="card-title">
                     <i class="fas fa-record-vinyl"></i>
                     Запись и разметка
                 </h2>
                 <div class="recording-status">
-                    <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="recording-dot" id="recordingIndicator"></div>
                         <span id="recordingStatus">Запись остановлена</span>
                     </div>
                     <span id="recordingTimer">00:00:00</span>
                 </div>
                 <div>
-                    <h3 style="font-size: 16px; margin-bottom: 10px;">Отметить эмоцию:</h3>
+                    <h3 style="font-size: 14px; margin-bottom: 8px;">Отметить эмоцию:</h3>
                     <div class="emotion-tags">
-                        <div class="emotion-tag">Спокойствие</div>
-                        <div class="emotion-tag active">Радость</div>
-                        <div class="emotion-tag">Грусть</div>
-                        <div class="emotion-tag">Страх</div>
-                        <div class="emotion-tag">Удивление</div>
-                        <div class="emotion-tag">Гнев</div>
-                        <div class="emotion-tag">Фокус</div>
-                        <div class="emotion-tag">Расслабление</div>
+                        <div class="emotion-tag" data-emotion="Спокойствие">Спокойствие</div>
+                        <div class="emotion-tag active" data-emotion="Радость">Радость</div>
+                        <div class="emotion-tag" data-emotion="Грусть">Грусть</div>
+                        <div class="emotion-tag" data-emotion="Страх">Страх</div>
+                        <div class="emotion-tag" data-emotion="Фокус">Фокус</div>
+                        <div class="emotion-tag" data-emotion="Расслабление">Расслабление</div>
                     </div>
                 </div>
             </div>
 
             <div class="brainprint">
-                <h2 class="card-title" style="text-align: center;display: block;">
-                    <i class="fas fa-fingerprint"></i>
-                    BrainPrint
-                </h2>
+                <div class="brainprint-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-fingerprint"></i>
+                        BrainPrint
+                    </h2>
+                    <button class="export-btn" id="exportBrainprintBtn">
+                        <i class="fas fa-download"></i>
+                        Экспорт
+                    </button>
+                </div>
                 <div class="brainprint-visual">
                     <div class="brainprint-circle"></div>
                 </div>
@@ -873,64 +1029,244 @@
         </aside>
     </div>
 
+    <!-- Modal Window -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Настройки системы</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Настройки отображения</h3>
+                <div class="settings-options">
+                    <div class="setting-item">
+                        <span class="setting-label">Тема интерфейса</span>
+                        <div class="setting-control">
+                            <select id="themeSelect">
+                                <option value="dark">Тёмная</option>
+                                <option value="light">Светлая</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Масштаб графика</span>
+                        <div class="setting-control">
+                            <select id="scaleSelect">
+                                <option value="100">100 uV</option>
+                                <option value="200" selected>200 uV</option>
+                                <option value="500">500 uV</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Окно отображения</span>
+                        <div class="setting-control">
+                            <select id="windowSelect">
+                                <option value="5">5 сек</option>
+                                <option value="10">10 сек</option>
+                                <option value="30">30 сек</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Настройки записи</h3>
+                <div class="settings-options">
+                    <div class="setting-item">
+                        <span class="setting-label">Автосохранение</span>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="autoSaveToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Формат экспорта</span>
+                        <div class="setting-control">
+                            <select id="formatSelect">
+                                <option value="json">JSON</option>
+                                <option value="csv">CSV</option>
+                                <option value="edf">EDF</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Настройки фильтров</h3>
+                <div class="settings-options">
+                    <div class="setting-item">
+                        <span class="setting-label">Фильтр низких частот</span>
+                        <div class="setting-control">
+                            <select id="lowPassFilter">
+                                <option value="30">30 Гц</option>
+                                <option value="50" selected>50 Гц</option>
+                                <option value="70">70 Гц</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Фильтр высоких частот</span>
+                        <div class="setting-control">
+                            <select id="highPassFilter">
+                                <option value="0.5" selected>0.5 Гц</option>
+                                <option value="1">1 Гц</option>
+                                <option value="5">5 Гц</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Подавление сетевых помех</span>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="notchFilterToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="saveSettingsBtn">
+                    Сохранить настройки
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Конфигурация для каждого графика волн
-        const waveConfigs = {
-            delta: {
-                canvas: document.getElementById('deltaChart'),
-                ctx: null,
-                color: '#6C63FF',
-                dataPoints: 200,
-                values: [],
-                amplitude: 1.2,
-                frequency: 0.5
-            },
-            theta: {
-                canvas: document.getElementById('thetaChart'),
-                ctx: null,
-                color: '#36D1DC',
-                dataPoints: 200,
-                values: [],
-                amplitude: 0.9,
-                frequency: 2.5
-            },
-            alpha: {
-                canvas: document.getElementById('alphaChart'),
-                ctx: null,
-                color: '#FF6584',
-                dataPoints: 200,
-                values: [],
-                amplitude: 1.1,
-                frequency: 4.5
-            },
-            beta: {
-                canvas: document.getElementById('betaChart'),
-                ctx: null,
-                color: '#FF9A8B',
-                dataPoints: 200,
-                values: [],
-                amplitude: 0.8,
-                frequency: 8
-            }
+        // Конфигурация для каналов
+        const channelConfigs = [];
+        const channelData = [];
+        
+        // Цвета для каналов (оригинальные цвета OpenBCI)
+        const channelColors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
+            '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+            '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2', '#F9E79F'
+        ];
+        
+        // Генерируем 16 каналов
+        for (let i = 0; i < 16; i++) {
+            channelConfigs.push({
+                id: `channel-${i+1}`,
+                number: i + 1,
+                impedance: Math.random() > 0.5 ? 'Good' : 'Check',
+                scale: '200uV',
+                status: 'Not Railed',
+                percent: (Math.random() * 30).toFixed(2) + '%',
+                rms: (Math.random() * 50 + 20).toFixed(1) + ' uVrms',
+                color: channelColors[i]
+            });
+            
+            // Инициализируем данные для канала
+            channelData.push([]);
+        }
+
+        // Данные для метрик
+        const metrics = {
+            heartRate: 72,
+            breathingRate: 16,
+            temperature: 36.6,
+            focusLevel: 0.87
         };
 
-        // Инициализация всех графиков
-        function initWaveCharts() {
-            for (const waveType in waveConfigs) {
-                const config = waveConfigs[waveType];
-                config.ctx = config.canvas.getContext('2d');
-                
-                // Инициализация данных
-                for (let i = 0; i < config.dataPoints; i++) {
-                    config.values.push(0);
-                }
-                
-                // Установка размеров canvas
-                resizeCanvas(config);
+        // Размеченные сэмплы
+        let markedSamples = [
+            { time: "14:05:23", label: "Спокойствие", data: generateSampleData() },
+            { time: "14:07:45", label: "Радость", data: generateSampleData() },
+            { time: "14:09:12", label: "Грусть", data: generateSampleData() },
+            { time: "14:11:34", label: "Страх", data: generateSampleData() },
+            { time: "14:13:21", label: "Фокус", data: generateSampleData() },
+            { time: "14:15:47", label: "Расслабление", data: generateSampleData() }
+        ];
+
+        // Генерация данных для сэмпла
+        function generateSampleData() {
+            const data = [];
+            for (let i = 0; i < 100; i++) {
+                data.push({
+                    timestamp: Date.now() + i * 10,
+                    channels: Array(16).fill(0).map(() => Math.random() * 2 - 1)
+                });
             }
+            return data;
+        }
+
+        // Генерация BrainPrint данных
+        function generateBrainPrintData() {
+            return {
+                id: 'brainprint_' + Date.now(),
+                timestamp: new Date().toISOString(),
+                metrics: {...metrics},
+                frequencyBands: {
+                    delta: Math.random() * 0.5 + 0.2,
+                    theta: Math.random() * 0.5 + 0.2,
+                    alpha: Math.random() * 0.5 + 0.2,
+                    beta: Math.random() * 0.5 + 0.2
+                },
+                coherence: Array(16).fill(0).map(() => 
+                    Array(16).fill(0).map(() => Math.random())
+                )
+            };
+        }
+
+        // Инициализация каналов
+        function initChannels() {
+            const container = document.getElementById('channelsContainer');
+            container.innerHTML = '';
             
-            // Запуск анимации
-            requestAnimationFrame(drawAllCharts);
+            channelConfigs.forEach((config, index) => {
+                const channelCard = document.createElement('div');
+                channelCard.className = 'channel-card';
+                channelCard.innerHTML = `
+                    <div class="channel-header">
+                        <div class="channel-info">
+                            <span class="channel-number">${config.number}</span>
+                            <span class="channel-impedance">${config.impedance === 'Good' ? '✓' : '⚠'} ${config.impedance}</span>
+                            <span class="channel-scale">${config.scale}</span>
+                        </div>
+                        <div class="channel-scale">${config.scale}</div>
+                    </div>
+                    <div class="channel-canvas-container">
+                        <canvas class="channel-canvas" id="canvas-${config.id}"></canvas>
+                    </div>
+                    <div class="channel-footer">
+                        <div class="channel-status">
+                            <span class="status-rail">${config.status}</span>
+                            <span class="status-percent">${config.percent}</span>
+                        </div>
+                        <div class="channel-rms">${config.rms}</div>
+                    </div>
+                `;
+                
+                container.appendChild(channelCard);
+                
+                // Инициализируем Canvas для канала
+                const canvas = document.getElementById(`canvas-${config.id}`);
+                const ctx = canvas.getContext('2d');
+                
+                // Сохраняем контекст в конфигурации
+                config.ctx = ctx;
+                config.canvas = canvas;
+                
+                // Устанавливаем размеры canvas
+                resizeCanvas(config);
+                
+                // Инициализируем данные для канала
+                for (let i = 0; i < 200; i++) {
+                    channelData[index].push(0);
+                }
+            });
+            
+            // Запускаем анимацию
+            requestAnimationFrame(drawAllChannels);
         }
 
         // Изменение размера canvas
@@ -940,48 +1276,58 @@
             config.canvas.height = container.clientHeight;
         }
 
-        // Генерация данных для волн
-        function generateWaveData(config) {
+        // Генерация данных для канала
+        function generateChannelData(channelIndex) {
             const time = Date.now() / 1000;
+            const data = channelData[channelIndex];
             
             // Удаляем старые данные
-            config.values.shift();
+            data.shift();
             
-            // Генерируем новые данные с реалистичными паттернами
-            const value = Math.sin(time * config.frequency) * config.amplitude + 
-                         Math.sin(time * config.frequency * 2.3) * (config.amplitude * 0.3) + 
-                         (Math.random() - 0.5) * 0.2;
+            // Генерируем новые данные с реалистичными паттернами ЭЭГ
+            const baseFreq = 0.5 + channelIndex * 0.2;
+            const value = Math.sin(time * baseFreq) * 0.8 + 
+                         Math.sin(time * baseFreq * 2.3) * 0.4 + 
+                         Math.sin(time * baseFreq * 4.7) * 0.2 +
+                         (Math.random() - 0.5) * 0.3;
             
             // Добавляем новые данные
-            config.values.push(value);
+            data.push(value);
         }
 
-        // Отрисовка одного графика
-        function drawWaveChart(config) {
-            generateWaveData(config);
-            
+        // Отрисовка одного канала
+        function drawChannel(channelIndex) {
+            const config = channelConfigs[channelIndex];
+            const data = channelData[channelIndex];
             const ctx = config.ctx;
             const width = config.canvas.width;
             const height = config.canvas.height;
             
+            generateChannelData(channelIndex);
+            
             // Очистка canvas
-            ctx.fillStyle = 'rgba(42, 45, 62, 0.1)';
+            ctx.fillStyle = 'rgba(30, 32, 48, 1)';
             ctx.fillRect(0, 0, width, height);
             
-            // Рисуем сетку
-            drawGrid(ctx, width, height);
+            // Рисуем центральную линию
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
             
-            // Рисуем волну
+            // Рисуем сигнал с индивидуальным цветом для каждого канала
             ctx.strokeStyle = config.color;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
             
-            const sliceWidth = width / (config.dataPoints - 1);
+            const sliceWidth = width / (data.length - 1);
             let x = 0;
             
-            for (let i = 0; i < config.dataPoints; i++) {
-                const v = config.values[i];
-                const y = height / 2 + v * height / 3;
+            for (let i = 0; i < data.length; i++) {
+                const v = data[i];
+                const y = height / 2 + v * height / 2;
                 
                 if (i === 0) {
                     ctx.moveTo(x, y);
@@ -995,41 +1341,44 @@
             ctx.stroke();
         }
 
-        // Отрисовка сетки
-        function drawGrid(ctx, width, height) {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-            ctx.lineWidth = 1;
-            
-            // Вертикальные линии
-            for (let x = 0; x < width; x += 50) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, height);
-                ctx.stroke();
+        // Отрисовка всех каналов
+        function drawAllChannels() {
+            for (let i = 0; i < channelConfigs.length; i++) {
+                drawChannel(i);
             }
-            
-            // Горизонтальные линии
-            for (let y = 0; y < height; y += 25) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(width, y);
-                ctx.stroke();
-            }
-            
-            // Центральная линия
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.beginPath();
-            ctx.moveTo(0, height / 2);
-            ctx.lineTo(width, height / 2);
-            ctx.stroke();
+            requestAnimationFrame(drawAllChannels);
         }
 
-        // Отрисовка всех графиков
-        function drawAllCharts() {
-            for (const waveType in waveConfigs) {
-                drawWaveChart(waveConfigs[waveType]);
-            }
-            requestAnimationFrame(drawAllCharts);
+        // Обновление метрик
+        function updateMetrics() {
+            // Обновляем значения метрик случайным образом
+            metrics.heartRate = Math.floor(65 + Math.random() * 15);
+            metrics.breathingRate = Math.floor(14 + Math.random() * 4);
+            metrics.temperature = 36.4 + Math.random() * 0.4;
+            metrics.focusLevel = 0.7 + Math.random() * 0.25;
+            
+            // Обновляем отображение
+            document.getElementById('heartRate').textContent = metrics.heartRate;
+            document.getElementById('breathingRate').textContent = metrics.breathingRate;
+            document.getElementById('temperature').textContent = metrics.temperature.toFixed(1);
+            document.getElementById('focusLevel').textContent = metrics.focusLevel.toFixed(2);
+            
+            // Обновляем качество сигнала
+            const qualityFill = document.querySelector('.quality-fill');
+            qualityFill.style.width = `${85 + Math.random() * 10}%`;
+            
+            // Обновляем активность областей мозга
+            document.querySelectorAll('.brain-region').forEach(region => {
+                const intensity = Math.random();
+                region.style.background = `rgba(108, 99, 255, ${0.2 + intensity * 0.3})`;
+            });
+        }
+
+        // Обновление временной шкалы
+        function updateTimeline() {
+            const now = new Date();
+            const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
+            document.getElementById('currentTime').textContent = timeString;
         }
 
         // Управление записью
@@ -1077,71 +1426,180 @@
                 `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        // Имитация обновления данных в реальном времени
-        function updateMetrics() {
-            // Обновляем значения метрик
-            const heartRate = document.getElementById('heartRate');
-            const breathingRate = document.getElementById('breathingRate');
-            const temperature = document.getElementById('temperature');
-            const focusLevel = document.getElementById('focusLevel');
-            
-            // Генерируем случайные значения в реалистичных диапазонах
-            heartRate.textContent = Math.floor(65 + Math.random() * 15);
-            breathingRate.textContent = Math.floor(14 + Math.random() * 4);
-            temperature.textContent = (36.4 + Math.random() * 0.4).toFixed(1);
-            focusLevel.textContent = (0.7 + Math.random() * 0.25).toFixed(2);
-            
-            // Обновляем активность областей мозга
-            document.querySelectorAll('.brain-area').forEach(area => {
-                const intensity = Math.random();
-                area.style.background = `rgba(108, 99, 255, ${0.2 + intensity * 0.3})`;
-            });
-            
-            // Обновляем качество сигнала
-            const qualityFill = document.querySelector('.quality-fill');
-            qualityFill.style.width = `${85 + Math.random() * 10}%`;
-        }
-
         // Добавление размеченного сэмпла
         function addMarkedSample(emotion) {
-            const samplesList = document.getElementById('samplesList');
             const now = new Date();
             const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
                              now.getMinutes().toString().padStart(2, '0') + ':' + 
                              now.getSeconds().toString().padStart(2, '0');
             
-            const newItem = document.createElement('div');
-            newItem.className = 'sample-item';
-            newItem.innerHTML = `
-                <div>
-                    <div class="sample-time">${timeString}</div>
-                    <div class="sample-label">${emotion}</div>
-                </div>
-                <div class="sample-actions">
-                    <button class="sample-btn"><i class="fas fa-play"></i></button>
-                    <button class="sample-btn"><i class="fas fa-trash"></i></button>
-                </div>
-            `;
+            const sample = {
+                time: timeString,
+                label: emotion,
+                data: generateSampleData()
+            };
             
-            samplesList.prepend(newItem);
+            markedSamples.unshift(sample);
+            updateSamplesList();
+        }
+
+        // Обновление списка сэмплов
+        function updateSamplesList() {
+            const samplesList = document.getElementById('samplesList');
+            samplesList.innerHTML = '';
             
-            // Ограничиваем список 8 последними записями
-            if (samplesList.children.length > 8) {
-                samplesList.removeChild(samplesList.lastChild);
-            }
-            
-            // Добавляем обработчики для новых кнопок
-            newItem.querySelector('.sample-btn:nth-child(2)').addEventListener('click', function() {
-                samplesList.removeChild(newItem);
+            markedSamples.forEach((sample, index) => {
+                const sampleItem = document.createElement('div');
+                sampleItem.className = 'sample-item';
+                sampleItem.innerHTML = `
+                    <div>
+                        <div class="sample-time">${sample.time}</div>
+                        <div class="sample-label">${sample.label}</div>
+                    </div>
+                    <div class="sample-actions">
+                        <button class="sample-btn play-sample" data-index="${index}"><i class="fas fa-play"></i></button>
+                        <button class="sample-btn export-sample" data-index="${index}"><i class="fas fa-download"></i></button>
+                        <button class="sample-btn delete-sample" data-index="${index}"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                
+                samplesList.appendChild(sampleItem);
             });
+            
+            // Добавляем обработчики событий
+            document.querySelectorAll('.play-sample').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    playSample(index);
+                });
+            });
+            
+            document.querySelectorAll('.export-sample').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    exportSample(index);
+                });
+            });
+            
+            document.querySelectorAll('.delete-sample').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    deleteSample(index);
+                });
+            });
+        }
+
+        // Воспроизведение сэмпла
+        function playSample(index) {
+            const sample = markedSamples[index];
+            alert(`Воспроизведение сэмпла: ${sample.label} (${sample.time})`);
+            // Здесь будет логика воспроизведения данных сэмпла
+        }
+
+        // Экспорт сэмпла
+        function exportSample(index) {
+            const sample = markedSamples[index];
+            const dataStr = JSON.stringify(sample, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `eeg_sample_${sample.time.replace(/:/g, '-')}_${sample.label}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Удаление сэмпла
+        function deleteSample(index) {
+            markedSamples.splice(index, 1);
+            updateSamplesList();
+        }
+
+        // Экспорт всех сэмплов
+        function exportAllSamples() {
+            const dataStr = JSON.stringify(markedSamples, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `eeg_samples_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Экспорт BrainPrint
+        function exportBrainPrint() {
+            const brainPrintData = generateBrainPrintData();
+            const dataStr = JSON.stringify(brainPrintData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `brainprint_${brainPrintData.id}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Экспорт всех данных
+        function exportAllData() {
+            const allData = {
+                timestamp: new Date().toISOString(),
+                channels: channelData,
+                metrics: metrics,
+                samples: markedSamples,
+                brainPrint: generateBrainPrintData()
+            };
+            
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `eeg_full_session_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Управление модальным окном
+        function openSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        function saveSettings() {
+            // Здесь будет логика сохранения настроек
+            alert('Настройки сохранены!');
+            closeSettingsModal();
         }
         
         // Инициализация при загрузке страницы
         window.addEventListener('load', () => {
-            initWaveCharts();
+            initChannels();
+            updateSamplesList();
             
             // Обработчики для кнопок
             document.getElementById('recordBtn').addEventListener('click', toggleRecording);
+            document.getElementById('settingsBtn').addEventListener('click', openSettingsModal);
+            document.getElementById('exportAllBtn').addEventListener('click', exportAllData);
+            document.getElementById('exportSamplesBtn').addEventListener('click', exportAllSamples);
+            document.getElementById('exportBrainprintBtn').addEventListener('click', exportBrainPrint);
+            document.getElementById('closeModal').addEventListener('click', closeSettingsModal);
+            document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
             
             // Обработчики для эмоциональных тегов
             document.querySelectorAll('.emotion-tag').forEach(tag => {
@@ -1151,37 +1609,31 @@
                     
                     // Добавляем размеченный сэмпл, если идет запись
                     if (isRecording) {
-                        addMarkedSample(this.textContent);
+                        const emotion = this.getAttribute('data-emotion');
+                        addMarkedSample(emotion);
                     }
                 });
             });
             
-            // Обработчики для кнопок удаления сэмплов
-            document.querySelectorAll('.sample-btn:nth-child(2)').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const sampleItem = this.closest('.sample-item');
-                    sampleItem.parentNode.removeChild(sampleItem);
-                });
+            // Закрытие модального окна при клике вне его
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('settingsModal');
+                if (event.target === modal) {
+                    closeSettingsModal();
+                }
             });
             
-            // Обработчики для опций управления
-            document.querySelectorAll('.control-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    if (this.parentElement.querySelectorAll('.control-option.active').length > 1 || 
-                        !this.classList.contains('active')) {
-                        this.classList.toggle('active');
-                    }
-                });
-            });
-            
-            // Обновляем данные каждые 3 секунды
+            // Обновление метрик каждые 3 секунды
             setInterval(updateMetrics, 3000);
+            
+            // Обновление временной шкалы
+            setInterval(updateTimeline, 100);
             
             // Обработка изменения размера окна
             window.addEventListener('resize', function() {
-                for (const waveType in waveConfigs) {
-                    resizeCanvas(waveConfigs[waveType]);
-                }
+                channelConfigs.forEach(config => {
+                    resizeCanvas(config);
+                });
             });
         });
     </script>
