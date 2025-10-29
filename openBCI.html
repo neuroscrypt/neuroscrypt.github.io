@@ -493,7 +493,8 @@
             position: absolute;
             width: 80px;
             height: 80px;
-            background: var(--darker);
+         /* background: var(--darker); */
+            background-color:#3a3d4c;
             border-radius: 50%;
             top: 20px;
             left: 20px;
@@ -510,9 +511,7 @@
             padding: 20px;
         }
 
-        .control-section {
-            margin-bottom: 20px;
-        }
+        .control-section {margin-bottom: 20px;}
 
         .control-section h3 {
             font-size: 16px;
@@ -535,13 +534,8 @@
             transition: var(--transition);
         }
 
-        .control-option:hover {
-            background: rgba(108, 99, 255, 0.2);
-        }
-
-        .control-option.active {
-            background: var(--primary);
-        }
+        .control-option:hover {background: rgba(108, 99, 255, 0.2);}
+        .control-option.active {background: var(--primary);}
 
         /* Marked Samples */
         .marked-samples {
@@ -566,20 +560,9 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .sample-time {
-            color: var(--gray);
-            font-size: 14px;
-        }
-
-        .sample-label {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .sample-actions {
-            display: flex;
-            gap: 8px;
-        }
+        .sample-time {color: var(--gray);font-size: 14px;}
+        .sample-label {font-weight: 600;font-size: 14px;}
+        .sample-actions {display: flex;gap: 8px;}
 
         .sample-btn {
             background: none;
@@ -589,9 +572,7 @@
             transition: var(--transition);
         }
 
-        .sample-btn:hover {
-            color: var(--primary);
-        }
+        .sample-btn:hover {color: var(--primary);}
 
         /* Responsive Design */
         @media (max-width: 1200px) {
@@ -604,19 +585,12 @@
                     "controls";
             }
             
-            .metrics {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .brain-waves-grid {
-                grid-template-columns: 1fr;
-            }
+            .metrics {grid-template-columns: repeat(2, 1fr);} 
+            .brain-waves-grid {grid-template-columns: 1fr;}
         }
 
         @media (max-width: 768px) {
-            .metrics {
-                grid-template-columns: 1fr;
-            }
+            .metrics {grid-template-columns: 1fr;}
         }
     </style>
 </head>
