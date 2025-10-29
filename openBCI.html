@@ -501,11 +501,7 @@
         .region-5 { width: 38px; height: 38px; top: 50%; left: 25%; }
 
         /* Metrics */
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
+        .metrics {display: grid; gap: 10px;grid-template-columns: repeat(2, 1fr);}
 
         .metric-card {
             background: var(--darker);
@@ -519,12 +515,10 @@
             transition: var(--transition);
         }
 
-        .metric-card:hover {
-            background: rgba(108, 99, 255, 0.1);
-        }
+        .metric-card:hover {background: rgba(108, 99, 255, 0.1);}
 
         .metric-value {
-            font-size: 20px;
+            font-size: 50px;
             font-weight: 700;
             margin: 5px 0;
             background: linear-gradient(135deg, var(--primary), var(--accent));
@@ -539,7 +533,7 @@
 
         /* BrainPrint */
         .brainprint {
-            height: 150px;
+            height: 200px;
             position: relative;
             background: var(--darker);
             border-radius: var(--border-radius);
@@ -556,7 +550,8 @@
         .brainprint-visual {
             position: absolute;
             width: 100%;
-            height: 100%;
+         /* height: 100%; */
+            height: 225px;
             display: flex;
             align-items: center;
             justify-content: center;
