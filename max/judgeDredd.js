@@ -31,13 +31,10 @@
       + '}\n'
       + '.jr-chat-header{'
       + 'padding:10px 14px;'
-      + 'background:linear-gradient(135deg,#111827,#020617);'
-      + 'color:#e5e7eb;font-size:13px;font-weight:600;'
+      + 'background:#f8faff;'
+      + 'color:#111827;font-size:13px;font-weight:600;'
       + 'display:flex;align-items:center;gap:8px;'
-      + '}\n'
-      + '.jr-chat-header-badge{'
-      + 'background:rgba(148,163,184,0.2);'
-      + 'border-radius:999px;padding:2px 8px;font-size:11px;'
+      + 'border-bottom:1px solid rgba(148,163,184,0.4);'
       + '}\n'
       + '.jr-chat-messages{'
       + 'padding:10px 12px 8px;flex:1;overflow-y:auto;'
@@ -51,7 +48,8 @@
       + 'background:#e0ebff;color:#111827;border-bottom-left-radius:4px;'
       + '}\n'
       + '.jr-msg-user{'
-      + 'background:#111827;color:#f9fafb;border-bottom-right-radius:4px;'
+      + 'background:linear-gradient(135deg,rgba(0,11,43,0.64),rgba(13,71,161,0.78));'
+      + 'color:#f9fafb;border-bottom-right-radius:4px;'
       + 'margin-left:auto;'
       + '}\n'
       + '.jr-chat-footer{'
@@ -84,7 +82,7 @@
 
     injectStyles();
 
-    // --- создаём DOM ---
+    // --- робот-виджет ---
     var wrapper = document.createElement('div');
     wrapper.id = 'judge-robot-wrapper';
     wrapper.setAttribute('role', 'button');
@@ -93,21 +91,21 @@
     var canvas = document.createElement('canvas');
     canvas.id = 'judge-robot-canvas';
     canvas.width = 240;
-    canvas.height = 260; // повыше, чтобы не обрезался при "полёте"
+    canvas.height = 260; // запас по высоте
 
     wrapper.appendChild(canvas);
     document.body.appendChild(wrapper);
 
+    // --- окно чата ---
     var chat = document.createElement('div');
     chat.id = 'judge-robot-chat';
     chat.innerHTML =
       '<div class="jr-chat-header">'
       + '<span>ИИ Судья</span>'
-      + '<span class="jr-chat-header-badge">демо</span>'
       + '</div>'
       + '<div class="jr-chat-messages"></div>'
       + '<div class="jr-chat-footer">'
-      + '<input class="jr-chat-input" type="text" placeholder="Задайте вопрос…">'
+      + '<input class="jr-chat-input" type="text" placeholder="Опишите, пожалуйста, свою ситуацию…">'
       + '<button class="jr-chat-send" type="button">Отпр.</button>'
       + '</div>';
 
@@ -117,12 +115,15 @@
     var inputEl = chat.querySelector('.jr-chat-input');
     var sendBtn = chat.querySelector('.jr-chat-send');
 
-    // --- заготовка диалога (можно менять под себя) ---
+    // --- диалог по шагам ---
+    var conversationStage = 0; // 0 — ждём описания ситуации; 1 — предложили шаблоны; 2+ — просим контакты / подтверждаем
+
     var defaultDialog = [
       { from: 'bot', text: 'Здравствуйте. Я ИИ Судья.' },
-      { from: 'bot', text: 'Я помогаю разбирать юридические ситуации и объяснять, как работает суд.' },
-      { from: 'user', text: 'Могу ли я обжаловать решение суда?' },
-      { from: 'bot', text: 'Да, как правило, у вас есть право на апелляцию в установленные законом сроки.' }
+      {
+        from: 'bot',
+        text: 'Кратко опишите, пожалуйста, вашу ситуацию или юридический вопрос. Что произошло и в какой роли вы выступаете?'
+      }
     ];
 
     function addMessage(from, text) {
@@ -134,21 +135,49 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // заполняем стартовый диалог
     defaultDialog.forEach(function (m) { addMessage(m.from, m.text); });
 
-    // упрощённая заглушка логики отправки
     function handleSend() {
       var v = (inputEl.value || '').trim();
       if (!v) return;
       addMessage('user', v);
       inputEl.value = '';
 
-      // здесь можно подключать настоящий ИИ / backend.
-      // пока просто имитация ответа:
-      setTimeout(function () {
-        addMessage('bot', 'Я зафиксировал ваш вопрос. В демо-режиме ответ не рассчитывается автоматически.');
-      }, 400);
+      if (conversationStage === 0) {
+        // 1-й ответ: даём ссылку на шаблоны
+        setTimeout(function () {
+          addMessage(
+            'bot',
+            'Спасибо, я зафиксировал вашу ситуацию. Для начала посмотрите, пожалуйста, шаблоны документов и заявлений по адресу: https://v01na.github.io/templates/ — это поможет понять, какие данные обычно указывают в подобных делах.'
+          );
+          addMessage(
+            'bot',
+            'Если после просмотра шаблонов останутся вопросы или понадобится помощь с формулировками, напишите сюда ещё раз.'
+          );
+        }, 300);
+        conversationStage = 1;
+      } else if (conversationStage === 1) {
+        // 2-й ответ: предлагаем оставить контакты
+        setTimeout(function () {
+          addMessage(
+            'bot',
+            'Если вопросы сохраняются или вам нужна более предметная консультация, оставьте, пожалуйста, свои контакты (телефон, email или мессенджер).'
+          );
+          addMessage(
+            'bot',
+            'С вами свяжется ИИ, как только обдумает ваш запрос и “проконсультируется” с коллегами, чтобы дать более взвешенную рекомендацию.'
+          );
+        }, 400);
+        conversationStage = 2;
+      } else {
+        // дальше: подтверждаем, что всё учли
+        setTimeout(function () {
+          addMessage(
+            'bot',
+            'Спасибо, я зафиксировал дополнительные данные. Контакты и описание ситуации будут использованы для подготовки более точного ответа.'
+          );
+        }, 400);
+      }
     }
 
     sendBtn.addEventListener('click', handleSend);
@@ -159,12 +188,11 @@
       }
     });
 
-    // открытие/закрытие чата по клику на робота
+    // открытие/закрытие чата по клику
     wrapper.addEventListener('click', function () {
       var open = chat.classList.toggle('jr-open');
       if (open) {
-        // небольшой "пинок" роботу при открытии
-        startTime = performance.now();
+        startTime = performance.now(); // чуть "оживляем" робота при открытии
       }
     });
 
@@ -233,7 +261,7 @@
       ctx.clearRect(0, 0, W, H);
       ctx.save();
 
-      // чуть выше центра, чтобы снизу был запас
+      // опускаем чуть ниже центра, чтобы при подъёме голова не обрезалась
       ctx.translate(W / 2, H / 2 + 14);
 
       var floatAmplitude = 6;
