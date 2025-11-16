@@ -234,7 +234,7 @@
       ctx.save();
 
       // чуть выше центра, чтобы снизу был запас
-      ctx.translate(W / 2, H / 2 - 8);
+      ctx.translate(W / 2, H / 2 + 14);
 
       var floatAmplitude = 6;
       var floatY = Math.sin(t * 2) * floatAmplitude;
