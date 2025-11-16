@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Робот-Судья</title>
+  <style>
+    /* ---------------- БАЗОВЫЕ НАСТРОЙКИ СТРАНИЦЫ ---------------- */
+
+    :root {
+      --bg-light: #eef1f7;
+      --bg-light-2: #f6f8fc;
+      --robot-main: #e8f1ff;
+      --robot-accent: #2f7cff;
+      --robot-dark: #1c2435;
+      --robot-line: #d0ddf3;
+      --robot-eye: #1c2435;
+      --robot-eye-glow: #74b1ff;
+      --judge-gavel: #c66a3b;
+      --judge-gavel-dark: #8b4321;
+      --danger-accent: #ff4a4a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 20% 0%, #ffffff 0, var(--bg-light) 50%, var(--bg-light-2) 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1b1f2a;
+      overflow: hidden;
+    }
+
+    /* Небольшой текстовый блок, чтобы было понятно «кто он» */
+
+    .label-block {
+      position: absolute;
+      top: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .label-block-title {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    .label-block-sub {
+      margin-top: 8px;
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    /* ---------------- ОБЁРТКА РОБОТА ---------------- */
+
+    .robot-orbit {
+      position: relative;
+      width: 320px;
+      height: 360px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Плавание всей фигуры вверх-вниз */
+      animation: robotFloat 4.4s ease-in-out infinite;
+    }
+
+    @keyframes robotFloat {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* Светящееся пятно под роботом */
+
+    .robot-shadow {
+      position: absolute;
+      bottom: 40px;
+      width: 200px;
+      height: 40px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.25), transparent 70%);
+      filter: blur(6px);
+      opacity: 0.25;
+      animation: shadowPulse 4.4s ease-in-out infinite;
+    }
+
+    @keyframes shadowPulse {
+      0%   { transform: scale(1); opacity: 0.25; }
+      50%  { transform: scale(1.06); opacity: 0.3; }
+      100% { transform: scale(1); opacity: 0.25; }
+    }
+
+    /* Основной круглый «кокон» вокруг робота (намёк на пузырь как у Макса) */
+
+    .robot-bubble {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #ffffff, var(--robot-main));
+      box-shadow:
+        0 24px 50px rgba(15, 40, 90, 0.20),
+        0 0 0 18px rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    /* «Уголок уведомления» в стиле Макса, но другой формы и цвета */
+
+    .robot-bubble-notice {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 20%, #ffe3e3, #ff6b6b);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(-12deg);
+      animation: noticePulse 3.5s ease-in-out infinite;
+    }
+
+    .robot-bubble-notice-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffffff;
+    }
+
+    @keyframes noticePulse {
+      0%, 60%, 100% { transform: rotate(-12deg) scale(1); }
+      20%          { transform: rotate(-12deg) scale(1.08); }
+      30%          { transform: rotate(-12deg) scale(0.96); }
+      40%          { transform: rotate(-12deg) scale(1.05); }
+    }
+
+    /* ---------------- КОНСТРУКЦИЯ РОБОТА ---------------- */
+
+    .robot {
+      position: relative;
+      width: 160px;
+      height: 200px;
+    }
+
+    /* Голова */
+
+    .robot-head {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 126px;
+      height: 96px;
+      border-radius: 40px;
+      background:
+        radial-gradient(circle at 25% 0%, #ffffff, #e9f0ff 55%, #d6e2ff 100%);
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.12),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Тонкая «окантовка» вокруг головы */
+
+    .robot-head::before {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow:
+        0 0 0 1px rgba(155, 178, 225, 0.5),
+        0 4px 14px rgba(40, 73, 130, 0.18);
+      pointer-events: none;
+    }
+
+    /* «Антенна» сверху — отсылка к ИИ */
+
+    .robot-antenna {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      width: 40px;
+      height: 26px;
+      transform: translateX(-50%);
+    }
+
+    .robot-antenna-line {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      width: 2px;
+      height: 10px;
+      transform: translateX(-50%);
+      background: linear-gradient(to bottom, #9fbdf6, #5066aa);
+      border-radius: 4px;
+    }
+
+    .robot-antenna-ball {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #ffffff, #9fc3ff);
+      box-shadow:
+        0 0 10px rgba(116, 185, 255, 0.9),
+        0 0 18px rgba(67, 126, 255, 0.7);
+      animation: antennaPulse 2.8s ease-in-out infinite;
+    }
+
+    @keyframes antennaPulse {
+      0%, 100% { transform: translateX(-50%) scale(1); }
+      40%      { transform: translateX(-50%) scale(1.2); }
+      60%      { transform: translateX(-50%) scale(0.95); }
+    }
+
+    /* «Экран-лицо» */
+
+    .robot-face {
+      position: relative;
+      width: 88px;
+      height: 52px;
+      border-radius: 22px;
+      background: radial-gradient(circle at 20% 0%, #ffffff, #f2f7ff 40%, #d8e5ff 100%);
+      box-shadow: inset 0 0 0 1px rgba(219, 230, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Лёгкий сдвиг градиента по времени, имитация живого экрана */
+
+    @keyframes faceGlow {
+      0%   { background-position: 0% 0%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 0%; }
+    }
+
+    .robot-face {
+      background-image: radial-gradient(circle at 20% 0%, #ffffff, #f2f7ff 40%, #d8e5ff 100%);
+      background-size: 200% 200%;
+      animation: faceGlow 9s ease-in-out infinite;
+    }
+
+    /* Глаза */
+
+    .robot-eyes {
+      position: relative;
+      width: 60px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .robot-eye {
+      position: relative;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #ffffff, #a8c4ff);
+      box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.7),
+        0 0 12px rgba(116, 177, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+      animation: eyeBlink 5.4s ease-in-out infinite;
+    }
+
+    .robot-eye::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--robot-eye);
+    }
+
+    /* Анимация мигания — кратковременное сжатие по вертикали */
+
+    @keyframes eyeBlink {
+      0%, 82%, 100%   { transform: scaleY(1); }
+      86%             { transform: scaleY(0.1); }
+      90%             { transform: scaleY(1.05); }
+    }
+
+    /* Лёгкая улыбка */
+
+    .robot-mouth {
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      width: 38px;
+      height: 16px;
+      transform: translateX(-50%);
+      border-radius: 0 0 20px 20px;
+      border-bottom: 2px solid rgba(66, 94, 150, 0.55);
+      border-left: 2px solid transparent;
+      border-right: 2px solid transparent;
+    }
+
+    /* Туловище судьи в мантии */
+
+    .robot-body {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 110px;
+      border-radius: 44px;
+      background:
+        linear-gradient(180deg, #f5f7ff 0%, #dbdff0 35%, #161b27 36%, #242a3a 100%);
+      box-shadow:
+        0 14px 28px rgba(0, 0, 0, 0.25),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+      overflow: hidden;
+    }
+
+    /* Белый «воротник» судьи */
+
+    .robot-collar {
+      position: absolute;
+      top: 34px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 40px;
+      background: transparent;
+      overflow: visible;
+    }
+
+    .robot-collar::before,
+    .robot-collar::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(180deg, #ffffff, #e1e9ff);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    }
+
+    .robot-collar::before {
+      left: 0;
+      border-radius: 24px 0 40px 40px;
+    }
+    .robot-collar::after {
+      right: 0;
+      border-radius: 0 24px 40px 40px;
+    }
+
+    /* Значок весов правосудия на груди */
+
+    .robot-badge {
+      position: absolute;
+      top: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #ffffff, #e5ecff);
+      box-shadow:
+        0 0 0 2px rgba(71, 96, 162, 0.4),
+        0 8px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .robot-badge-scale {
+      position: absolute;
+      inset: 8px;
+      border-radius: 50%;
+      border: 1px solid rgba(106, 130, 190, 0.6);
+    }
+
+    .robot-badge-scale::before,
+    .robot-badge-scale::after {
+      content: "";
+      position: absolute;
+      bottom: 8px;
+      width: 12px;
+      height: 6px;
+      border-radius: 0 0 10px 10px;
+      border: 1px solid rgba(106, 130, 190, 0.9);
+      border-top: none;
+    }
+
+    .robot-badge-scale::before {
+      left: 4px;
+    }
+
+    .robot-badge-scale::after {
+      right: 4px;
+    }
+
+    .robot-badge-bar {
+      position: absolute;
+      top: 13px;
+      left: 50%;
+      width: 20px;
+      height: 2px;
+      transform: translateX(-50%);
+      background: rgba(88, 112, 172, 0.95);
+    }
+
+    .robot-badge-center {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      width: 7px;
+      height: 7px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: rgba(88, 112, 172, 1);
+    }
+
+    .robot-badge-stem {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      width: 2px;
+      height: 12px;
+      transform: translateX(-50%);
+      background: rgba(88, 112, 172, 1);
+    }
+
+    /* Руки */
+
+    .robot-arm {
+      position: absolute;
+      top: 64px;
+      width: 34px;
+      height: 60px;
+      background: linear-gradient(180deg, #f1f4ff, #cfd6eb);
+      border-radius: 20px;
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .robot-arm-left {
+      left: 4px;
+      transform-origin: top center;
+      transform: rotate(10deg);
+    }
+
+    .robot-arm-right {
+      right: 4px;
+      transform-origin: 8px 10px; /* точка вращения ближе к плечу */
+      animation: gavelSwing 3.4s ease-in-out infinite;
+    }
+
+    /* Ладони */
+
+    .robot-hand {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 12px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #ffffff, #d8e0f3);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Молоток судьи в правой руке */
+
+    .robot-gavel {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      width: 30px;
+      height: 24px;
+      transform: translateX(-20%);
+    }
+
+    .robot-gavel-handle {
+      position: absolute;
+      bottom: 4px;
+      left: 10px;
+      width: 16px;
+      height: 4px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--judge-gavel-dark), var(--judge-gavel));
+      box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+    }
+
+    .robot-gavel-head {
+      position: absolute;
+      bottom: 6px;
+      left: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #f4c29a, var(--judge-gavel-dark));
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    }
+
+    @keyframes gavelSwing {
+      0%, 70%, 100%  { transform: rotate(0deg); }
+      82%            { transform: rotate(-18deg); }
+      90%            { transform: rotate(6deg); }
+    }
+
+    /* Небольшая «табличка» снизу — можно убрать, если не нужна */
+
+    .robot-plate {
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow:
+        0 10px 18px rgba(13, 31, 68, 0.25),
+        0 0 0 1px rgba(189, 201, 228, 0.8);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #4b5675;
+    }
+
+    .robot-plate strong {
+      font-weight: 600;
+    }
+
+    /* Адаптация под более узкие экраны */
+
+    @media (max-width: 600px) {
+      .label-block {
+        top: 28px;
+      }
+      .robot-orbit {
+        transform: scale(0.9);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Подпись над роботом -->
+  <div class="label-block">
+    <div class="label-block-title">ИИ&nbsp;Судья</div>
+    <div class="label-block-sub">Персональный помощник по анализу дел и документов</div>
+  </div>
+
+  <!-- Орбита и тень -->
+  <div class="robot-orbit">
+    <div class="robot-shadow"></div>
+
+    <!-- Пузырь вокруг робота -->
+    <div class="robot-bubble">
+
+      <!-- Уведомление в углу пузыря -->
+      <div class="robot-bubble-notice">
+        <div class="robot-bubble-notice-dot"></div>
+      </div>
+
+      <!-- Конструкция робота -->
+      <div class="robot">
+
+        <!-- Антенна -->
+        <div class="robot-antenna">
+          <div class="robot-antenna-line"></div>
+          <div class="robot-antenna-ball"></div>
+        </div>
+
+        <!-- Голова -->
+        <div class="robot-head">
+          <div class="robot-face">
+            <div class="robot-eyes">
+              <div class="robot-eye"></div>
+              <div class="robot-eye"></div>
+            </div>
+            <div class="robot-mouth"></div>
+          </div>
+        </div>
+
+        <!-- Туловище с мантией -->
+        <div class="robot-body">
+          <div class="robot-collar"></div>
+
+          <!-- Значок весов -->
+          <div class="robot-badge">
+            <div class="robot-badge-scale">
+              <div class="robot-badge-bar"></div>
+              <div class="robot-badge-center"></div>
+              <div class="robot-badge-stem"></div>
+            </div>
+          </div>
+
+          <!-- Левая рука -->
+          <div class="robot-arm robot-arm-left">
+            <div class="robot-hand"></div>
+          </div>
+
+          <!-- Правая рука с молотком -->
+          <div class="robot-arm robot-arm-right">
+            <div class="robot-hand"></div>
+            <div class="robot-gavel">
+              <div class="robot-gavel-head"></div>
+              <div class="robot-gavel-handle"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Табличка снизу -->
+        <div class="robot-plate">
+          <strong>Робот-Судья</strong> · demo
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
