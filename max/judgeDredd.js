@@ -130,7 +130,13 @@
       if (!text) return;
       var bubble = document.createElement('div');
       bubble.className = 'jr-msg ' + (from === 'user' ? 'jr-msg-user' : 'jr-msg-bot');
-      bubble.textContent = text;
+
+      if (from === 'bot') {
+        bubble.innerHTML = text;      // боту разрешаем HTML (ссылки и т.п.)
+      } else {
+        bubble.textContent = text;    // пользователю только текст
+      }
+
       messagesEl.appendChild(bubble);
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
@@ -148,7 +154,9 @@
         setTimeout(function () {
           addMessage(
             'bot',
-            'Спасибо, я зафиксировал вашу ситуацию. Для начала посмотрите, пожалуйста, шаблоны документов и заявлений по адресу: https://v01na.github.io/templates/ — это поможет понять, какие данные обычно указывают в подобных делах.'
+            'Спасибо, я зафиксировал вашу ситуацию. Для начала посмотрите, пожалуйста, '
+            + '<a href="https://v01na.github.io/templates/" style="text-decoration:none;color:#111827;" target="blank">Шаблоны</a>'
+            + ' документов и заявлений — это поможет понять, какие данные обычно указывают в подобных делах.'
           );
           addMessage(
             'bot',
