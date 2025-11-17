@@ -155,8 +155,8 @@
           addMessage(
             'bot',
             'Спасибо, я зафиксировал вашу ситуацию. Для начала посмотрите, пожалуйста, '
-            + '<a href="https://v01na.github.io/templates/" style="text-decoration:none;color:#111827;" target="blank">Шаблоны</a>'
-            + ' документов и заявлений — это поможет понять, какие данные обычно указывают в подобных делах.'
+            + '<a href="https://v01na.github.io/templates/" style="text-decoration:none;color:#111827;font-weight: 900;" target="blank">Шаблоны документов и заявлений</a>'
+            + ' — это поможет понять, какие данные обычно указывают в подобных делах.'
           );
           addMessage(
             'bot',
