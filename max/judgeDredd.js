@@ -13,8 +13,8 @@
       + 'width:240px;height:260px;max-width:100%;max-height:100%;display:block;'
       + '}\n'
       + '#judge-robot-chat{'
-      + 'position:fixed;right:32px;bottom:308px;'
-      + 'width:320px;max-height:460px;'
+      + 'position:fixed;top:50%;left:50%;'
+      + 'width:50vw;height:50vh;max-width:640px;max-height:560px;'
       + 'background:rgba(248,250,255,0.98);'
       + 'border-radius:18px;'
       + 'box-shadow:0 14px 45px rgba(15,23,42,0.25);'
@@ -22,12 +22,13 @@
       + 'overflow:hidden;'
       + 'font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'
       + 'opacity:0;pointer-events:none;'
-      + 'transform:translateY(16px);'
+      + 'transform:translate(-50%,-50%) scale(0.96);'
       + 'transition:opacity .25s ease,transform .25s ease;'
       + 'z-index:9999;'
       + '}\n'
       + '#judge-robot-chat.jr-open{'
-      + 'opacity:1;pointer-events:auto;transform:translateY(0);'
+      + 'opacity:1;pointer-events:auto;'
+      + 'transform:translate(-50%,-50%) scale(1);'
       + '}\n'
       + '.jr-chat-header{'
       + 'padding:10px 14px;'
@@ -155,8 +156,8 @@
           addMessage(
             'bot',
             'Спасибо, я зафиксировал вашу ситуацию. Для начала посмотрите, пожалуйста, '
-            + '<a href="https://v01na.github.io/templates/" style="text-decoration:none;color:#111827;font-weight: 900;" target="blank">Шаблоны документов и заявлений</a>'
-            + ' — это поможет понять, какие данные обычно указывают в подобных делах.'
+            + '<a href="https://v01na.github.io/templates/" style="text-decoration:none;color:#111827;" target="blank">Шаблоны</a>'
+            + ' документов и заявлений — это поможет понять, какие данные обычно указывают в подобных делах.'
           );
           addMessage(
             'bot',
