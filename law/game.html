@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Pipeline Game Visual</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:#020617;
+      --bg-deep:#020414;
+      --cyan:#22d3ee;
+      --cyan-soft:#38bdf8;
+      --cyan-dark:#0ea5e9;
+      --red:#f97373;
+      --red-strong:#f97316;
+      --red-deep:#991b1b;
+      --grid:#0b1220;
+    }
+
+    * {
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    body {
+      background:radial-gradient(circle at top,#111827 0%,#020617 45%,#000000 100%);
+      color:#e5e7eb;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+      overflow:hidden;
+    }
+
+    .root {
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px 16px;
+    }
+
+    .layout {
+      width:100%;
+      max-width:1200px;
+      height:min(72vh,640px);
+      min-height:420px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      position:relative;
+    }
+
+    .layout::before {
+      /* лёгкая сетка как фон */
+      content:"";
+      position:absolute;
+      inset:-40px;
+      background-image:
+        linear-gradient(to right,rgba(15,23,42,0.55) 1px,transparent 1px),
+        linear-gradient(to bottom,rgba(15,23,42,0.55) 1px,transparent 1px);
+      background-size:48px 48px;
+      opacity:0.35;
+      pointer-events:none;
+    }
+
+    .side {
+      position:relative;
+      z-index:2;
+      flex:0 0 140px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:26px;
+    }
+
+    .center {
+      position:relative;
+      z-index:1;
+      flex:1 1 auto;
+      height:100%;
+      margin:0 16px;
+      border-radius:26px;
+      overflow:hidden;
+      box-shadow:0 26px 60px rgba(15,23,42,0.9);
+      background:radial-gradient(circle at center,#020617 0%,#000000 85%);
+    }
+
+    #pipelineCanvas {
+      width:100%;
+      height:100%;
+      display:block;
+    }
+
+    /* ИСТОЧНИКИ СЛЕВА */
+
+    .source {
+      position:relative;
+      width:88px;
+      height:72px;
+      border-radius:18px;
+      border:1px solid rgba(56,189,248,0.7);
+      background:radial-gradient(circle at 30% 20%,rgba(56,189,248,0.25),rgba(15,23,42,0.9));
+      box-shadow:0 0 30px rgba(56,189,248,0.35);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      overflow:hidden;
+    }
+
+    .source::after {
+      /* луч в сторону цилиндра */
+      content:"";
+      position:absolute;
+      left:100%;
+      top:50%;
+      transform:translateY(-50%);
+      width:18vw;
+      max-width:260px;
+      height:2px;
+      background:linear-gradient(90deg,rgba(34,211,238,0.0),rgba(34,211,238,0.8));
+      filter:drop-shadow(0 0 10px rgba(34,211,238,0.8));
+      pointer-events:none;
+      opacity:0.7;
+    }
+
+    .source svg {
+      width:70%;
+      height:70%;
+      fill:none;
+      stroke:var(--cyan);
+      stroke-width:1.8;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .source-video svg rect.frame {
+      stroke-width:2.2;
+    }
+
+    .source-audio svg path.wave {
+      stroke-width:2.2;
+      stroke:var(--cyan-soft);
+      stroke-linejoin:round;
+    }
+
+    .source-chat svg rect.bubble {
+      stroke-width:2.1;
+    }
+
+    .source:hover {
+      box-shadow:0 0 40px rgba(56,189,248,0.8);
+      transform:translateY(-2px);
+      transition:box-shadow 0.2s ease,transform 0.2s ease;
+    }
+
+    /* ЦЕЛИ СПРАВА */
+
+    .target {
+      position:relative;
+      width:80px;
+      height:96px;
+      border-radius:18px;
+      border:2px solid rgba(248,113,113,0.9);
+      background:
+        radial-gradient(circle at 30% 25%,rgba(248,113,113,0.95),rgba(127,29,29,0.95) 55%,rgba(15,23,42,0.95) 100%);
+      box-shadow:0 0 35px rgba(248,113,113,0.65);
+      overflow:hidden;
+      cursor:pointer;
+    }
+
+    .target::before {
+      /* силуэт */
+      content:"";
+      position:absolute;
+      left:50%;
+      top:26%;
+      width:32px;
+      height:32px;
+      transform:translateX(-50%);
+      border-radius:50%;
+      background:rgba(0,0,0,0.45);
+      box-shadow:0 0 16px rgba(0,0,0,0.65);
+    }
+
+    .target::after {
+      /* корпус */
+      content:"";
+      position:absolute;
+      left:50%;
+      top:52%;
+      width:44px;
+      height:36px;
+      transform:translateX(-50%);
+      border-radius:50% 50% 16px 16px;
+      background:rgba(0,0,0,0.55);
+    }
+
+    .target span.cross {
+      position:absolute;
+      inset:8px;
+      border:2px solid rgba(254,242,242,0.25);
+      border-radius:12px;
+      box-shadow:0 0 18px rgba(254,202,202,0.5);
+      pointer-events:none;
+    }
+
+    .target span.cross::before,
+    .target span.cross::after {
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:100%;
+      height:1px;
+      background:rgba(248,250,252,0.35);
+      transform:translate(-50%,-50%);
+    }
+
+    .target span.cross::after {
+      width:1px;
+      height:100%;
+    }
+
+    .target .beam-in {
+      position:absolute;
+      right:100%;
+      top:50%;
+      transform:translateY(-50%);
+      width:18vw;
+      max-width:260px;
+      height:2px;
+      background:linear-gradient(270deg,rgba(248,113,113,0.0),rgba(248,113,113,0.9));
+      filter:drop-shadow(0 0 10px rgba(248,113,113,0.9));
+      pointer-events:none;
+      opacity:0.7;
+    }
+
+    .target:hover {
+      box-shadow:0 0 44px rgba(248,113,113,0.95);
+      transform:translateY(-2px);
+      transition:box-shadow 0.2s ease,transform 0.2s ease;
+    }
+
+    /* Световой бег по лучам */
+
+    @keyframes beamFlow {
+      0% {opacity:0.2;}
+      40% {opacity:0.9;}
+      100% {opacity:0.2;}
+    }
+
+    .source::after,
+    .target .beam-in {
+      animation:beamFlow 2.4s ease-in-out infinite;
+    }
+
+    /* Адаптивность */
+
+    @media (max-width:900px) {
+      .layout {
+        flex-direction:column;
+        height:auto;
+        max-height:none;
+        gap:18px;
+      }
+      .side {
+        flex-direction:row;
+        justify-content:space-around;
+        width:100%;
+        max-width:520px;
+      }
+      .source::after,
+      .target .beam-in {
+        display:none;
+      }
+      .center {
+        width:100%;
+        height:56vh;
+        min-height:320px;
+        order:-1;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="root">
+  <div class="layout">
+    <!-- ЛЕВАЯ ПАНЕЛЬ: источники -->
+    <div class="side left">
+      <div class="source source-video" data-boost="video">
+        <svg viewBox="0 0 60 40">
+          <rect class="frame" x="7" y="7" rx="4" ry="4" width="36" height="26" />
+          <rect x="9" y="9" width="4" height="4" />
+          <rect x="9" y="15" width="4" height="4" />
+          <rect x="9" y="21" width="4" height="4" />
+          <rect x="9" y="27" width="4" height="4" />
+          <polygon points="29,12 38,20 29,28" />
+        </svg>
+      </div>
+      <div class="source source-audio" data-boost="audio">
+        <svg viewBox="0 0 60 40">
+          <path class="wave" d="M6 20 Q12 6 18 20 T30 20 T42 20 T54 20" />
+          <path d="M12 26 v-12 M18 28 v-16 M24 26 v-12 M30 29 v-18 M36 26 v-12 M42 28 v-16 M48 26 v-12" />
+        </svg>
+      </div>
+      <div class="source source-chat" data-boost="chat">
+        <svg viewBox="0 0 60 40">
+          <rect class="bubble" x="10" y="9" rx="5" ry="5" width="34" height="20" />
+          <polygon points="24,29 20,33 20,29" />
+          <circle cx="18" cy="19" r="2.2" />
+          <circle cx="27" cy="19" r="2.2" />
+          <circle cx="36" cy="19" r="2.2" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- ЦЕНТР: WebGL-трубка -->
+    <div class="center">
+      <canvas id="pipelineCanvas"></canvas>
+    </div>
+
+    <!-- ПРАВАЯ ПАНЕЛЬ: цели -->
+    <div class="side right">
+      <div class="target">
+        <div class="beam-in"></div>
+        <span class="cross"></span>
+      </div>
+      <div class="target">
+        <div class="beam-in"></div>
+        <span class="cross"></span>
+      </div>
+      <div class="target">
+        <div class="beam-in"></div>
+        <span class="cross"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Three.js -->
+<script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
+<script>
+  // Инициализация WebGL-сцены
+  (function initPipelineScene() {
+    const canvas = document.getElementById('pipelineCanvas');
+    if (!canvas || !window.THREE) return;
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(38, 2, 0.1, 100);
+    camera.position.set(0, 0, 18);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambient);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+    dir.position.set(4, 5, 8);
+    scene.add(dir);
+
+    const tubeGroup = new THREE.Group();
+    scene.add(tubeGroup);
+
+    const uniforms = {
+      uTime: { value: 0 },
+      uProgress: { value: 0 },
+      uBoost: { value: 0 }
+    };
+
+    const vertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+
+    // Трубка: голубое свечение, внутри бегут волны и «биты»
+    const fragmentShader = `
+      precision highp float;
+      uniform float uTime;
+      uniform float uProgress;
+      uniform float uBoost;
+      varying vec2 vUv;
+
+      // простая хэш-функция для шума
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+      }
+
+      void main() {
+        // координата вдоль цилиндра
+        float x = vUv.x;
+        float y = vUv.y;
+
+        // радиальное тело трубки
+        float dist = distance(vec2(0.5, 0.5), vec2(x, y));
+        float core = smoothstep(0.7, 0.35, dist);
+
+        // бегущая волна
+        float wave = 0.5 + 0.5 * sin( (x * 10.0 - uTime * 3.0) );
+        float waveBand = smoothstep(0.5, 0.8, wave);
+
+        // «биты» как дискретные вспышки
+        float gridX = floor(x * 26.0);
+        float gridY = floor(y * 12.0);
+        float cell = hash(vec2(gridX, gridY) + floor(uTime * 4.0));
+        float bits = step(0.93, cell) * core;
+
+        // область фокуса / риска
+        float focus = 1.0 - smoothstep(0.0, 0.25, abs(x - uProgress));
+        float boost = uBoost;
+
+        vec3 base = mix(vec3(0.01, 0.13, 0.25), vec3(0.02, 0.25, 0.5), core);
+        vec3 glow = vec3(0.2, 0.7, 1.0) * (waveBand * core * 0.7);
+        vec3 bitColor = vec3(0.4, 0.8, 1.0) * bits;
+
+        // красная зона риска
+        vec3 riskColor = vec3(1.0, 0.32, 0.20);
+        vec3 mixed = base + glow + bitColor;
+        mixed = mix(mixed, riskColor, focus * (0.55 + 0.35 * boost));
+
+        // светящиеся края
+        float edge = smoothstep(0.32, 0.0, dist);
+        mixed += vec3(0.12, 0.5, 1.0) * edge * 0.45;
+
+        gl_FragColor = vec4(mixed, core * 0.97);
+      }
+    `;
+
+    const tubeGeo = new THREE.CylinderGeometry(2.3, 2.3, 9.2, 96, 1, true);
+    const tubeMat = new THREE.ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+
+    const tube = new THREE.Mesh(tubeGeo, tubeMat);
+    tube.rotation.z = Math.PI / 2;
+    tubeGroup.add(tube);
+
+    // Торцевые крышки
+    const capGeo = new THREE.CircleGeometry(2.3, 64);
+    const capMat = new THREE.MeshStandardMaterial({
+      color: 0x020617,
+      emissive: 0x0ea5e9,
+      emissiveIntensity: 0.7,
+      transparent: true,
+      opacity: 0.95
+    });
+
+    const capL = new THREE.Mesh(capGeo, capMat.clone());
+    capL.position.set(-4.7, 0, 0);
+    capL.rotation.y = Math.PI / 2;
+    tubeGroup.add(capL);
+
+    const capR = new THREE.Mesh(capGeo, capMat.clone());
+    capR.position.set(4.7, 0, 0);
+    capR.rotation.y = -Math.PI / 2;
+    tubeGroup.add(capR);
+
+    // Маленькие «пакеты данных», бегущие по трубке
+    const bitGeo = new THREE.BoxGeometry(0.14, 0.14, 0.14);
+    const bits = [];
+    const bitCount = 140;
+
+    for (let i = 0; i < bitCount; i++) {
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x93c5fd,
+        emissive: 0x38bdf8,
+        emissiveIntensity: 1.1,
+        metalness: 0.2,
+        roughness: 0.3
+      });
+      const m = new THREE.Mesh(bitGeo, mat);
+      m.position.set(
+        -4.2 + Math.random() * 8.4,
+        (Math.random() - 0.5) * 0.9,
+        (Math.random() - 0.5) * 0.9
+      );
+      m.userData.speed = 0.02 + Math.random() * 0.035;
+      m.userData.offset = Math.random() * Math.PI * 2;
+      tubeGroup.add(m);
+      bits.push(m);
+    }
+
+    function resizeRenderer() {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      if (width === 0 || height === 0) return;
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+
+    let start = performance.now();
+    let pointerX = 0.5;
+    let boost = 0;
+
+    window.addEventListener('pointermove', function (e) {
+      pointerX = e.clientX / window.innerWidth;
+    });
+
+    // «Бонус» от кликов по источникам или целям
+    function triggerBoost() {
+      boost = 1.0;
+    }
+    document.querySelectorAll('.source, .target').forEach(function (el) {
+      el.addEventListener('pointerdown', triggerBoost);
+    });
+
+    function render() {
+      const now = performance.now();
+      const t = (now - start) / 1000;
+
+      uniforms.uTime.value = t;
+
+      const autoProgress = (t * 0.12) % 1;
+      uniforms.uProgress.value = 0.7 * autoProgress + 0.3 * pointerX;
+
+      // Плавное затухание boost
+      boost *= 0.94;
+      uniforms.uBoost.value = boost;
+
+      // Движение «пакетов данных»
+      for (let i = 0; i < bits.length; i++) {
+        const m = bits[i];
+        const speed = m.userData.speed * (1.0 + boost * 3.0);
+        m.position.x += speed;
+        m.position.y = Math.sin(t * 1.5 + m.userData.offset) * 0.55;
+        if (m.position.x > 4.2) {
+          m.position.x = -4.2;
+        }
+      }
+
+      tubeGroup.rotation.y = Math.sin(t * 0.25) * 0.18;
+
+      resizeRenderer();
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+    window.addEventListener('resize', resizeRenderer);
+  })();
+</script>
+</body>
+</html>
